@@ -12,10 +12,12 @@ import com.qc.printers.pojo.entity.Token;
 import com.qc.printers.pojo.entity.TrLogin;
 import com.qc.printers.pojo.entity.User;
 import com.qc.printers.pojo.vo.LoginRes;
+import com.qc.printers.service.CommonService;
 import com.qc.printers.service.IRedisService;
 import com.qc.printers.service.TrLoginService;
 import com.qc.printers.service.UserService;
 import com.qc.printers.utils.CASOauthUtil;
+import com.qc.printers.utils.ImageUtil;
 import com.qc.printers.utils.JWTUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -23,6 +25,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.multipart.MultipartFile;
 
 /**
  * 第三方登录服务之ENROOM
@@ -34,12 +37,15 @@ public class TrLoginServiceImpl extends ServiceImpl<TrLoginMapper, TrLogin> impl
     private CASOauthUtil casOauthUtil;
     private final RestTemplate restTemplate;
 
+    private final CommonService commonService;
+
     private final IRedisService iRedisService;
     @Autowired
     private UserService userService;
 
-    public TrLoginServiceImpl(RestTemplate restTemplate, IRedisService iRedisService) {
+    public TrLoginServiceImpl(RestTemplate restTemplate, CommonService commonService, IRedisService iRedisService) {
         this.restTemplate = restTemplate;
+        this.commonService = commonService;
         this.iRedisService = iRedisService;
     }
 
@@ -83,6 +89,8 @@ public class TrLoginServiceImpl extends ServiceImpl<TrLoginMapper, TrLogin> impl
         try{
             String string = userObjectByToken.getString("avatar");
             avatar = string;
+            MultipartFile multipartFile = ImageUtil.base64ImageToM(avatar);
+            avatar = commonService.uploadFileTOMinio(multipartFile).getData();
         }catch (Exception e){
             avatar = null;
         }
@@ -92,7 +100,7 @@ public class TrLoginServiceImpl extends ServiceImpl<TrLoginMapper, TrLogin> impl
             phone = null;
         }
         user.setPhone(phone);
-
+        // 设置头像
         user.setAvatar(avatar);
         user.setStatus(1);
         user.setSex(userObjectByToken.getString("sex"));

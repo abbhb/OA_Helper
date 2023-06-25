@@ -1,4 +1,5 @@
 package com.qc.printers.utils;
+import cn.hutool.core.img.ImgUtil;
 import com.qc.printers.config.MinIoProperties;
 import io.minio.MinioClient;
 import io.minio.ObjectStat;
