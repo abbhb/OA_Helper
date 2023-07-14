@@ -2,11 +2,11 @@ package com.qc.printers.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.qc.printers.common.R;
-import com.qc.printers.pojo.PrinterResult;
-import com.qc.printers.pojo.ValueLabelResult;
-import com.qc.printers.pojo.entity.PageData;
-import com.qc.printers.pojo.entity.Printer;
+import com.qc.printers.pojo.PageData;
+import com.qc.printers.pojo.Printer;
 import com.qc.printers.pojo.vo.CountTop10VO;
+import com.qc.printers.pojo.vo.PrinterResult;
+import com.qc.printers.pojo.vo.ValueLabelResult;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;

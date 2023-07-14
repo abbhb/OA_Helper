@@ -2,9 +2,9 @@ package com.qc.printers.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.qc.printers.common.R;
-import com.qc.printers.pojo.QuickNavigationItemResult;
-import com.qc.printers.pojo.entity.PageData;
-import com.qc.printers.pojo.entity.QuickNavigationItem;
+import com.qc.printers.pojo.PageData;
+import com.qc.printers.pojo.QuickNavigationItem;
+import com.qc.printers.pojo.vo.QuickNavigationItemResult;
 
 public interface QuickNavigationItemService extends IService<QuickNavigationItem> {
     boolean hasId(Long valueOf);

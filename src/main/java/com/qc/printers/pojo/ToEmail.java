@@ -1,4 +1,4 @@
-package com.qc.printers.pojo.entity;
+package com.qc.printers.pojo;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

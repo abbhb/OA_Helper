@@ -4,8 +4,8 @@ import com.alibaba.fastjson.JSONObject;
 import com.qc.printers.common.Code;
 import com.qc.printers.common.CustomException;
 import com.qc.printers.config.CASConfig;
-import com.qc.printers.pojo.entity.Token;
-import com.qc.printers.pojo.entity.User;
+import com.qc.printers.pojo.Token;
+import com.qc.printers.pojo.User;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpEntity;
@@ -14,8 +14,6 @@ import org.springframework.http.MediaType;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import javax.servlet.http.Cookie;
-import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
 import java.util.Map;
 

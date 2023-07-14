@@ -1,15 +1,7 @@
 package com.qc.printers.utils;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.qc.printers.common.CustomException;
-import com.qc.printers.common.MyString;
-import com.qc.printers.common.R;
-import com.qc.printers.pojo.UserResult;
-import com.qc.printers.pojo.entity.Permission;
-import com.qc.printers.pojo.entity.Printer;
-import com.qc.printers.pojo.entity.User;
-import com.qc.printers.service.IRedisService;
-import com.qc.printers.service.UserService;
+import com.qc.printers.pojo.Printer;
 
 /**
  * 参数校验工具类

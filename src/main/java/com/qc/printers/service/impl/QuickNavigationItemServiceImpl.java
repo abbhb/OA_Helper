@@ -7,11 +7,10 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qc.printers.common.CustomException;
 import com.qc.printers.common.R;
 import com.qc.printers.mapper.QuickNavigationItemMapper;
-import com.qc.printers.pojo.QuickNavigationItemResult;
-import com.qc.printers.pojo.entity.PageData;
-import com.qc.printers.pojo.entity.QuickNavigationCategorize;
-import com.qc.printers.pojo.entity.QuickNavigationItem;
-
+import com.qc.printers.pojo.PageData;
+import com.qc.printers.pojo.QuickNavigationCategorize;
+import com.qc.printers.pojo.QuickNavigationItem;
+import com.qc.printers.pojo.vo.QuickNavigationItemResult;
 import com.qc.printers.service.QuickNavigationCategorizeService;
 import com.qc.printers.service.QuickNavigationItemService;
 import lombok.extern.slf4j.Slf4j;

@@ -1,17 +1,12 @@
 package com.qc.printers.controller;
 
-import com.alibaba.fastjson.JSONObject;
-import com.qc.printers.common.R;
-import com.qc.printers.pojo.UserResult;
 import com.qc.printers.service.RedirectService;
 import io.swagger.annotations.Api;
-import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.*;
-
-import java.util.Map;
+import org.springframework.web.bind.annotation.CrossOrigin;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 @RestController//@ResponseBody+@Controller
 @RequestMapping("/redirect")

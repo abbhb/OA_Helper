@@ -2,11 +2,12 @@ package com.qc.printers.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.qc.printers.common.R;
-import com.qc.printers.pojo.UserResult;
-import com.qc.printers.pojo.entity.PageData;
-import com.qc.printers.pojo.entity.User;
+import com.qc.printers.pojo.PageData;
+import com.qc.printers.pojo.User;
+import com.qc.printers.pojo.dto.LoginDTO;
 import com.qc.printers.pojo.vo.LoginRes;
 import com.qc.printers.pojo.vo.PasswordR;
+import com.qc.printers.pojo.vo.UserResult;
 
 public interface UserService extends IService<User> {
 //    R<UserResult> login(String code);
@@ -36,7 +37,7 @@ public interface UserService extends IService<User> {
 
     R<String> emailWithUser(String emails, String code, String token);
 
-    R<LoginRes> login(User user);
+    R<LoginRes> login(LoginDTO user);
 
     R<UserResult> info();
 

@@ -1,12 +1,13 @@
 package com.qc.printers.controller;
 
-import com.qc.printers.common.annotation.NeedToken;
 import com.qc.printers.common.R;
-import com.qc.printers.common.annotation.PermissionCheck;
+import com.qc.printers.common.annotation.NeedToken;
 import com.qc.printers.service.CommonService;
+import com.qc.printers.utils.RSAUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -39,13 +40,34 @@ public class CommonController {
 
     @CrossOrigin("*")
     @GetMapping("/api_count_lastday")
-    @ApiOperation(value = "昨日请求数",notes = "")
-    public R<Integer> userCountToday(){
+    @ApiOperation(value = "昨日请求数", notes = "")
+    public R<Integer> userCountToday() {
         log.info("获取昨日请求数");
         Integer integer = commonService.apiCountLastday();
-        if (integer == null){
+        if (integer == null) {
             return R.success(0);
         }
         return R.success(integer);
     }
+
+    @CrossOrigin("*")
+    @GetMapping("/get_all_image_url")
+    @ApiOperation(value = "获取完整的图片url地址", notes = "")
+    public R<String> getAllImageUrl(String key) {
+        log.info("获取完整的图片url地址");
+        if (StringUtils.isEmpty(key)) {
+            return R.error("无法获取");
+        }
+        String imageUrl = commonService.getAllImageUrl(key);
+        return R.successOnlyObject(imageUrl);
+    }
+
+    @CrossOrigin("*")
+    @GetMapping("/get_public_key")
+    @ApiOperation(value = "获取RSA公钥", notes = "")
+    public R<String> getPublicKey() {
+        log.info("获取RSA公钥");
+        return R.successOnlyObject(RSAUtil.publicKey);
+    }
+
 }

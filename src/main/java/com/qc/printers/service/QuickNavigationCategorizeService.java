@@ -2,11 +2,10 @@ package com.qc.printers.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.qc.printers.common.R;
-import com.qc.printers.pojo.QuickNavigationCategorizeResult;
-import com.qc.printers.pojo.QuickNavigationItemResult;
-import com.qc.printers.pojo.entity.PageData;
-import com.qc.printers.pojo.entity.QuickNavigationCategorize;
-import com.qc.printers.pojo.selectOptionsResult;
+import com.qc.printers.pojo.PageData;
+import com.qc.printers.pojo.QuickNavigationCategorize;
+import com.qc.printers.pojo.vo.QuickNavigationCategorizeResult;
+import com.qc.printers.pojo.vo.selectOptionsResult;
 
 import java.util.List;
 
