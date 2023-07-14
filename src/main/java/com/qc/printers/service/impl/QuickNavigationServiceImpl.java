@@ -3,11 +3,11 @@ package com.qc.printers.service.impl;
 
 import com.qc.printers.common.CustomException;
 import com.qc.printers.common.R;
-import com.qc.printers.pojo.QuickNavigationItemResult;
-import com.qc.printers.pojo.QuickNavigationResult;
-import com.qc.printers.pojo.entity.QuickNavigationCategorize;
-import com.qc.printers.pojo.entity.QuickNavigationItem;
-import com.qc.printers.pojo.entity.User;
+import com.qc.printers.pojo.QuickNavigationCategorize;
+import com.qc.printers.pojo.QuickNavigationItem;
+import com.qc.printers.pojo.User;
+import com.qc.printers.pojo.vo.QuickNavigationItemResult;
+import com.qc.printers.pojo.vo.QuickNavigationResult;
 import com.qc.printers.service.QuickNavigationCategorizeService;
 import com.qc.printers.service.QuickNavigationItemService;
 import com.qc.printers.service.QuickNavigationService;

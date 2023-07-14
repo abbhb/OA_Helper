@@ -8,19 +8,18 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qc.printers.common.Code;
 import com.qc.printers.common.CustomException;
-
 import com.qc.printers.common.MyString;
 import com.qc.printers.common.R;
 import com.qc.printers.mapper.UserMapper;
-import com.qc.printers.pojo.UserResult;
-import com.qc.printers.pojo.entity.PageData;
-import com.qc.printers.pojo.entity.Permission;
-import com.qc.printers.pojo.entity.User;
+import com.qc.printers.pojo.PageData;
+import com.qc.printers.pojo.Permission;
+import com.qc.printers.pojo.User;
+import com.qc.printers.pojo.dto.LoginDTO;
 import com.qc.printers.pojo.vo.LoginRes;
 import com.qc.printers.pojo.vo.PasswordR;
+import com.qc.printers.pojo.vo.UserResult;
 import com.qc.printers.service.CommonService;
 import com.qc.printers.service.IRedisService;
-
 import com.qc.printers.service.UserService;
 import com.qc.printers.utils.*;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +29,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 
 import static com.qc.printers.utils.ParamsCalibration.checkSensitiveWords;
 
@@ -484,28 +485,32 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public R<LoginRes> login(User user) {
-        if (StringUtils.isEmpty(user.getUsername())||StringUtils.isEmpty(user.getPassword())){
+    public R<LoginRes> login(LoginDTO user) {
+        if (StringUtils.isEmpty(user.getUsername()) || StringUtils.isEmpty(user.getPassword())) {
             return R.error("参数异常");
         }
         LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        userLambdaQueryWrapper.eq(User::getUsername,user.getUsername());
+        userLambdaQueryWrapper.eq(User::getUsername, user.getUsername());
         User one = super.getOne(userLambdaQueryWrapper);
-        if (one==null){
+        if (one == null) {
             return R.error("用户名或密码错误");
         }
-        if (one.getPassword()==null||one.getSalt()==null){
+        if (one.getPassword() == null || one.getSalt() == null) {
             return R.error("此用户未设置密码,请使用oauth2登录");
         }
-        String password = PWDMD5.getMD5Encryption(user.getPassword(),one.getSalt());
-        if (!one.getPassword().equals(password)){
+        String password = PWDMD5.getMD5Encryption(RSAUtil.decryptDataOnJava(user.getPassword()), one.getSalt());
+        if (!one.getPassword().equals(password)) {
             return R.error("用户名或密码错误");
         }
-        if (one.getStatus().equals(0)){
+        if (one.getStatus().equals(0)) {
             return R.error("账号已被禁用");
         }
-        String token = JWTUtil.getToken(String.valueOf(one.getId()),String.valueOf(one.getPermission()));
-        iRedisService.setTokenWithTime(token,String.valueOf(one.getId()),3*3600L);
+        String token = JWTUtil.getToken(String.valueOf(one.getId()), String.valueOf(one.getPermission()));
+        if (user.getWeek()) {
+            iRedisService.setTokenWithTime(token, String.valueOf(one.getId()), 7 * 24 * 3600L);
+        } else {
+            iRedisService.setTokenWithTime(token, String.valueOf(one.getId()), 12 * 3600L);
+        }
         LoginRes loginRes = new LoginRes();
         loginRes.setToken(token);
         return R.success(loginRes);

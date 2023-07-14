@@ -1,7 +1,7 @@
 package com.qc.printers.service;
 
 import com.qc.printers.common.R;
-import com.qc.printers.pojo.entity.ToEmail;
+import com.qc.printers.pojo.ToEmail;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface CommonService {
@@ -15,4 +15,6 @@ public interface CommonService {
     Integer countApi();
 
     Integer apiCountLastday();
+
+    String getAllImageUrl(String key);
 }

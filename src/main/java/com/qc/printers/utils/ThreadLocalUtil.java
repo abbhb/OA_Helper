@@ -1,7 +1,7 @@
 package com.qc.printers.utils;
 
 
-import com.qc.printers.pojo.entity.User;
+import com.qc.printers.pojo.User;
 
 public class ThreadLocalUtil {
 

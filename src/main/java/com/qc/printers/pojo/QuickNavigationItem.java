@@ -1,9 +1,8 @@
-package com.qc.printers.pojo.entity;
+package com.qc.printers.pojo;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
-import com.qc.printers.common.R;
 import lombok.Data;
 
 @Data

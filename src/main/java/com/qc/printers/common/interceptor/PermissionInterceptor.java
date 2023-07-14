@@ -4,13 +4,11 @@ import com.qc.printers.common.CustomException;
 import com.qc.printers.common.MyString;
 import com.qc.printers.common.annotation.NeedToken;
 import com.qc.printers.common.annotation.PermissionCheck;
-
-import com.qc.printers.pojo.entity.Permission;
-import com.qc.printers.pojo.entity.User;
+import com.qc.printers.pojo.Permission;
+import com.qc.printers.pojo.User;
 import com.qc.printers.service.IRedisService;
 import com.qc.printers.utils.ThreadLocalUtil;
 import lombok.extern.slf4j.Slf4j;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;

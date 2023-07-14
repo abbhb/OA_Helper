@@ -1,7 +1,7 @@
 package com.qc.printers.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.qc.printers.pojo.entity.Printer;
+import com.qc.printers.pojo.Printer;
 import com.qc.printers.pojo.vo.CountTop10VO;
 import org.apache.ibatis.annotations.Mapper;
 

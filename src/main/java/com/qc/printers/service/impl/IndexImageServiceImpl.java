@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qc.printers.config.MinIoProperties;
 import com.qc.printers.mapper.IndexImageMapper;
-import com.qc.printers.pojo.entity.IndexImage;
+import com.qc.printers.pojo.IndexImage;
 import com.qc.printers.service.IndexImageService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;

@@ -4,10 +4,11 @@ import com.qc.printers.common.Code;
 import com.qc.printers.common.CustomException;
 import com.qc.printers.common.R;
 import com.qc.printers.common.annotation.NeedToken;
-import com.qc.printers.pojo.UserResult;
-import com.qc.printers.pojo.entity.User;
+import com.qc.printers.pojo.User;
+import com.qc.printers.pojo.dto.LoginDTO;
 import com.qc.printers.pojo.vo.LoginRes;
 import com.qc.printers.pojo.vo.PasswordR;
+import com.qc.printers.pojo.vo.UserResult;
 import com.qc.printers.service.TrLoginService;
 import com.qc.printers.service.UserService;
 import com.qc.printers.utils.CASOauthUtil;
@@ -19,7 +20,6 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
 import java.util.Map;
 
 @RestController//@ResponseBody+@Controller
@@ -43,14 +43,14 @@ public class UserController {
      * 登录分为账密和Oauth2.0授权登录
      */
     @PostMapping("/login")
-    @ApiOperation(value = "登录",notes = "")
-    public R<LoginRes> login(@RequestBody User user){
-        log.info("user:{}",user);
+    @ApiOperation(value = "登录", notes = "")
+    public R<LoginRes> login(@RequestBody LoginDTO user) {
+        log.info("user:{}", user);
         /**
          * 对密码进行加密传输
          */
         String password = user.getPassword();
-        if (StringUtils.isEmpty(password)){
+        if (StringUtils.isEmpty(password)) {
             return R.error("密码不能为空");
         }
         return userService.login(user);

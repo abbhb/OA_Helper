@@ -1,26 +1,16 @@
 package com.qc.printers.service.impl;
 
-import com.auth0.jwt.interfaces.Claim;
-import com.auth0.jwt.interfaces.DecodedJWT;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.qc.printers.common.Code;
 import com.qc.printers.common.CustomException;
 import com.qc.printers.common.R;
 import com.qc.printers.config.MinIoProperties;
 import com.qc.printers.mapper.LogMapper;
-import com.qc.printers.pojo.entity.Log;
-import com.qc.printers.pojo.entity.ToEmail;
-import com.qc.printers.pojo.entity.User;
+import com.qc.printers.pojo.ToEmail;
 import com.qc.printers.service.CommonService;
 import com.qc.printers.service.IRedisService;
 import com.qc.printers.service.UserService;
-import com.qc.printers.utils.JWTUtil;
 import com.qc.printers.utils.MinIoUtil;
-import com.qc.printers.utils.VerCodeGenerateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.mail.SimpleMailMessage;
-import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -36,6 +26,7 @@ public class CommonServiceImpl implements CommonService {
     private final UserService userService;
 //    @Autowired
 //    private JavaMailSender mailSender;
+
 
     @Autowired
     public CommonServiceImpl(IRedisService iRedisService, UserService userService) {
@@ -111,9 +102,14 @@ public class CommonServiceImpl implements CommonService {
     @Override
     public Integer apiCountLastday() {
         Integer lastDayCountApi = iRedisService.getLastDayCountApi();
-        if (lastDayCountApi!=null){
+        if (lastDayCountApi != null) {
             return lastDayCountApi;
         }
         return 0;
+    }
+
+    @Override
+    public String getAllImageUrl(String key) {
+        return minIoProperties.getUrl() + "/" + minIoProperties.getBucketName() + "/" + key;
     }
 }

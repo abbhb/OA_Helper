@@ -3,11 +3,13 @@ package com.qc.printers.service.impl;
 import com.itextpdf.text.pdf.PdfReader;
 import com.qc.printers.common.CustomException;
 import com.qc.printers.config.MinIoProperties;
-import com.qc.printers.pojo.entity.User;
 import com.qc.printers.service.CommonService;
 import com.qc.printers.service.PrintService;
 import com.qc.printers.service.PrinterService;
-import com.qc.printers.utils.*;
+import com.qc.printers.utils.MinIoUtil;
+import com.qc.printers.utils.PdfPrintUtil;
+import com.qc.printers.utils.RandomName;
+import com.qc.printers.utils.WordPrintUtil;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -15,10 +17,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
-
 
 import static com.qc.printers.common.MyString.public_file;
 import static com.qc.printers.utils.ParamsCalibration.checkBeforePrint;

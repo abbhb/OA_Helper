@@ -1,6 +1,5 @@
 package com.qc.printers.common;
 
-import com.qc.printers.pojo.UserResult;
 import lombok.Data;
 
 import java.util.HashMap;

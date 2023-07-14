@@ -5,12 +5,15 @@
 <mapper namespace="com.qc.printers.mapper.UserMapper">
 
     <!--public List<User> getAllUserIncludeDeleted();-->
-    <select id="getAllUserIncludeDeleted" resultType="com.qc.printers.pojo.entity.User">
-        select * from user
+    <select id="getAllUserIncludeDeleted" resultType="com.qc.printers.pojo.User">
+        select *
+        from user
     </select>
     <!--public User getUserIncludeDeleted(Long id);-->
-    <select id="getUserIncludeDeleted" resultType="com.qc.printers.pojo.entity.User">
-        select * from user where id = #{id}
+    <select id="getUserIncludeDeleted" resultType="com.qc.printers.pojo.User">
+        select *
+        from user
+        where id = #{id}
     </select>
 
 </mapper>

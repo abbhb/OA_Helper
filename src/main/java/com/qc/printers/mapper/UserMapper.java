@@ -1,8 +1,7 @@
 package com.qc.printers.mapper;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.qc.printers.pojo.entity.User;
-import org.apache.ibatis.annotations.CacheNamespace;
+import com.qc.printers.pojo.User;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 

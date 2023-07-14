@@ -1,31 +1,12 @@
 package com.qc.printers.service.impl;
 
-import com.alibaba.fastjson.JSON;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.qc.printers.common.Code;
-import com.qc.printers.common.CustomException;
-import com.qc.printers.common.MyString;
-import com.qc.printers.common.R;
-import com.qc.printers.pojo.UserResult;
-import com.qc.printers.pojo.entity.Permission;
-import com.qc.printers.pojo.entity.TrLogin;
-import com.qc.printers.pojo.entity.User;
 import com.qc.printers.service.IRedisService;
 import com.qc.printers.service.RedirectService;
 import com.qc.printers.service.TrLoginService;
 import com.qc.printers.service.UserService;
-import com.qc.printers.utils.JWTUtil;
-import com.qc.printers.utils.PWDMD5;
-import com.qc.printers.utils.RandomName;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
-import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.web.client.RestTemplate;
-
-import java.util.Map;
 
 /**
  * 回调服务

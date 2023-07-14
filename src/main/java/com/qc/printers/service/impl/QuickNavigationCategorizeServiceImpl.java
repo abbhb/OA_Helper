@@ -7,11 +7,10 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qc.printers.common.CustomException;
 import com.qc.printers.common.R;
 import com.qc.printers.mapper.QuickNavigationCategorizeMapper;
-import com.qc.printers.pojo.QuickNavigationCategorizeResult;
-
-import com.qc.printers.pojo.entity.PageData;
-import com.qc.printers.pojo.entity.QuickNavigationCategorize;
-import com.qc.printers.pojo.selectOptionsResult;
+import com.qc.printers.pojo.PageData;
+import com.qc.printers.pojo.QuickNavigationCategorize;
+import com.qc.printers.pojo.vo.QuickNavigationCategorizeResult;
+import com.qc.printers.pojo.vo.selectOptionsResult;
 import com.qc.printers.service.QuickNavigationCategorizeService;
 import com.qc.printers.service.QuickNavigationItemService;
 import lombok.extern.slf4j.Slf4j;
@@ -21,7 +20,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
 
 @Service

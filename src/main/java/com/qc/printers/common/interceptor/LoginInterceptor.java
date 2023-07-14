@@ -1,17 +1,11 @@
 package com.qc.printers.common.interceptor;
 
-import com.auth0.jwt.interfaces.Claim;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import com.qc.printers.common.Code;
 import com.qc.printers.common.CustomException;
-import com.qc.printers.common.MyString;
 import com.qc.printers.common.annotation.NeedToken;
-import com.qc.printers.pojo.entity.Token;
-import com.qc.printers.pojo.entity.User;
+import com.qc.printers.pojo.User;
 import com.qc.printers.service.IRedisService;
 import com.qc.printers.service.UserService;
-import com.qc.printers.utils.CASOauthUtil;
-import com.qc.printers.utils.CookieManger;
 import com.qc.printers.utils.JWTUtil;
 import com.qc.printers.utils.ThreadLocalUtil;
 import io.swagger.annotations.Api;
@@ -20,7 +14,6 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
-import org.springframework.web.client.RestTemplate;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.HandlerInterceptor;
 

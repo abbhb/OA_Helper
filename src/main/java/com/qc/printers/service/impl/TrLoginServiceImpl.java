@@ -8,9 +8,9 @@ import com.qc.printers.common.Code;
 import com.qc.printers.common.CustomException;
 import com.qc.printers.common.R;
 import com.qc.printers.mapper.TrLoginMapper;
-import com.qc.printers.pojo.entity.Token;
-import com.qc.printers.pojo.entity.TrLogin;
-import com.qc.printers.pojo.entity.User;
+import com.qc.printers.pojo.Token;
+import com.qc.printers.pojo.TrLogin;
+import com.qc.printers.pojo.User;
 import com.qc.printers.pojo.vo.LoginRes;
 import com.qc.printers.service.CommonService;
 import com.qc.printers.service.IRedisService;
@@ -74,7 +74,7 @@ public class TrLoginServiceImpl extends ServiceImpl<TrLoginMapper, TrLogin> impl
                 throw new CustomException("认证失败",Code.DEL_TOKEN);
             }
             String token = JWTUtil.getToken(String.valueOf(byId.getId()), String.valueOf(byId.getPermission()));
-            iRedisService.setTokenWithTime(token,String.valueOf(byId.getId()),3*3600L);
+            iRedisService.setTokenWithTime(token, String.valueOf(byId.getId()), 12 * 3600L);
             LoginRes userResult = new LoginRes();
             userResult.setToken(token);
             return R.success(userResult);
@@ -144,7 +144,7 @@ public class TrLoginServiceImpl extends ServiceImpl<TrLoginMapper, TrLogin> impl
                 }
             }
             String token = JWTUtil.getToken(String.valueOf(user.getId()), String.valueOf(user.getPermission()));
-            iRedisService.setTokenWithTime(token,String.valueOf(user.getId()),3*3600L);
+            iRedisService.setTokenWithTime(token, String.valueOf(user.getId()), 12 * 3600L);
             LoginRes userResult = new LoginRes();
             userResult.setToken(token);
             return R.success(userResult);

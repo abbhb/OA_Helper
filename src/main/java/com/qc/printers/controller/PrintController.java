@@ -1,18 +1,17 @@
 package com.qc.printers.controller;
 
 import com.qc.printers.common.CustomException;
-import com.qc.printers.common.annotation.NeedToken;
 import com.qc.printers.common.R;
+import com.qc.printers.common.annotation.NeedToken;
 import com.qc.printers.common.annotation.PermissionCheck;
-import com.qc.printers.pojo.PrinterResult;
-import com.qc.printers.pojo.ValueLabelResult;
-import com.qc.printers.pojo.entity.PageData;
-import com.qc.printers.pojo.entity.User;
+import com.qc.printers.pojo.PageData;
+import com.qc.printers.pojo.User;
 import com.qc.printers.pojo.vo.CountTop10VO;
+import com.qc.printers.pojo.vo.PrinterResult;
+import com.qc.printers.pojo.vo.ValueLabelResult;
 import com.qc.printers.service.CommonService;
 import com.qc.printers.service.PrintService;
 import com.qc.printers.service.PrinterService;
-import com.qc.printers.utils.JWTUtil;
 import com.qc.printers.utils.ParamsCalibration;
 import com.qc.printers.utils.ThreadLocalUtil;
 import com.qc.printers.utils.WordPrintUtil;
@@ -27,8 +26,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.websocket.server.PathParam;
 import java.util.List;
-
-import static com.qc.printers.utils.ParamsCalibration.somePrinterParams;
 
 @RestController//@ResponseBody+@Controller
 @RequestMapping("/printer")

@@ -1,23 +1,17 @@
-package com.qc.printers.pojo.entity;
+package com.qc.printers.pojo.vo;
 
-import com.baomidou.mybatisplus.annotation.FieldFill;
-import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
-/**
- * 此对象不能直接映射，否则出现问题
- */
-@Data
-public class Printer implements Serializable {
 
-    private Long id;
+@Data
+public class PrinterResult implements Serializable {
+    private String id;
 
     /**
      * 份数
-     * todo 建议变量名改为copies,
      */
     private Integer copies;
 
@@ -38,41 +32,32 @@ public class Printer implements Serializable {
     private Integer printBigValue;
 
     /**
-     * todo 类型改为integer, -1代表all, 其他代表页码截至号, 变量名改为needPrintPagesEndIndex
+     * 单份文件用纸数
+     */
+    private Integer singleDocumentPaperUsage;
+    /**
+     * 【单份】打印页数
      */
     private Integer needPrintPagesEndIndex;
 
     private Integer needPrintPagesIndex;
 
-
-    /**
-     * 单份文件用纸数
-     */
-    private Integer singleDocumentPaperUsage;
-    /**
-     * 源文件总页数
-     */
     private Integer originFilePages;
 
     private String contentHash;
 
     private String name;
 
-    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
     /**
      * 谁打印
      */
-    private Long createUser;
+    private String createUser;
 
-    /**
-     * 单双面
-     * false单面 true 双面
-     */
     private Integer isDuplex;
 
-    //文件地址
     private String url;
-    
-    
+
+
+
 }
