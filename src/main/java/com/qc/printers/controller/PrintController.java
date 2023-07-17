@@ -148,6 +148,9 @@ public class PrintController {
         if (pageSize == null) {
             return R.error("传参错误");
         }
+        if (pageSize > 100) {
+            return R.error("传参错误");
+        }
         return printerService.listAllPrinter(pageNum, pageSize, name, user);
     }
     
@@ -187,7 +190,9 @@ public class PrintController {
         if (pageSize == null) {
             return R.error("传参错误");
         }
-        
+        if (pageSize > 100) {
+            return R.error("传参错误");
+        }
         return printerService.listPrinter(pageNum, pageSize, name, date);
     }
 

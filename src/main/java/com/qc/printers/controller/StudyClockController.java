@@ -2,13 +2,19 @@ package com.qc.printers.controller;
 
 import com.qc.printers.common.R;
 import com.qc.printers.common.annotation.NeedToken;
+import com.qc.printers.common.annotation.PermissionCheck;
+import com.qc.printers.pojo.PageData;
 import com.qc.printers.pojo.dto.AddClock30DTO;
 import com.qc.printers.pojo.dto.ClockSelfDTO;
+import com.qc.printers.pojo.vo.ClockSelfEchartsVO;
+import com.qc.printers.pojo.vo.KeepDayDataVO;
 import com.qc.printers.service.StudyClockService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 @RestController//@ResponseBody+@Controller
 @RequestMapping("/study_clock")
@@ -51,5 +57,24 @@ public class StudyClockController {
     public R<ClockSelfDTO> getClockSelfAll() {
         log.info("获取本人情况");
         return studyClockService.getClockSelfAll();
+    }
+
+    @CrossOrigin("*")
+    @GetMapping("/get_self_clock_echarts")
+    @ApiOperation(value = "获取本人Echarts折线图数据")
+    @NeedToken
+    public R<ClockSelfEchartsVO> getSelfClockEcharts() {
+        log.info("获取本人Echarts折线图数据");
+        return studyClockService.getSelfClockEcharts();
+    }
+
+    @CrossOrigin("*")
+    @GetMapping("/get_admin_day_data")
+    @ApiOperation(value = "获取日数据")
+    @NeedToken
+    @PermissionCheck("1")
+    public R<PageData<List<KeepDayDataVO>>> getAdminDayData(@RequestParam("pageNum") Integer pageNum, @RequestParam("pageSize") Integer pageSize, String name, String date, String groupId) {
+        log.info("获取日数据");
+        return studyClockService.getAdminDayData(pageNum, pageSize, name, date, groupId);
     }
 }
