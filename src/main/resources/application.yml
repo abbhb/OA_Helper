@@ -38,6 +38,6 @@ cas:
   clientId: 93519f52770144c7afa01c1f76409d81
   clientSecret: 0a28768c96db4ab79eec56b70fade03c
 study:
-  minOldTime: 600 #单位：分钟
-  # 就是12点前的意思
-  maxFirstTime: 12
+  minOldTime: 420 #单位：分钟
+  # 就是10点前的意思
+  maxFirstTime: 10

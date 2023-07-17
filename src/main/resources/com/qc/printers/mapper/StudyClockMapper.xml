@@ -11,7 +11,7 @@
         WHERE user_id = #{id}
           and date between #{startTime}
           and #{endTime}
-
+        ORDER BY date DESC
     </select>
 
 
