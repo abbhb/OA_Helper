@@ -210,6 +210,10 @@ public class StudyClockServiceImpl extends ServiceImpl<StudyClockMapper, StudyCl
 
     @Override
     public R<PageData<List<KeepDayDataVO>>> getAdminDayData(Integer pageNum, Integer pageSize, String name, String date, String groupId) {
+        if (pageNum == null || pageSize == null || pageSize > 100) {
+            throw new CustomException("参数不能太离谱~");
+        }
+
         return null;
     }
     /**
