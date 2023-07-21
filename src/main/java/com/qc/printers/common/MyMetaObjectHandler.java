@@ -1,10 +1,8 @@
 package com.qc.printers.common;
 
-import com.auth0.jwt.interfaces.Claim;
-import com.auth0.jwt.interfaces.DecodedJWT;
 import com.baomidou.mybatisplus.core.handlers.MetaObjectHandler;
-
-import com.qc.printers.utils.JWTUtil;
+import com.qc.printers.pojo.User;
+import com.qc.printers.utils.ThreadLocalUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.ibatis.reflection.MetaObject;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,18 +21,28 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
     @Override
     public void insertFill(MetaObject metaObject) {
         //此处可能会出现异常,要是userid为null此处异常
-        if (metaObject.hasSetter("updateTime")){
-            metaObject.setValue("updateTime",LocalDateTime.now());
+        if (metaObject.hasSetter("updateTime")) {
+            metaObject.setValue("updateTime", LocalDateTime.now());
         }
-        if (metaObject.hasSetter("createTime")){
-            metaObject.setValue("createTime",LocalDateTime.now());
-        }
-        if (metaObject.hasSetter("isDeleted")){
-            metaObject.setValue("isDeleted",Integer.valueOf(0));//刚插入默认都是不删除的
+        if (metaObject.hasSetter("createTime")) {
+            metaObject.setValue("createTime", LocalDateTime.now());
         }
 
-        if (metaObject.hasSetter("version")){
-            metaObject.setValue("version",Integer.valueOf(0));
+        if (metaObject.hasSetter("createUser")) {
+            // 当需要获取创建人必定该接口是要校验是否登录
+            // 所以currentUser在此处应该要存才，否则抛出异常
+            User currentUser = ThreadLocalUtil.getCurrentUser();
+            if (currentUser == null) {
+                throw new RuntimeException("取参异常:My-1");
+            }
+            metaObject.setValue("createUser", currentUser.getId());
+        }
+        if (metaObject.hasSetter("isDeleted")) {
+            metaObject.setValue("isDeleted", Integer.valueOf(0));//刚插入默认都是不删除的
+        }
+
+        if (metaObject.hasSetter("version")) {
+            metaObject.setValue("version", Integer.valueOf(0));
         }
 
     }
