@@ -6,6 +6,7 @@ import com.qc.printers.common.annotation.PermissionCheck;
 import com.qc.printers.pojo.PageData;
 import com.qc.printers.pojo.dto.AddClock30DTO;
 import com.qc.printers.pojo.dto.ClockSelfDTO;
+import com.qc.printers.pojo.vo.AdminDayDataParamsVO;
 import com.qc.printers.pojo.vo.ClockSelfEchartsVO;
 import com.qc.printers.pojo.vo.KeepDayDataVO;
 import com.qc.printers.service.StudyClockService;
@@ -69,12 +70,13 @@ public class StudyClockController {
     }
 
     @CrossOrigin("*")
-    @GetMapping("/get_admin_day_data")
+    @PostMapping("/get_admin_day_data")
     @ApiOperation(value = "获取日数据")
     @NeedToken
     @PermissionCheck("1")
-    public R<PageData<List<KeepDayDataVO>>> getAdminDayData(@RequestParam("pageNum") Integer pageNum, @RequestParam("pageSize") Integer pageSize, String name, String date, String groupId) {
+    public R<PageData<List<KeepDayDataVO>>> getAdminDayData(@RequestBody AdminDayDataParamsVO adminDayDataParamsVO) {
         log.info("获取日数据");
-        return studyClockService.getAdminDayData(pageNum, pageSize, name, date, groupId);
+        return studyClockService.getAdminDayData(adminDayDataParamsVO);
     }
+
 }
