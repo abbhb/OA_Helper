@@ -14,6 +14,7 @@ import com.qc.printers.pojo.StudyClock;
 import com.qc.printers.pojo.User;
 import com.qc.printers.pojo.dto.AddClock30DTO;
 import com.qc.printers.pojo.dto.ClockSelfDTO;
+import com.qc.printers.pojo.vo.AdminDayDataParamsVO;
 import com.qc.printers.pojo.vo.ClockSelfEchartsVO;
 import com.qc.printers.pojo.vo.KeepDayDataVO;
 import com.qc.printers.service.IRedisService;
@@ -208,9 +209,24 @@ public class StudyClockServiceImpl extends ServiceImpl<StudyClockMapper, StudyCl
 
     }
 
+    /**
+     * \
+     * 获取签到日数据
+     *
+     * @param pageNum   分页之当前多少页
+     * @param pageSize  分页之每页多少条
+     * @param name      通过名称模糊查询
+     * @param date      日期段
+     * @param firstTime 签到时间段
+     * @param groupId   哪个组
+     * @return
+     */
     @Override
-    public R<PageData<List<KeepDayDataVO>>> getAdminDayData(Integer pageNum, Integer pageSize, String name, String date, String groupId) {
-        if (pageNum == null || pageSize == null || pageSize > 100) {
+    public R<PageData<List<KeepDayDataVO>>> getAdminDayData(AdminDayDataParamsVO adminDayDataParamsVO) {
+        if (adminDayDataParamsVO == null) {
+            throw new CustomException("参数不能太离谱~");
+        }
+        if (adminDayDataParamsVO.getPageSize() > 100 || adminDayDataParamsVO.getPageNum() == null) {
             throw new CustomException("参数不能太离谱~");
         }
 

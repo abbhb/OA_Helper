@@ -6,6 +6,7 @@ import com.qc.printers.pojo.PageData;
 import com.qc.printers.pojo.StudyClock;
 import com.qc.printers.pojo.dto.AddClock30DTO;
 import com.qc.printers.pojo.dto.ClockSelfDTO;
+import com.qc.printers.pojo.vo.AdminDayDataParamsVO;
 import com.qc.printers.pojo.vo.ClockSelfEchartsVO;
 import com.qc.printers.pojo.vo.KeepDayDataVO;
 
@@ -20,5 +21,5 @@ public interface StudyClockService extends IService<StudyClock> {
 
     R<ClockSelfEchartsVO> getSelfClockEcharts();
 
-    R<PageData<List<KeepDayDataVO>>> getAdminDayData(Integer pageNum, Integer pageSize, String name, String date, String groupId);
+    R<PageData<List<KeepDayDataVO>>> getAdminDayData(AdminDayDataParamsVO adminDayDataParamsVO);
 }

@@ -3,6 +3,7 @@ package com.qc.printers.controller;
 import com.qc.printers.common.R;
 import com.qc.printers.common.annotation.NeedToken;
 import com.qc.printers.common.annotation.PermissionCheck;
+import com.qc.printers.pojo.Group;
 import com.qc.printers.pojo.PageData;
 import com.qc.printers.pojo.vo.Duplicate;
 import com.qc.printers.pojo.vo.GroupAndUserFrontVO;
@@ -115,6 +116,20 @@ public class GroupController {
             return R.error("参数不能为空");
         }
         return R.success(groupService.queryGroup(pageNum, pageSize, name));
+    }
+
+    /**
+     * 查询群组可选列表
+     *
+     * @param
+     * @return
+     */
+    @NeedToken
+    @GetMapping("/queryGroupSelectList")
+    @PermissionCheck("1")
+    @ApiOperation(value = "查询群组可选列表", notes = "")
+    public R<List<Group>> queryGroupSelectList() {
+        return R.success(groupService.list());
     }
 
     @NeedToken
