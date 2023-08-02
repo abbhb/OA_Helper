@@ -2,6 +2,7 @@ package com.qc.printers.service.impl;
 
 
 import com.qc.printers.common.MyString;
+import com.qc.printers.pojo.PrintDocumentTypeStatistic;
 import com.qc.printers.service.IRedisService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -10,7 +11,10 @@ import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+
+import static com.qc.printers.common.MyString.print_document_type_statistic;
 
 @Service
 public class IRedisServiceImpl implements IRedisService {
@@ -78,13 +82,23 @@ public class IRedisServiceImpl implements IRedisService {
         if (o == null){
             return 0;
         }
-        return (int)o;
+        return (int) o;
     }
 
     @Override
     public int getCountApi() {
         int o = (int) redisTemplate.opsForValue().get(MyString.pre_api_count);
         return o;
+    }
+
+    @Override
+    public List<PrintDocumentTypeStatistic> getPrintDocumentTypeStatistics() {
+        return (List<PrintDocumentTypeStatistic>) redisTemplate.opsForValue().get(print_document_type_statistic);
+    }
+
+    @Override
+    public void setPrintDocumentTypeStatistics(List<PrintDocumentTypeStatistic> printDocumentTypeStatisticList) {
+        redisTemplate.opsForValue().set(print_document_type_statistic, printDocumentTypeStatisticList);
     }
 
     @Override
@@ -95,7 +109,7 @@ public class IRedisServiceImpl implements IRedisService {
 
     @Override
     public String getValue(String key) {
-        return (String)redisTemplate.opsForValue().get(key);
+        return (String) redisTemplate.opsForValue().get(key);
     }
 
 
