@@ -3,6 +3,7 @@ package com.qc.printers.service;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.qc.printers.common.R;
 import com.qc.printers.pojo.PageData;
+import com.qc.printers.pojo.PrintDocumentTypeStatistic;
 import com.qc.printers.pojo.Printer;
 import com.qc.printers.pojo.vo.CountTop10VO;
 import com.qc.printers.pojo.vo.PrinterResult;
@@ -28,5 +29,12 @@ public interface PrinterService extends IService<Printer> {
 
     R<Integer> getTodayPrintCount();
 
-    R<Integer> addPrinterLog(MultipartFile file, Integer pageStart, Integer pageEnd, Integer copiesNum,String username,Integer duplex,String fileName);
+    R<Integer> addPrinterLog(MultipartFile file, Integer pageStart, Integer pageEnd, Integer copiesNum, String username, Integer duplex, String fileName);
+
+    /**
+     * 获取print类别排行榜信息
+     *
+     * @return
+     */
+    List<PrintDocumentTypeStatistic> getPrinterTypeStatistics();
 }

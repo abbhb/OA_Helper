@@ -5,11 +5,13 @@ import com.qc.printers.common.R;
 import com.qc.printers.common.annotation.NeedToken;
 import com.qc.printers.common.annotation.PermissionCheck;
 import com.qc.printers.pojo.PageData;
+import com.qc.printers.pojo.PrintDocumentTypeStatistic;
 import com.qc.printers.pojo.User;
 import com.qc.printers.pojo.vo.CountTop10VO;
 import com.qc.printers.pojo.vo.PrinterResult;
 import com.qc.printers.pojo.vo.ValueLabelResult;
 import com.qc.printers.service.CommonService;
+import com.qc.printers.service.IRedisService;
 import com.qc.printers.service.PrintService;
 import com.qc.printers.service.PrinterService;
 import com.qc.printers.utils.ParamsCalibration;
@@ -33,20 +35,23 @@ import java.util.List;
 @CrossOrigin("*")
 @Api("共享打印相关api")
 public class PrintController {
-    
+
     private final PrintService printService;
-    
+
     private final CommonService commonService;
-    
+
     private final PrinterService printerService;
-    
+
+    private final IRedisService iRedisService;
+
     @Autowired
-    public PrintController(PrintService printService, CommonService commonService, PrinterService printerService) {
+    public PrintController(PrintService printService, CommonService commonService, PrinterService printerService, IRedisService iRedisService) {
         this.printService = printService;
         this.commonService = commonService;
         this.printerService = printerService;
+        this.iRedisService = iRedisService;
     }
-    
+
     /**
      * 打印通用接口, 用来调用打印word或pdf服务
      * 后期可以传回token拿到用户信息
@@ -161,14 +166,22 @@ public class PrintController {
     public R<List<ValueLabelResult>> getAllUserPrinter() {
         return printerService.getAllUserPrinter();
     }
-    
+
+
     @GetMapping("/getUserPrintTopList")
     @NeedToken
     @ApiOperation(value = "获取打印榜前10名用户", notes = "会排序好返回")
     public R<List<CountTop10VO>> getUserPrintTopList(@ApiParam("type:1为总，2为每天") Integer type) {
         return printerService.getUserPrintTopList(type);
     }
-    
+
+    @GetMapping("/getPrintDocumentTypeStatistics")
+    @NeedToken
+    @ApiOperation(value = "获取文件拓展名榜")
+    public R<List<PrintDocumentTypeStatistic>> getPrintDocumentTypeStatistics() {
+        return R.success(iRedisService.getPrintDocumentTypeStatistics());
+    }
+
     /**
      * 获取历史打印记录
      * 需要分页
