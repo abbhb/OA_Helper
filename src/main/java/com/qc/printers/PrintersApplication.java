@@ -24,6 +24,7 @@ public class PrintersApplication implements CommandLineRunner {
 
     @Autowired
     private PermissionMapper permissionMapper;
+
     public static void main(String[] args) {
         SpringApplication.run(PrintersApplication.class, args);
     }
@@ -31,7 +32,8 @@ public class PrintersApplication implements CommandLineRunner {
     @Override
     public void run(String... args) throws Exception {
         //启动成功执行该方法
-        log.info("启动");
+        log.info("启动主程序");
+        //对权限进行缓存
         LambdaQueryWrapper<Permission> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         List<Permission> permissions = permissionMapper.selectList(lambdaQueryWrapper);
         for (Permission permission :

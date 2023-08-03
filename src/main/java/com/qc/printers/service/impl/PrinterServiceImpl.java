@@ -9,6 +9,7 @@ import com.qc.printers.config.MinIoProperties;
 import com.qc.printers.mapper.PrinterMapper;
 import com.qc.printers.mapper.UserMapper;
 import com.qc.printers.pojo.PageData;
+import com.qc.printers.pojo.PrintDocumentTypeStatistic;
 import com.qc.printers.pojo.Printer;
 import com.qc.printers.pojo.User;
 import com.qc.printers.pojo.vo.CountTop10VO;
@@ -32,7 +33,9 @@ import java.io.InputStream;
 import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 @Service
 @Slf4j
@@ -272,11 +275,36 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
         printer.setNeedPrintPagesEndIndex(pageEnd);
         printer.setNeedPrintPagesIndex(pageStart);
         printer.setName(fileName);
-        printer.setSingleDocumentPaperUsage((isDuplex?(int)Math.ceil((double)(pageEnd-pageStart+1)/2.0):(pageEnd-pageStart+1)));
+        printer.setSingleDocumentPaperUsage((isDuplex ? (int) Math.ceil((double) (pageEnd - pageStart + 1) / 2.0) : (pageEnd - pageStart + 1)));
         boolean save = this.save(printer);
-        if (!save){
+        if (!save) {
             throw new CustomException("保存失败");
         }
         return R.success(1);
+    }
+
+    @Override
+    public List<PrintDocumentTypeStatistic> getPrinterTypeStatistics() {
+        // 全部打印信息
+        List<Printer> list = this.list(new LambdaQueryWrapper<Printer>().select(Printer::getId, Printer::getName));
+        List<PrintDocumentTypeStatistic> printDocumentTypeStatisticList = new ArrayList<>();
+        Map<String, Integer> typeNumbers = new HashMap<>();
+        for (Printer printer : list) {
+            String fileName = printer.getName();
+            int lastDotIndex = fileName.lastIndexOf(".");
+            String extension = fileName.substring(lastDotIndex + 1);
+            //java8:特性 如果key存在了，就返回key对应的object计算后的值，如果不存在就返回value，同时更新map
+            typeNumbers.merge(extension, 1, Integer::sum);
+        }
+        for (String key : typeNumbers.keySet()) {
+            Integer value = typeNumbers.get(key);
+            // 做一些操作，例如打印键值对
+            PrintDocumentTypeStatistic printDocumentTypeStatistic = new PrintDocumentTypeStatistic();
+            printDocumentTypeStatistic.setType(key);
+            printDocumentTypeStatistic.setCount(value);
+            printDocumentTypeStatistic.setProportion(value / (list.size() * 1.0));
+            printDocumentTypeStatisticList.add(printDocumentTypeStatistic);
+        }
+        return printDocumentTypeStatisticList;
     }
 }

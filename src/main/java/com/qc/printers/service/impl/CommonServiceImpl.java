@@ -3,11 +3,9 @@ package com.qc.printers.service.impl;
 import com.qc.printers.common.CustomException;
 import com.qc.printers.common.R;
 import com.qc.printers.config.MinIoProperties;
-import com.qc.printers.mapper.LogMapper;
 import com.qc.printers.pojo.ToEmail;
 import com.qc.printers.service.CommonService;
 import com.qc.printers.service.IRedisService;
-import com.qc.printers.service.UserService;
 import com.qc.printers.utils.MinIoUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,16 +20,8 @@ public class CommonServiceImpl implements CommonService {
     private final IRedisService iRedisService;
 
     @Autowired
-    private LogMapper logMapper;
-    private final UserService userService;
-//    @Autowired
-//    private JavaMailSender mailSender;
-
-
-    @Autowired
-    public CommonServiceImpl(IRedisService iRedisService, UserService userService) {
+    public CommonServiceImpl(IRedisService iRedisService) {
         this.iRedisService = iRedisService;
-        this.userService = userService;
     }
 
     public R<String> uploadFileTOMinio(MultipartFile file) {
