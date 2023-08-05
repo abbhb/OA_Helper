@@ -213,42 +213,39 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 
     @Transactional
     @Override
-    public R<String> updateUserStatus(String id,String status, Long userId) {
-        if (StringUtils.isEmpty(id)){
-            return R.error("无操作对象");
+    public boolean updateUserStatus(String id, String status) {
+        if (StringUtils.isEmpty(id)) {
+            throw new CustomException("无操作对象");
         }
-        if (StringUtils.isEmpty(status)){
-            return R.error("无操作对象");
+        if (StringUtils.isEmpty(status)) {
+            throw new CustomException("无操作对象");
         }
-        if (userId==null){
-            return R.error("无操作对象");
+        User currentUser = ThreadLocalUtil.getCurrentUser();
+        if (currentUser == null) {
+            throw new CustomException("授权问题");
         }
-
-        User byId = super.getById(id);
-        if (byId==null){
-            //don't hava object
-            throw new CustomException("没有对象");
-        }
-        User myId = super.getById(userId);
-        if (myId==null){
-            //don't hava object
-            throw new CustomException("没有对象");
-        }
-        if (userId.equals(Long.valueOf(id))){
-            return R.error("禁止操作自己账号");
-        }
-        Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(byId.getPermission()));
-        Permission permissionMyId = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(myId.getPermission()));
-        if (permissionMyId.getWeight()<=permission.getWeight()){
-            return R.error("权限不足");
-        }
-
         List<User> users = new ArrayList<>();
         boolean update = false;
-        if (id.contains(",")){
+        if (id.contains(",")) {
             String[] split = id.split(",");
-            for (String s:
+            for (String s :
                     split) {
+                //这部分代码感觉需要优化👇和下面的块是重复的
+                User byId = super.getById(Long.valueOf(s));
+                if (byId == null) {
+                    //don't hava object
+                    throw new CustomException("没有对象");
+                }
+                if (byId.getPermission().equals(10)) {
+                    // 禁止操作大管理
+                    throw new CustomException("你已越界");
+                }
+                if (byId.getId().equals(currentUser.getId())) {
+                    throw new CustomException("相信我，你自己管不好自己!");
+                }
+                //这部分代码感觉需要优化👆
+
+
                 User user = new User();
                 user.setId(Long.valueOf(s));
                 user.setStatus(Integer.valueOf(status));
@@ -256,15 +253,31 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             }
             update = super.updateBatchById(users);
         }else {
+            //这部分代码感觉需要优化👇和上面块是重复的
+            User byId = super.getById(Long.valueOf(id));
+            if (byId == null) {
+                //don't hava object
+                throw new CustomException("没有对象");
+            }
+            if (byId.getPermission().equals(10)) {
+                // 禁止操作大管理
+                throw new CustomException("你已越界");
+            }
+            if (byId.getId().equals(currentUser.getId())) {
+                throw new CustomException("相信我，你自己管不好自己!");
+            }
+            //这部分代码感觉需要优化👆
+
+
             LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-            lambdaUpdateWrapper.set(User::getStatus,Integer.valueOf(status));
-            lambdaUpdateWrapper.eq(User::getId,Long.valueOf(id));
+            lambdaUpdateWrapper.set(User::getStatus, Integer.valueOf(status));
+            lambdaUpdateWrapper.eq(User::getId, Long.valueOf(id));
             update = super.update(lambdaUpdateWrapper);
         }
         if (update){
-            return R.success("更改成功");
+            return true;
         }
-        return R.error("无操作对象");
+        throw new CustomException("更新失败");
     }
 
     @Transactional
@@ -357,30 +370,17 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     }
 
     @Override
-    public R<PageData> getUserList(Integer pageNum, Integer pageSize, String name, Long userId) {
-        if (pageNum==null){
-            return R.error("传参错误");
+    public PageData<UserResult> getUserList(Integer pageNum, Integer pageSize, String name) {
+        if (pageNum == null) {
+            throw new IllegalArgumentException("传参错误");
         }
-        if (pageSize==null){
-            return R.error("传参错误");
+        if (pageSize == null) {
+            throw new IllegalArgumentException("传参错误");
         }
-        if (userId==null){
-            throw new CustomException("业务异常");
-        }
-        User byId = super.getById(userId);
-        if (byId==null){
-            throw new CustomException("业务异常");
-        }
-        
-        
-        if (byId.getPermission()==2){
-            //当前是User身份,不返回数据
-            return R.error("你好像没权限欸!");
-        }
-        Page pageInfo = new Page(pageNum,pageSize);
+        Page<User> pageInfo = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         //添加过滤条件
-        lambdaQueryWrapper.like(StringUtils.isNotEmpty(name),User::getName,name);
+        lambdaQueryWrapper.like(StringUtils.isNotEmpty(name), User::getName, name);
         //添加排序条件
         lambdaQueryWrapper.orderByAsc(User::getCreateTime);//按照创建时间排序
         super.page(pageInfo,lambdaQueryWrapper);
@@ -400,7 +400,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         pageData.setSize(pageInfo.getSize());
         pageData.setRecords(results);
         pageData.setMaxLimit(pageInfo.getMaxLimit());
-        return R.success(pageData);
+        return pageData;
     }
 
     @Transactional

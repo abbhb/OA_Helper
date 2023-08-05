@@ -4,6 +4,8 @@ import com.qc.printers.common.Code;
 import com.qc.printers.common.CustomException;
 import com.qc.printers.common.R;
 import com.qc.printers.common.annotation.NeedToken;
+import com.qc.printers.common.annotation.PermissionCheck;
+import com.qc.printers.pojo.PageData;
 import com.qc.printers.pojo.User;
 import com.qc.printers.pojo.dto.LoginDTO;
 import com.qc.printers.pojo.vo.LoginRes;
@@ -84,19 +86,31 @@ public class UserController {
 
     @NeedToken
     @PutMapping("/update")
-    @ApiOperation(value = "token校验",notes = "没过期就data返回1告诉前端一声")
-    public R<String> update(@RequestBody User user){
+    @ApiOperation(value = "token校验", notes = "没过期就data返回1告诉前端一声")
+    public R<String> update(@RequestBody User user) {
         boolean isTrue = userService.updateUserInfo(user);
-        if (isTrue){
+        if (isTrue) {
             return R.success("修改成功");
         }
         return R.error("修改失败");
     }
+
+    @NeedToken
+    @GetMapping("/updateStatus")
+    @ApiOperation(value = "更新用户的状态", notes = "成功或者失败告诉前端")
+    public R<String> updateStatus(String id, String status) {
+        boolean isTrue = userService.updateUserStatus(id, status);
+        if (isTrue) {
+            return R.success("修改成功");
+        }
+        return R.error("修改失败");
+    }
+
     @NeedToken
     @PutMapping("/setPassword")
-    public R<String> setPassword(@RequestBody PasswordR passwordR){
+    public R<String> setPassword(@RequestBody PasswordR passwordR) {
         boolean isTrue = userService.setPassword(passwordR);
-        if (isTrue){
+        if (isTrue) {
             return R.success("修改成功,下次登录生效!");
         }
         return R.error("修改失败");
@@ -126,16 +140,26 @@ public class UserController {
     }
 
     @GetMapping("/user_count")
-    @ApiOperation(value = "获取用户数量",notes = "")
-    public R<Integer> userCount(){
+    @ApiOperation(value = "获取用户数量", notes = "")
+    public R<Integer> userCount() {
         log.info("获取用户数量");
         return R.success(userService.count());
     }
 
+    @GetMapping("/user_manger")
+    @NeedToken
+    @PermissionCheck("1")
+    @ApiOperation(value = "用户管理获取所有用户", notes = "")
+    public R<PageData<UserResult>> userManger(Integer pageNum, Integer pageSize, @RequestParam(required = false, name = "name") String name) {
+        log.info("用户管理获取所有用户");
+        return R.success(userService.getUserList(pageNum, pageSize, name));
+    }
+
+
     @GetMapping("/user_password")
     @NeedToken
-    @ApiOperation(value = "是否需要输入密码",notes = "")
-    public R<Integer> userPassword(){
+    @ApiOperation(value = "是否需要输入密码", notes = "")
+    public R<Integer> userPassword() {
         log.info("是否需要输入密码");
         return R.success(userService.userPassword());
     }
