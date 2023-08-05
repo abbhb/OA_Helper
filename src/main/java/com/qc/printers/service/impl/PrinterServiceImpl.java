@@ -276,6 +276,7 @@ public class PrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> impl
         printer.setNeedPrintPagesIndex(pageStart);
         printer.setName(fileName);
         printer.setSingleDocumentPaperUsage((isDuplex ? (int) Math.ceil((double) (pageEnd - pageStart + 1) / 2.0) : (pageEnd - pageStart + 1)));
+        log.info("printer={}", printer);
         boolean save = this.save(printer);
         if (!save) {
             throw new CustomException("保存失败");

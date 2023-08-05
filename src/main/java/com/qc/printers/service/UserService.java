@@ -20,7 +20,7 @@ public interface UserService extends IService<User> {
 
     R<LoginRes> loginByToken();
 
-    R<String> updateUserStatus(String id,String status, Long userId);
+    boolean updateUserStatus(String id, String status);
 
     R<UserResult> updateForUser(User user);
 
@@ -29,7 +29,7 @@ public interface UserService extends IService<User> {
 
     R<String> updateUser(String userid, String name, String username, String phone, String idNumber, String status, String grouping, String sex, String token);
 
-    R<PageData> getUserList(Integer pageNum, Integer pageSize, String name,Long userId);
+    PageData<UserResult> getUserList(Integer pageNum, Integer pageSize, String name);
 
     R<String> deleteUsers(String id,Long userId);
 
