@@ -31,11 +31,13 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
         if (metaObject.hasSetter("createUser")) {
             // 当需要获取创建人必定该接口是要校验是否登录
             // 所以currentUser在此处应该要存才，否则抛出异常
-            User currentUser = ThreadLocalUtil.getCurrentUser();
-            if (currentUser == null) {
-                throw new RuntimeException("取参异常:My-1");
+            if (metaObject.getValue("createUser") == null) {
+                User currentUser = ThreadLocalUtil.getCurrentUser();
+                if (currentUser == null) {
+                    throw new RuntimeException("取参异常:My-1");
+                }
+                metaObject.setValue("createUser", currentUser.getId());
             }
-            metaObject.setValue("createUser", currentUser.getId());
         }
         if (metaObject.hasSetter("isDeleted")) {
             metaObject.setValue("isDeleted", Integer.valueOf(0));//刚插入默认都是不删除的
