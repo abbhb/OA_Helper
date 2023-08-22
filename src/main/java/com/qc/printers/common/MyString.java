@@ -16,4 +16,6 @@ public class MyString {
     public final static String permission_key = "permission";
 
     public final static String print_document_type_statistic = cache + "PrintDocumentTypeStatistic";
+
+    public final static String pre_common_config = cache + "common_config";
 }
