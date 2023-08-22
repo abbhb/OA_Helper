@@ -7,6 +7,10 @@ import java.util.List;
 public interface IRedisService {
 //    String getTokenId(String token);
 
+    Object get(String key);
+
+    void set(String key, Object Object);
+
     void setTokenWithTime(String token, String value, Long time);
 
     void del(String token);
@@ -15,7 +19,7 @@ public interface IRedisService {
 
     String getValue(String key);
 
-    void hashPut(String key,String hashKey,Object object);
+    void hashPut(String key, String hashKey, Object object);
 
     Object getHash(String key, String hashKey);
 

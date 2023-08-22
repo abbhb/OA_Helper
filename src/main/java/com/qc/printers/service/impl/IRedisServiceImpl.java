@@ -50,13 +50,24 @@ public class IRedisServiceImpl implements IRedisService {
     }
 
     @Override
+    public void set(String key, Object Object) {
+        redisTemplate.opsForValue().set(key, Object);
+    }
+
+    @Override
+    public Object get(String key) {
+        return redisTemplate.opsForValue().get(key);
+    }
+
+    @Override
     public void del(String token) {
         redisTemplate.delete(token);
 
     }
+
     @Override
-    public void hashPut(String key,String hashKey,Object object) {
-        redisTemplate.opsForHash().put(key,hashKey,object);
+    public void hashPut(String key, String hashKey, Object object) {
+        redisTemplate.opsForHash().put(key, hashKey, object);
     }
 
     @Override
