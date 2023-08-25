@@ -60,7 +60,7 @@ public class CommonConfigServiceImpl extends ServiceImpl<CommonConfigMapper, Com
             Iterator iterator = commonConfigs.iterator();
             while (iterator.hasNext()) {
                 CommonConfig commonConfig = (CommonConfig) iterator.next();
-                if (commonConfig.getKey().equals(id)) {
+                if (commonConfig.getConfigKey().equals(id)) {
                     iterator.remove();
                 }
             }
@@ -70,11 +70,6 @@ public class CommonConfigServiceImpl extends ServiceImpl<CommonConfigMapper, Com
         return a;
     }
 
-    @Transactional
-    @Override
-    public boolean remove(Wrapper<CommonConfig> queryWrapper) {
-        throw new CustomException("禁止通过此方法删除");
-    }
 
     @Transactional
     @Override
@@ -94,6 +89,7 @@ public class CommonConfigServiceImpl extends ServiceImpl<CommonConfigMapper, Com
         return a;
     }
 
+    @Transactional
     @Override
     public boolean update(Wrapper<CommonConfig> updateWrapper) {
         boolean a = super.update(updateWrapper);
@@ -119,7 +115,7 @@ public class CommonConfigServiceImpl extends ServiceImpl<CommonConfigMapper, Com
         iRedisService.set(MyString.pre_common_config, list);
         return a;
     }
-
+    @Transactional
     @Override
     public CommonConfig getById(Serializable id) {
         List<CommonConfig> commonConfigs = (List<CommonConfig>) iRedisService.get(MyString.pre_common_config);
@@ -128,7 +124,7 @@ public class CommonConfigServiceImpl extends ServiceImpl<CommonConfigMapper, Com
             iRedisService.set(MyString.pre_common_config, list);
             commonConfigs = list;
         }
-        List<CommonConfig> collect = commonConfigs.stream().filter(item -> item.getKey().equals(id)).collect(Collectors.toList());
+        List<CommonConfig> collect = commonConfigs.stream().filter(item -> item.getConfigKey().equals(id)).collect(Collectors.toList());
         if (collect == null) {
             collect = new ArrayList<>();
         }
@@ -139,16 +135,8 @@ public class CommonConfigServiceImpl extends ServiceImpl<CommonConfigMapper, Com
         return collect.get(0);
     }
 
-    @Override
-    public CommonConfig getOne(Wrapper<CommonConfig> queryWrapper) {
-        throw new CustomException("禁止此方法获取");
-    }
 
-    @Override
-    public List<CommonConfig> list(Wrapper<CommonConfig> queryWrapper) {
-        throw new CustomException("禁止此方法获取");
-    }
-
+    @Transactional
     @Override
     public List<CommonConfig> list() {
         List<CommonConfig> commonConfigs = (List<CommonConfig>) iRedisService.get(MyString.pre_common_config);
@@ -159,4 +147,7 @@ public class CommonConfigServiceImpl extends ServiceImpl<CommonConfigMapper, Com
         }
         return commonConfigs;
     }
+
+
+
 }
