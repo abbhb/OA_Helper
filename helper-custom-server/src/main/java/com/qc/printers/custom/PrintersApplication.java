@@ -1,12 +1,5 @@
-package com.qc.printers;
+package com.qc.printers.custom;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.qc.printers.common.MyString;
-import com.qc.printers.mapper.PermissionMapper;
-import com.qc.printers.pojo.Permission;
-import com.qc.printers.service.CommonConfigService;
-import com.qc.printers.service.IRedisService;
-import com.qc.printers.utils.RSAUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -16,7 +9,7 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 import java.util.List;
 
 //@EnableOpenApi//启动swaggerUI
-@SpringBootApplication
+@SpringBootApplication(scanBasePackages = {"com.qc.printers"})
 @Slf4j
 public class PrintersApplication implements CommandLineRunner {
 
