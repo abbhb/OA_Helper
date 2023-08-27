@@ -1,7 +1,6 @@
 package com.qc.printers.custom.user.service;
 
 
-import com.baomidou.mybatisplus.extension.service.IService;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.user.domain.dto.LoginDTO;
@@ -10,7 +9,7 @@ import com.qc.printers.common.user.domain.vo.UserResult;
 import com.qc.printers.custom.user.domain.vo.request.PasswordR;
 import com.qc.printers.custom.user.domain.vo.response.LoginRes;
 
-public interface UserService extends IService<User> {
+public interface UserService {
 //    R<UserResult> login(String code);
 
 //    R<UserResult> loginFirst(User user);
@@ -20,6 +19,8 @@ public interface UserService extends IService<User> {
     R<String> logout(String token);
 
     R<LoginRes> loginByToken();
+
+    Integer count();
 
     boolean updateUserStatus(String id, String status);
 

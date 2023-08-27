@@ -1,8 +1,7 @@
-package com.qc.printers.service.impl;
+package com.qc.printers.common.common.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.qc.printers.common.CustomException;
 import com.qc.printers.common.MyString;
 import com.qc.printers.mapper.CommonConfigMapper;
 import com.qc.printers.pojo.CommonConfig;

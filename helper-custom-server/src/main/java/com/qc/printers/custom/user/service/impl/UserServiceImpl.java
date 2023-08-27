@@ -5,20 +5,17 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qc.printers.common.common.Code;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.MyString;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.domain.entity.PageData;
-import com.qc.printers.common.common.utils.CASOauthUtil;
-import com.qc.printers.common.common.utils.JWTUtil;
-import com.qc.printers.common.common.utils.PWDMD5;
-import com.qc.printers.common.common.utils.ThreadLocalUtil;
+import com.qc.printers.common.common.service.CommonService;
+import com.qc.printers.common.common.utils.*;
 import com.qc.printers.common.user.domain.dto.LoginDTO;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.domain.vo.UserResult;
-import com.qc.printers.common.user.mapper.UserMapper;
+import com.qc.printers.common.user.service.IUserService;
 import com.qc.printers.custom.user.domain.vo.request.PasswordR;
 import com.qc.printers.custom.user.domain.vo.response.LoginRes;
 import com.qc.printers.custom.user.service.UserService;
@@ -33,42 +30,28 @@ import java.security.Permission;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
+
+import static com.qc.printers.common.common.utils.ParamsCalibration.checkSensitiveWords;
 
 
 @Service
 @Slf4j
-public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements UserService {
+public class UserServiceImpl implements UserService {
     private final RestTemplate restTemplate;
-    private final IRedisService iRedisService;
+    private final IUserService iUserService;
     @Autowired
     private CASOauthUtil casOauthUtil;
     @Autowired
     private CommonService commonService;
 
     @Autowired
-    public UserServiceImpl(RestTemplate restTemplate, IRedisService iRedisService) {
+    public UserServiceImpl(RestTemplate restTemplate, IUserService iUserService) {
         this.restTemplate = restTemplate;
-        this.iRedisService = iRedisService;
+        this.iUserService = iUserService;
     }
 
 
-    //重写save方法,校验用户名重复
-    //不使用唯一索引是为了逻辑删除后避免用户名不能再次使用
-    @Transactional
-    @Override
-    public boolean save(User entity) {
-        if (StringUtils.isEmpty(entity.getUsername())) {
-            throw new CustomException("err:user:save");
-        }
-        LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(User::getUsername, entity.getUsername());
-        //会自动加上条件判断没有删除
-        int count = super.count(lambdaQueryWrapper);
-        if (count > 0) {
-            throw new CustomException("用户名已经存在");
-        }
-        return super.save(entity);
-    }
 
 //    @Transactional
 //    @Override
@@ -132,13 +115,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 //            throw new CustomException("不可包含'@'");
 //        }
 //        checkSensitiveWords(user.getName());
-//        boolean save = super.save(user);
+//        boolean save = iUserService.save(user);
 //        if (!save){
 //            throw new CustomException("认证失败");
 //        }
 //        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
 //        queryWrapper.eq(User::getId,Long.valueOf(user.getId()));
-//        User one = super.getOne(queryWrapper);
+//        User one = iUserService.getOne(queryWrapper);
 //        if (one==null){
 //            throw new CustomException("登录业务异常!");
 //        }
@@ -171,13 +154,13 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
 
         if (user.getPermission().equals(1)) {
-            User byId = super.getById(userId);
+            User byId = iUserService.getById(userId);
             if (!byId.getPermission().equals(1)) {
                 return R.error("权限不足");
             }
         }
         checkSensitiveWords(user.getName());
-        boolean save = super.save(user);
+        boolean save = iUserService.save(user);
         if (save) {
             return R.success("创建成功");
         }
@@ -189,7 +172,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (StringUtils.isEmpty(token)) {
             return R.error(Code.DEL_TOKEN, "登陆过期");
         }
-        iRedisService.del(token);
+        RedisUtils.del(token);
         return R.successOnlyMsg("下线成功", Code.DEL_TOKEN);
     }
 
@@ -207,6 +190,11 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
 //        UserLoginR userLoginR = new UserLoginR();
 //        userLoginR.setToken();
         return R.success(null);
+    }
+
+    @Override
+    public Integer count() {
+        return iUserService.count();
     }
 
     @Transactional
@@ -229,7 +217,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             for (String s :
                     split) {
                 //这部分代码感觉需要优化👇和下面的块是重复的
-                User byId = super.getById(Long.valueOf(s));
+                User byId = iUserService.getById(Long.valueOf(s));
                 if (byId == null) {
                     //don't hava object
                     throw new CustomException("没有对象");
@@ -249,10 +237,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 user.setStatus(Integer.valueOf(status));
                 users.add(user);
             }
-            update = super.updateBatchById(users);
+            update = iUserService.updateBatchById(users);
         } else {
             //这部分代码感觉需要优化👇和上面块是重复的
-            User byId = super.getById(Long.valueOf(id));
+            User byId = iUserService.getById(Long.valueOf(id));
             if (byId == null) {
                 //don't hava object
                 throw new CustomException("没有对象");
@@ -270,7 +258,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
             LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
             lambdaUpdateWrapper.set(User::getStatus, Integer.valueOf(status));
             lambdaUpdateWrapper.eq(User::getId, Long.valueOf(id));
-            update = super.update(lambdaUpdateWrapper);
+            update = iUserService.update(lambdaUpdateWrapper);
         }
         if (update) {
             return true;
@@ -317,7 +305,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         lambdaUpdateWrapper.set(User::getStatus, user.getStatus());
         lambdaUpdateWrapper.set(User::getPhone, user.getPhone());
         lambdaUpdateWrapper.set(User::getAvatar, user.getAvatar());
-        boolean update = super.update(lambdaUpdateWrapper);
+        boolean update = iUserService.update(lambdaUpdateWrapper);
         if (update) {
             return R.success("更新成功");
         }
@@ -358,7 +346,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         lambdaUpdateWrapper.set(User::getStatus, user.getStatus());
         lambdaUpdateWrapper.set(User::getPhone, user.getPhone());
         lambdaUpdateWrapper.set(User::getAvatar, user.getAvatar());
-        boolean update = super.update(lambdaUpdateWrapper);
+        boolean update = iUserService.update(lambdaUpdateWrapper);
         if (update) {
             return R.success("更新成功");
         }
@@ -384,13 +372,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         lambdaQueryWrapper.like(StringUtils.isNotEmpty(name), User::getName, name);
         //添加排序条件
         lambdaQueryWrapper.orderByAsc(User::getCreateTime);//按照创建时间排序
-        super.page(pageInfo, lambdaQueryWrapper);
+        iUserService.page(pageInfo, lambdaQueryWrapper);
         PageData<UserResult> pageData = new PageData<>();
         List<UserResult> results = new ArrayList<>();
         for (Object user : pageInfo.getRecords()) {
             User user1 = (User) user;
-            Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(user1.getPermission()));
-
+            Permission permission = (Permission) RedisUtils.hget(MyString.permission_key, String.valueOf(user1.getPermission()));
             UserResult userResult = new UserResult(String.valueOf(user1.getId()), user1.getUsername(), user1.getName(), user1.getPhone(), user1.getSex(), String.valueOf(user1.getStudentId()), user1.getStatus(), user1.getCreateTime(), user1.getUpdateTime(), user1.getPermission(), permission.getName(), user1.getEmail(), user1.getAvatar());
             results.add(userResult);
         }
@@ -413,7 +400,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (userId == null) {
             throw new CustomException("环境异常");
         }
-        User byId = super.getById(userId);
+        User byId = iUserService.getById(userId);
         if (byId.getPermission().equals(2)) {
             //当前是User身份,不返回数据
             return R.error("你好像没权限欸!");
@@ -428,14 +415,14 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
                 }
                 ids.add(Long.valueOf(s));
             }
-            super.removeByIds(ids);
+            iUserService.removeByIds(ids);
         } else {
             if (Long.valueOf(id).equals(1L)) {
                 throw new CustomException("admin不可删除");
             }
             LambdaQueryWrapper<User> lambdaUpdateWrapper = new LambdaQueryWrapper<>();
             lambdaUpdateWrapper.eq(User::getId, Long.valueOf(id));
-            super.remove(lambdaUpdateWrapper);
+            iUserService.remove(lambdaUpdateWrapper);
         }
 
         return R.success("删除成功");
@@ -445,7 +432,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
     public R<String> hasUserName(String username) {
         LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
         userLambdaQueryWrapper.eq(User::getUsername, username);
-        int count = super.count(userLambdaQueryWrapper);
+        int count = iUserService.count(userLambdaQueryWrapper);
         if (count == 0) {
             return R.success("可用");
         }
@@ -463,19 +450,19 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         try {
             DecodedJWT decodedJWT = JWTUtil.deToken(token);
             Claim id = decodedJWT.getClaim("id");
-            if (!iRedisService.getValue("emailcode:" + id.asString()).equals(code)) {
+            if (!RedisUtils.get("emailcode:" + id.asString()).equals(code)) {
                 throw new CustomException("验证码错误");
             }
             LambdaQueryWrapper<User> userLambdaQueryWrapperCount = new LambdaQueryWrapper<>();
             userLambdaQueryWrapperCount.eq(User::getEmail, emails);
-            int count = super.count(userLambdaQueryWrapperCount);
+            int count = iUserService.count(userLambdaQueryWrapperCount);
             if (count > 0) {
                 throw new CustomException("该账号已经绑定过帐号了!");
             }
             LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
             lambdaUpdateWrapper.set(User::getEmail, emails);
             lambdaUpdateWrapper.eq(User::getId, Long.valueOf(id.asString()));
-            boolean update = super.update(lambdaUpdateWrapper);
+            boolean update = iUserService.update(lambdaUpdateWrapper);
             if (update) {
                 return R.success("绑定成功");
             }
@@ -492,7 +479,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
         userLambdaQueryWrapper.eq(User::getUsername, user.getUsername());
-        User one = super.getOne(userLambdaQueryWrapper);
+        User one = iUserService.getOne(userLambdaQueryWrapper);
         if (one == null) {
             return R.error("用户名或密码错误");
         }
@@ -508,9 +495,9 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         String token = JWTUtil.getToken(String.valueOf(one.getId()), String.valueOf(one.getPermission()));
         if (user.getWeek()) {
-            iRedisService.setTokenWithTime(token, String.valueOf(one.getId()), 7 * 24 * 3600L);
+            RedisUtils.set(token, String.valueOf(one.getId()), 7 * 24 * 3600L, TimeUnit.SECONDS);
         } else {
-            iRedisService.setTokenWithTime(token, String.valueOf(one.getId()), 12 * 3600L);
+            RedisUtils.set(token, String.valueOf(one.getId()), 12 * 3600L, TimeUnit.SECONDS);
         }
         LoginRes loginRes = new LoginRes();
         loginRes.setToken(token);
@@ -523,7 +510,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         if (currentUser == null) {
             return R.error(Code.DEL_TOKEN, "请先登录");
         }
-        Permission permission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(currentUser.getPermission()));
+        Permission permission = (Permission) RedisUtils.hget(MyString.permission_key, String.valueOf(currentUser.getPermission()));
         String avatar = currentUser.getAvatar();
         if (StringUtils.isNotEmpty(avatar)) {
             if (!avatar.contains("http")) {
@@ -563,7 +550,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         }
         lambdaUpdateWrapper.set(User::getSex, user.getSex());
         lambdaUpdateWrapper.set(User::getStudentId, user.getStudentId());
-        boolean update = this.update(lambdaUpdateWrapper);
+        boolean update = iUserService.update(lambdaUpdateWrapper);
         return update;
     }
 
@@ -607,7 +594,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, User> implements Us
         String md5Encryptions = PWDMD5.getMD5Encryption(passwordR.getNewPassword(), salt);
         userLambdaUpdateWrapper.set(User::getPassword, md5Encryptions);
         userLambdaUpdateWrapper.set(User::getSalt, salt);
-        boolean update = this.update(userLambdaUpdateWrapper);
+        boolean update = iUserService.update(userLambdaUpdateWrapper);
         return update;
     }
 

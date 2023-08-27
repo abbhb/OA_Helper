@@ -1,52 +1,51 @@
-package com.qc.printers.service.impl;
+package com.qc.printers.custom.user.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.qc.printers.common.Code;
-import com.qc.printers.common.CustomException;
-import com.qc.printers.common.R;
-import com.qc.printers.mapper.TrLoginMapper;
-import com.qc.printers.pojo.Token;
-import com.qc.printers.pojo.TrLogin;
-import com.qc.printers.pojo.User;
-import com.qc.printers.pojo.vo.LoginRes;
-import com.qc.printers.service.CommonService;
-import com.qc.printers.service.IRedisService;
-import com.qc.printers.service.TrLoginService;
-import com.qc.printers.service.UserService;
-import com.qc.printers.utils.CASOauthUtil;
-import com.qc.printers.utils.ImageUtil;
-import com.qc.printers.utils.JWTUtil;
+import com.qc.printers.common.common.Code;
+import com.qc.printers.common.common.CustomException;
+import com.qc.printers.common.common.R;
+import com.qc.printers.common.common.domain.entity.Token;
+import com.qc.printers.common.common.service.CommonService;
+import com.qc.printers.common.common.utils.CASOauthUtil;
+import com.qc.printers.common.common.utils.JWTUtil;
+import com.qc.printers.common.common.utils.RedisUtils;
+import com.qc.printers.common.user.domain.entity.TrLogin;
+import com.qc.printers.common.user.domain.entity.User;
+import com.qc.printers.common.user.service.ITrLoginService;
+import com.qc.printers.common.user.service.IUserService;
+import com.qc.printers.custom.user.domain.vo.response.LoginRes;
+import com.qc.printers.custom.user.service.TrLoginService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
-import org.springframework.web.multipart.MultipartFile;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * 第三方登录服务之ENROOM
  */
 @Service
 @Slf4j
-public class TrLoginServiceImpl extends ServiceImpl<TrLoginMapper, TrLogin> implements TrLoginService {
+public class TrLoginServiceImpl implements TrLoginService {
     @Autowired
     private CASOauthUtil casOauthUtil;
     private final RestTemplate restTemplate;
 
+    private final ITrLoginService iTrLoginService;
     private final CommonService commonService;
 
-    private final IRedisService iRedisService;
     @Autowired
-    private UserService userService;
+    private IUserService iUserService;
 
-    public TrLoginServiceImpl(RestTemplate restTemplate, CommonService commonService, IRedisService iRedisService) {
+    public TrLoginServiceImpl(RestTemplate restTemplate, ITrLoginService iTrLoginService, CommonService commonService) {
         this.restTemplate = restTemplate;
+        this.iTrLoginService = iTrLoginService;
         this.commonService = commonService;
-        this.iRedisService = iRedisService;
     }
 
     @Transactional
@@ -57,7 +56,7 @@ public class TrLoginServiceImpl extends ServiceImpl<TrLoginMapper, TrLogin> impl
         }
         Token tokenByCode = casOauthUtil.getTokenByCode(restTemplate, code);
         if (tokenByCode==null){
-            throw new CustomException("认证失败",Code.DEL_TOKEN);
+            throw new CustomException("认证失败", Code.DEL_TOKEN);
         }
         JSONObject userObjectByToken = casOauthUtil.getUserObjectByToken(restTemplate, tokenByCode);
         if (userObjectByToken==null){
@@ -66,15 +65,16 @@ public class TrLoginServiceImpl extends ServiceImpl<TrLoginMapper, TrLogin> impl
         String openid = userObjectByToken.getString("openid");
         LambdaQueryWrapper<TrLogin> wrapper = new LambdaQueryWrapper<>();
         wrapper.eq(TrLogin::getTrId,openid);
-        TrLogin one = this.getOne(wrapper);
-        if (one!=null&&one.getStatus().equals(1)){
+        TrLogin one = iTrLoginService.getOne(wrapper);
+        if (one!=null&&one.getStatus().equals(1)) {
             //已经绑定
-            User byId = userService.getById(one.getUserId());
-            if (byId==null){
-                throw new CustomException("认证失败",Code.DEL_TOKEN);
+            User byId = iUserService.getById(one.getUserId());
+            if (byId == null) {
+                throw new CustomException("认证失败", Code.DEL_TOKEN);
             }
             String token = JWTUtil.getToken(String.valueOf(byId.getId()), String.valueOf(byId.getPermission()));
-            iRedisService.setTokenWithTime(token, String.valueOf(byId.getId()), 12 * 3600L);
+            RedisUtils.set(token, String.valueOf(byId.getId()), 12 * 3600L, TimeUnit.SECONDS);
+
             LoginRes userResult = new LoginRes();
             userResult.setToken(token);
             return R.success(userResult);
@@ -86,17 +86,18 @@ public class TrLoginServiceImpl extends ServiceImpl<TrLoginMapper, TrLogin> impl
         user.setName(userObjectByToken.getString("name"));
         String avatar = null;
         String phone;
-        try{
-            String string = userObjectByToken.getString("avatar");
-            avatar = string;
-            MultipartFile multipartFile = ImageUtil.base64ImageToM(avatar);
-            avatar = commonService.uploadFileTOMinio(multipartFile).getData();
-        }catch (Exception e){
-            avatar = null;
-        }
+        //直接不要头像
+//        try{
+//            String string = userObjectByToken.getString("avatar");
+//            avatar = string;
+//            MultipartFile multipartFile = ImageUtil.base64ImageToM(avatar);
+//            avatar = commonService.uploadFileTOMinio(multipartFile).getData();
+//        }catch (Exception e){
+//            avatar = null;
+//        }
         try {
             phone = userObjectByToken.getString("phone");
-        }catch (Exception e){
+        } catch (Exception e) {
             phone = null;
         }
         user.setPhone(phone);
@@ -119,7 +120,7 @@ public class TrLoginServiceImpl extends ServiceImpl<TrLoginMapper, TrLogin> impl
                 user.setPermission(2);
             }
         }
-        boolean save = userService.save(user);
+        boolean save = iUserService.save(user);
         if (save){
             if (one==null){
                 //添加账号并绑定然后登录
@@ -129,7 +130,7 @@ public class TrLoginServiceImpl extends ServiceImpl<TrLoginMapper, TrLogin> impl
                 trLogin.setType(2);
                 trLogin.setIsDeleted(0);
                 trLogin.setUserId(user.getId());
-                boolean save1 = this.save(trLogin);
+                boolean save1 = iTrLoginService.save(trLogin);
                 if(!save1){
                     throw new CustomException("认证失败",Code.DEL_TOKEN);
                 }
@@ -138,13 +139,13 @@ public class TrLoginServiceImpl extends ServiceImpl<TrLoginMapper, TrLogin> impl
                 trLoginLambdaUpdateWrapper.eq(TrLogin::getUserId,user.getId());
                 //修改状态为1
                 trLoginLambdaUpdateWrapper.set(TrLogin::getStatus,1);
-                boolean update = this.update(trLoginLambdaUpdateWrapper);
+                boolean update = iTrLoginService.update(trLoginLambdaUpdateWrapper);
                 if (!update){
                     throw new CustomException("认证失败",Code.DEL_TOKEN);
                 }
             }
             String token = JWTUtil.getToken(String.valueOf(user.getId()), String.valueOf(user.getPermission()));
-            iRedisService.setTokenWithTime(token, String.valueOf(user.getId()), 12 * 3600L);
+            RedisUtils.set(token, String.valueOf(user.getId()), 12 * 3600L, TimeUnit.SECONDS);
             LoginRes userResult = new LoginRes();
             userResult.setToken(token);
             return R.success(userResult);
