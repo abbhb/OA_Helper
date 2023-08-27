@@ -1,4 +1,4 @@
-package com.qc.printers.pojo;
+package com.qc.printers.common.user.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;

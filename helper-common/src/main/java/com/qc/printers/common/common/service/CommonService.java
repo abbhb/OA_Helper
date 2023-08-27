@@ -1,7 +1,7 @@
-package com.qc.printers.service;
+package com.qc.printers.common.common.service;
 
-import com.qc.printers.common.R;
-import com.qc.printers.pojo.ToEmail;
+import com.qc.printers.common.common.R;
+import com.qc.printers.common.common.domain.entity.ToEmail;
 import org.springframework.web.multipart.MultipartFile;
 
 public interface CommonService {

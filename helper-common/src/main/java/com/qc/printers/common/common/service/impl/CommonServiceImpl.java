@@ -1,12 +1,13 @@
-package com.qc.printers.service.impl;
+package com.qc.printers.common.common.service.impl;
 
-import com.qc.printers.common.CustomException;
-import com.qc.printers.common.R;
-import com.qc.printers.config.MinIoProperties;
-import com.qc.printers.pojo.ToEmail;
-import com.qc.printers.service.CommonService;
-import com.qc.printers.service.IRedisService;
-import com.qc.printers.utils.MinIoUtil;
+
+import com.qc.printers.common.common.CustomException;
+import com.qc.printers.common.common.R;
+import com.qc.printers.common.common.domain.entity.ToEmail;
+import com.qc.printers.common.common.service.CommonService;
+import com.qc.printers.common.common.utils.MinIoUtil;
+import com.qc.printers.common.common.utils.apiCount.ApiCount;
+import com.qc.printers.common.config.MinIoProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -17,12 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 public class CommonServiceImpl implements CommonService {
     @Autowired
     MinIoProperties minIoProperties;
-    private final IRedisService iRedisService;
 
-    @Autowired
-    public CommonServiceImpl(IRedisService iRedisService) {
-        this.iRedisService = iRedisService;
-    }
 
     public R<String> uploadFileTOMinio(MultipartFile file) {
         try {
@@ -86,12 +82,12 @@ public class CommonServiceImpl implements CommonService {
     @Override
     public Integer countApi() {
 //      获取日志表当日请求数
-        return iRedisService.getCountApi();
+        return ApiCount.getApiCount();
     }
 
     @Override
     public Integer apiCountLastday() {
-        Integer lastDayCountApi = iRedisService.getLastDayCountApi();
+        Integer lastDayCountApi = ApiCount.getLastDayCountApi();
         if (lastDayCountApi != null) {
             return lastDayCountApi;
         }

@@ -25,4 +25,16 @@ public class ApiCount {
     public static void addApiCount() {
         RedisUtils.increment(MyString.pre_api_count);
     }
+
+    public static Integer getApiCount() {
+        return RedisUtils.get(MyString.pre_api_count);
+    }
+
+    public static Integer getLastDayCountApi() {
+        Object o = RedisUtils.get(MyString.pre_api_count_latday);
+        if (o == null) {
+            return 0;
+        }
+        return (int) o;
+    }
 }
