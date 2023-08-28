@@ -2,11 +2,11 @@ package com.qc.printers.common.common.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.qc.printers.common.MyString;
-import com.qc.printers.mapper.CommonConfigMapper;
-import com.qc.printers.pojo.CommonConfig;
-import com.qc.printers.service.CommonConfigService;
-import com.qc.printers.service.IRedisService;
+import com.qc.printers.common.common.MyString;
+import com.qc.printers.common.common.domain.entity.CommonConfig;
+import com.qc.printers.common.common.mapper.CommonConfigMapper;
+import com.qc.printers.common.common.service.CommonConfigService;
+import com.qc.printers.common.common.utils.RedisUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -27,26 +27,21 @@ import java.util.stream.Collectors;
 @Service
 public class CommonConfigServiceImpl extends ServiceImpl<CommonConfigMapper, CommonConfig> implements CommonConfigService {
 
-    private final IRedisService iRedisService;
-
-
-    public CommonConfigServiceImpl(IRedisService iRedisService) {
-        this.iRedisService = iRedisService;
-    }
 
     @Transactional
     @Override
     public boolean save(CommonConfig entity) {
         boolean a = super.save(entity);
         //更新redis
-        List<CommonConfig> commonConfigs = (List<CommonConfig>) iRedisService.get(MyString.pre_common_config);
+
+        List<CommonConfig> commonConfigs = (List<CommonConfig>) RedisUtils.get(MyString.pre_common_config);
         if (commonConfigs == null) {
             commonConfigs = new ArrayList<>();
             commonConfigs.add(entity);
         } else {
             commonConfigs.add(entity);
         }
-        iRedisService.set(MyString.pre_common_config, commonConfigs);
+        RedisUtils.set(MyString.pre_common_config, commonConfigs);
         return a;
     }
 
@@ -54,7 +49,7 @@ public class CommonConfigServiceImpl extends ServiceImpl<CommonConfigMapper, Com
     @Override
     public boolean removeById(Serializable id) {
         boolean a = super.removeById(id);
-        List<CommonConfig> commonConfigs = (List<CommonConfig>) iRedisService.get(MyString.pre_common_config);
+        List<CommonConfig> commonConfigs = (List<CommonConfig>) RedisUtils.get(MyString.pre_common_config);
         if (commonConfigs != null) {
             Iterator iterator = commonConfigs.iterator();
             while (iterator.hasNext()) {
@@ -63,8 +58,7 @@ public class CommonConfigServiceImpl extends ServiceImpl<CommonConfigMapper, Com
                     iterator.remove();
                 }
             }
-            iRedisService.set(MyString.pre_common_config, commonConfigs);
-
+            RedisUtils.set(MyString.pre_common_config, commonConfigs);
         }
         return a;
     }
@@ -84,7 +78,7 @@ public class CommonConfigServiceImpl extends ServiceImpl<CommonConfigMapper, Com
     public boolean updateById(CommonConfig entity) {
         boolean a = super.updateById(entity);
         List<CommonConfig> list = super.list();
-        iRedisService.set(MyString.pre_common_config, list);
+        RedisUtils.set(MyString.pre_common_config, list);
         return a;
     }
 
@@ -93,7 +87,7 @@ public class CommonConfigServiceImpl extends ServiceImpl<CommonConfigMapper, Com
     public boolean update(Wrapper<CommonConfig> updateWrapper) {
         boolean a = super.update(updateWrapper);
         List<CommonConfig> list = super.list();
-        iRedisService.set(MyString.pre_common_config, list);
+        RedisUtils.set(MyString.pre_common_config, list);
         return a;
     }
 
@@ -102,7 +96,7 @@ public class CommonConfigServiceImpl extends ServiceImpl<CommonConfigMapper, Com
     public boolean update(CommonConfig entity, Wrapper<CommonConfig> updateWrapper) {
         boolean a = super.update(entity, updateWrapper);
         List<CommonConfig> list = super.list();
-        iRedisService.set(MyString.pre_common_config, list);
+        RedisUtils.set(MyString.pre_common_config, list);
         return a;
     }
 
@@ -111,16 +105,16 @@ public class CommonConfigServiceImpl extends ServiceImpl<CommonConfigMapper, Com
     public boolean updateBatchById(Collection<CommonConfig> entityList) {
         boolean a = super.updateBatchById(entityList);
         List<CommonConfig> list = super.list();
-        iRedisService.set(MyString.pre_common_config, list);
+        RedisUtils.set(MyString.pre_common_config, list);
         return a;
     }
     @Transactional
     @Override
     public CommonConfig getById(Serializable id) {
-        List<CommonConfig> commonConfigs = (List<CommonConfig>) iRedisService.get(MyString.pre_common_config);
+        List<CommonConfig> commonConfigs = (List<CommonConfig>) RedisUtils.get(MyString.pre_common_config);
         if (commonConfigs == null) {
             List<CommonConfig> list = super.list();
-            iRedisService.set(MyString.pre_common_config, list);
+            RedisUtils.set(MyString.pre_common_config, list);
             commonConfigs = list;
         }
         List<CommonConfig> collect = commonConfigs.stream().filter(item -> item.getConfigKey().equals(id)).collect(Collectors.toList());
@@ -138,10 +132,10 @@ public class CommonConfigServiceImpl extends ServiceImpl<CommonConfigMapper, Com
     @Transactional
     @Override
     public List<CommonConfig> list() {
-        List<CommonConfig> commonConfigs = (List<CommonConfig>) iRedisService.get(MyString.pre_common_config);
+        List<CommonConfig> commonConfigs = (List<CommonConfig>) RedisUtils.get(MyString.pre_common_config);
         if (commonConfigs == null) {
             List<CommonConfig> list = super.list();
-            iRedisService.set(MyString.pre_common_config, list);
+            RedisUtils.set(MyString.pre_common_config, list);
             commonConfigs = list;
         }
         return commonConfigs;
