@@ -1,5 +1,12 @@
 package com.qc.printers.custom;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.qc.printers.common.common.MyString;
+import com.qc.printers.common.common.service.CommonConfigService;
+import com.qc.printers.common.common.utils.RSAUtil;
+import com.qc.printers.common.common.utils.RedisUtils;
+import com.qc.printers.common.user.domain.entity.Permission;
+import com.qc.printers.common.user.mapper.PermissionMapper;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -12,9 +19,6 @@ import java.util.List;
 @SpringBootApplication(scanBasePackages = {"com.qc.printers"})
 @Slf4j
 public class PrintersApplication implements CommandLineRunner {
-
-    @Autowired
-    private IRedisService iRedisService;
 
     @Autowired
     private PermissionMapper permissionMapper;
@@ -35,7 +39,7 @@ public class PrintersApplication implements CommandLineRunner {
         List<Permission> permissions = permissionMapper.selectList(lambdaQueryWrapper);
         for (Permission permission :
                 permissions) {
-            iRedisService.hashPut(MyString.permission_key, String.valueOf(permission.getId()), permission);
+            RedisUtils.hset(MyString.permission_key, String.valueOf(permission.getId()), permission);
         }
         //缓存公共配置
         commonConfigService.list();

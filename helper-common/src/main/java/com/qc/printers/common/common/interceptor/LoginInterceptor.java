@@ -1,13 +1,14 @@
 package com.qc.printers.common.common.interceptor;
 
-import com.qc.printers.common.Code;
-import com.qc.printers.common.CustomException;
-import com.qc.printers.common.annotation.NeedToken;
-import com.qc.printers.pojo.User;
-import com.qc.printers.service.IRedisService;
-import com.qc.printers.service.UserService;
-import com.qc.printers.utils.JWTUtil;
-import com.qc.printers.utils.ThreadLocalUtil;
+
+import com.qc.printers.common.common.Code;
+import com.qc.printers.common.common.CustomException;
+import com.qc.printers.common.common.annotation.NeedToken;
+import com.qc.printers.common.common.utils.JWTUtil;
+import com.qc.printers.common.common.utils.RedisUtils;
+import com.qc.printers.common.common.utils.ThreadLocalUtil;
+import com.qc.printers.common.user.domain.entity.User;
+import com.qc.printers.common.user.service.IUserService;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -26,11 +27,7 @@ import java.lang.reflect.Method;
 @Api("此拦截器用于获取用户基本信息存在threadlocal内,并且校验是否登录")
 public class LoginInterceptor implements HandlerInterceptor {
     @Autowired
-    private UserService userService;
-
-    @Autowired
-    private IRedisService iRedisService;
-
+    private IUserService iUserService;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -54,7 +51,7 @@ public class LoginInterceptor implements HandlerInterceptor {
         log.info("## authHeader= {}", authHeader);
         if (StringUtils.isBlank(authHeader) || !authHeader.startsWith(JWTUtil.TOKEN_PREFIX)) {
             log.info("### 用户未登录，请先登录 ###");
-            throw new CustomException("请先登录!",Code.DEL_TOKEN);
+            throw new CustomException("请先登录!", Code.DEL_TOKEN);
         }
         // 获取token
         final String token = authHeader.substring(7);
@@ -63,11 +60,11 @@ public class LoginInterceptor implements HandlerInterceptor {
             throw new CustomException("请先登录!",Code.DEL_TOKEN);
         }
         log.info("### 解析token= {}", token);
-        String userId = iRedisService.getValue(token);
+        String userId = RedisUtils.get(token);
         if (StringUtils.isEmpty(userId)){
             throw new CustomException("认证失败",Code.DEL_TOKEN);
         }
-        User userByToken = userService.getById(Long.valueOf(userId));
+        User userByToken = iUserService.getById(Long.valueOf(userId));
         ThreadLocalUtil.addCurrentUser(userByToken);
         return true;
     }

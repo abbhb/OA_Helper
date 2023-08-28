@@ -3,11 +3,11 @@ package com.qc.printers.custom.user.service;
 
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.domain.entity.PageData;
-import com.qc.printers.common.user.domain.dto.LoginDTO;
 import com.qc.printers.common.user.domain.entity.User;
-import com.qc.printers.common.user.domain.vo.UserResult;
+import com.qc.printers.custom.user.domain.dto.LoginDTO;
 import com.qc.printers.custom.user.domain.vo.request.PasswordR;
 import com.qc.printers.custom.user.domain.vo.response.LoginRes;
+import com.qc.printers.custom.user.domain.vo.response.UserResult;
 
 public interface UserService {
 //    R<UserResult> login(String code);
