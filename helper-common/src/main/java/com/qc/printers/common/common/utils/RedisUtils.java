@@ -12,6 +12,7 @@ import org.springframework.data.redis.core.ZSetOperations.TypedTuple;
 import org.springframework.data.redis.core.script.DefaultRedisScript;
 import org.springframework.data.redis.core.script.RedisScript;
 import org.springframework.data.redis.serializer.GenericJackson2JsonRedisSerializer;
+import org.springframework.data.redis.serializer.Jackson2JsonRedisSerializer;
 import org.springframework.data.redis.serializer.RedisSerializer;
 import org.springframework.data.redis.serializer.StringRedisSerializer;
 
@@ -33,15 +34,15 @@ public class RedisUtils {
     private static RedisTemplate redisTemplate;
 
     static {
-        RedisTemplate redisTemplate = SpringUtil.getBean(RedisTemplate.class);
+        RedisTemplate redisTemplate = SpringUtil.getBean("redisTemplate", RedisTemplate.class);
         RedisSerializer stringSerializer = new StringRedisSerializer();//序列化为String
         //不能反序列化
-        // Jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Object.class);// 序列化为Json
-        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer();
+        Jackson2JsonRedisSerializer jackson2JsonRedisSerializer = new Jackson2JsonRedisSerializer(Object.class);// 序列化为Json
+//        GenericJackson2JsonRedisSerializer serializer = new GenericJackson2JsonRedisSerializer();
         redisTemplate.setKeySerializer(stringSerializer);
-        redisTemplate.setValueSerializer(serializer);
+        redisTemplate.setValueSerializer(jackson2JsonRedisSerializer);
         redisTemplate.setHashKeySerializer(stringSerializer);
-        redisTemplate.setHashValueSerializer(serializer);
+        redisTemplate.setHashValueSerializer(jackson2JsonRedisSerializer);
         RedisUtils.redisTemplate = redisTemplate;
     }
 
@@ -252,9 +253,8 @@ public class RedisUtils {
      * @param key 键
      * @return 值
      */
-    public static <T> T get(String key) {
-        Object s = redisTemplate.opsForValue().get(key);
-        return (T) s;
+    public static Object get(String key) {
+        return redisTemplate.opsForValue().get(key);
     }
 
     /**
@@ -311,8 +311,8 @@ public class RedisUtils {
      * @param item 项 不能为null
      * @return 值
      */
-    public static <T> T hget(String key, String item) {
-        return (T) redisTemplate.opsForHash().get(key, item);
+    public static Object hget(String key, String item) {
+        return redisTemplate.opsForHash().get(key, item);
     }
 
     /**

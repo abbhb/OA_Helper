@@ -1,7 +1,10 @@
 package com.qc.printers.common.common;
 
 
+import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.common.utils.apiCount.ApiCount;
+import com.qc.printers.common.print.domain.entity.PrintDocumentTypeStatistic;
+import com.qc.printers.common.print.service.IPrinterService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
@@ -17,7 +20,7 @@ import java.util.List;
 public class SaticScheduleTask {
 
     @Autowired
-    private PrinterService printerService;
+    private IPrinterService iPrinterService;
 
 
     @Scheduled(cron = "0 59 23 * * ?")
@@ -34,8 +37,8 @@ public class SaticScheduleTask {
     //或直接指定时间间隔，例如：5秒
     //@Scheduled(fixedRate=5000)
     private void updataPrintTypeStatistics() {
-        List<PrintDocumentTypeStatistic> printerTypeStatistics = printerService.getPrinterTypeStatistics();
-        iRedisService.setPrintDocumentTypeStatistics(printerTypeStatistics);
+        List<PrintDocumentTypeStatistic> printerTypeStatistics = iPrinterService.getPrinterTypeStatistics();
+        RedisUtils.set(MyString.print_document_type_statistic, printerTypeStatistics);
         log.info("setPrintDocumentTypeStatistics");
     }
 }
