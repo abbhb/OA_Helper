@@ -14,7 +14,7 @@ public class ApiCount {
      * 清空
      */
     public static void cleanApiCount() {
-        RedisUtils.set(MyString.pre_api_count_latday, RedisUtils.get(MyString.pre_api_count));
+        RedisUtils.set(MyString.pre_api_count_latday, (Integer) RedisUtils.get(MyString.pre_api_count));
         RedisUtils.set(MyString.pre_api_count, 0);
     }
 
@@ -27,7 +27,7 @@ public class ApiCount {
     }
 
     public static Integer getApiCount() {
-        return RedisUtils.get(MyString.pre_api_count);
+        return (Integer) RedisUtils.get(MyString.pre_api_count);
     }
 
     public static Integer getLastDayCountApi() {

@@ -450,7 +450,7 @@ public class UserServiceImpl implements UserService {
         try {
             DecodedJWT decodedJWT = JWTUtil.deToken(token);
             Claim id = decodedJWT.getClaim("id");
-            if (!RedisUtils.get("emailcode:" + id.asString()).equals(code)) {
+            if (!((String) RedisUtils.get("emailcode:" + id.asString())).equals(code)) {
                 throw new CustomException("验证码错误");
             }
             LambdaQueryWrapper<User> userLambdaQueryWrapperCount = new LambdaQueryWrapper<>();

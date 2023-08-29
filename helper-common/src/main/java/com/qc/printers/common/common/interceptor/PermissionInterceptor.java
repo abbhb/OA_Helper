@@ -1,15 +1,14 @@
 package com.qc.printers.common.common.interceptor;
 
-import com.qc.printers.common.CustomException;
-import com.qc.printers.common.MyString;
-import com.qc.printers.common.annotation.NeedToken;
-import com.qc.printers.common.annotation.PermissionCheck;
-import com.qc.printers.pojo.Permission;
-import com.qc.printers.pojo.User;
-import com.qc.printers.service.IRedisService;
-import com.qc.printers.utils.ThreadLocalUtil;
+import com.qc.printers.common.common.CustomException;
+import com.qc.printers.common.common.MyString;
+import com.qc.printers.common.common.annotation.NeedToken;
+import com.qc.printers.common.common.annotation.PermissionCheck;
+import com.qc.printers.common.common.utils.RedisUtils;
+import com.qc.printers.common.common.utils.ThreadLocalUtil;
+import com.qc.printers.common.user.domain.entity.Permission;
+import com.qc.printers.common.user.domain.entity.User;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.stereotype.Component;
 import org.springframework.web.method.HandlerMethod;
@@ -23,8 +22,7 @@ import java.lang.reflect.Method;
 @Component
 public class PermissionInterceptor implements HandlerInterceptor {
 
-    @Autowired
-    private IRedisService iRedisService;
+
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -51,16 +49,14 @@ public class PermissionInterceptor implements HandlerInterceptor {
         //需要的权限
         String annotationValue = method.getAnnotation(PermissionCheck.class).value();
         //獲取權限权重
-        Permission needUserPermission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(annotationValue));
+        Permission needUserPermission = (Permission) RedisUtils.hget(MyString.permission_key, String.valueOf(annotationValue));
 
         User currentUser = ThreadLocalUtil.getCurrentUser();
 
         if (currentUser==null){
             throw new CustomException("没有权限");
         }
-        Permission currentUserPermission = (Permission) iRedisService.getHash(MyString.permission_key, String.valueOf(currentUser.getPermission()));
-
-
+        Permission currentUserPermission = (Permission) RedisUtils.hget(MyString.permission_key, String.valueOf(currentUser.getPermission()));
         /**
          * 10为系统管理员
          */
