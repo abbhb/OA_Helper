@@ -12,6 +12,7 @@ import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.common.service.CommonService;
 import com.qc.printers.common.common.utils.*;
+import com.qc.printers.common.user.domain.entity.Permission;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.service.IUserService;
 import com.qc.printers.custom.user.domain.dto.LoginDTO;
@@ -26,7 +27,6 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
-import java.security.Permission;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
@@ -377,7 +377,7 @@ public class UserServiceImpl implements UserService {
         List<UserResult> results = new ArrayList<>();
         for (Object user : pageInfo.getRecords()) {
             User user1 = (User) user;
-            Permission permission = (Permission) RedisUtils.hget(MyString.permission_key, String.valueOf(user1.getPermission()));
+            Permission permission = RedisUtils.hget(MyString.permission_key, String.valueOf(user1.getPermission()), Permission.class);
             UserResult userResult = new UserResult(String.valueOf(user1.getId()), user1.getUsername(), user1.getName(), user1.getPhone(), user1.getSex(), String.valueOf(user1.getStudentId()), user1.getStatus(), user1.getCreateTime(), user1.getUpdateTime(), user1.getPermission(), permission.getName(), user1.getEmail(), user1.getAvatar());
             results.add(userResult);
         }
@@ -450,7 +450,7 @@ public class UserServiceImpl implements UserService {
         try {
             DecodedJWT decodedJWT = JWTUtil.deToken(token);
             Claim id = decodedJWT.getClaim("id");
-            if (!((String) RedisUtils.get("emailcode:" + id.asString())).equals(code)) {
+            if (!((String) RedisUtils.get("emailcode:" + id.asString(), String.class)).equals(code)) {
                 throw new CustomException("验证码错误");
             }
             LambdaQueryWrapper<User> userLambdaQueryWrapperCount = new LambdaQueryWrapper<>();
@@ -510,7 +510,7 @@ public class UserServiceImpl implements UserService {
         if (currentUser == null) {
             return R.error(Code.DEL_TOKEN, "请先登录");
         }
-        Permission permission = (Permission) RedisUtils.hget(MyString.permission_key, String.valueOf(currentUser.getPermission()));
+        Permission permission = (Permission) RedisUtils.hget(MyString.permission_key, String.valueOf(currentUser.getPermission()), Permission.class);
         String avatar = currentUser.getAvatar();
         if (StringUtils.isNotEmpty(avatar)) {
             if (!avatar.contains("http")) {

@@ -2,7 +2,6 @@ package com.qc.printers.custom.user.service;
 
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.qc.printers.common.common.domain.entity.PageData;
-import com.qc.printers.common.user.domain.entity.Group;
 import com.qc.printers.custom.user.domain.vo.request.GroupAndUserVO;
 import com.qc.printers.custom.user.domain.vo.response.Duplicate;
 import com.qc.printers.custom.user.domain.vo.response.GroupAndUserFrontVO;

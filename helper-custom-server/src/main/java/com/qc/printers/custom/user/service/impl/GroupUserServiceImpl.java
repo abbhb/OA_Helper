@@ -2,8 +2,6 @@ package com.qc.printers.custom.user.service.impl;
 
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qc.printers.common.common.utils.RemoveDuplication;
-import com.qc.printers.common.user.domain.entity.GroupUser;
-import com.qc.printers.common.user.mapper.GroupUserMapper;
 import com.qc.printers.custom.user.domain.vo.request.GroupAndUserVO;
 import com.qc.printers.custom.user.service.GroupUserService;
 import org.springframework.stereotype.Service;

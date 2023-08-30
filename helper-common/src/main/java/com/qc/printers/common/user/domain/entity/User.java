@@ -54,8 +54,8 @@ public class User implements Serializable {
     @ApiModelProperty(value = "状态")
     public Integer status;
 
-    @ApiModelProperty(value = "权限")
-    public Integer permission;
+    @ApiModelProperty(value = "部门")
+    public Integer deptId;
 //    public Long role;//权限更改为角色，再去查询角色所有的权限
 
     @ApiModelProperty(value = "电子邮箱")
@@ -70,4 +70,14 @@ public class User implements Serializable {
 
     @ApiModelProperty(value = "盐")
     public String salt;
+
+    @ApiModelProperty(value = "创建用户")
+    public Long createUser;
+
+    @ApiModelProperty(value = "最后登录的时间")
+    public LocalDateTime loginDate;
+
+    @ApiModelProperty(value = "最后登录的ip")
+    public String loginIp;
+
 }
