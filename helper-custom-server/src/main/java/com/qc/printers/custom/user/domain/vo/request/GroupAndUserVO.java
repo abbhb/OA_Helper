@@ -1,8 +1,6 @@
 package com.qc.printers.custom.user.domain.vo.request;
 
 
-import com.qc.printers.common.user.domain.entity.Group;
-import com.qc.printers.common.user.domain.entity.GroupUser;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;

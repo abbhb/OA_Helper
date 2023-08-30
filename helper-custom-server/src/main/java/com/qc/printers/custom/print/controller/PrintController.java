@@ -98,7 +98,7 @@ public class PrintController {
     @NeedToken
     @ApiOperation(value = "获取文件拓展名榜")
     public R<List<PrintDocumentTypeStatistic>> getPrintDocumentTypeStatistics() {
-        return R.success((List<PrintDocumentTypeStatistic>) RedisUtils.get(MyString.print_document_type_statistic));
+        return R.success((List<PrintDocumentTypeStatistic>) RedisUtils.get(MyString.print_document_type_statistic, List.class));
     }
 
     /**

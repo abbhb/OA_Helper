@@ -1,6 +1,5 @@
 package com.qc.printers.custom.user.domain.vo.response;
 
-import com.qc.printers.common.user.domain.entity.Group;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.ToString;

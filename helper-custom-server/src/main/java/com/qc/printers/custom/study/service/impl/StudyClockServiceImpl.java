@@ -2,10 +2,10 @@ package com.qc.printers.custom.study.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
-
 import com.qc.printers.common.common.Code;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.MyString;
+import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
@@ -21,7 +21,6 @@ import com.qc.printers.custom.study.domain.vo.ClockSelfEchartsVO;
 import com.qc.printers.custom.study.domain.vo.KeepDayDataVO;
 import com.qc.printers.custom.study.service.StudyClockService;
 import lombok.extern.slf4j.Slf4j;
-import com.qc.printers.common.common.R;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -55,7 +54,7 @@ public class StudyClockServiceImpl implements StudyClockService {
         if (currentUser == null) {
             throw new CustomException("登录失效", Code.DEL_TOKEN);
         }
-        String value = (String) RedisUtils.get(MyString.study_clock + currentUser.getId());
+        String value = (String) RedisUtils.get(MyString.study_clock + currentUser.getId(), String.class);
         if (StringUtils.isNotEmpty(value)) {
             Long lastTime;
             Long cuttentTime;

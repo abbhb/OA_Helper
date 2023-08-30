@@ -49,14 +49,14 @@ public class PermissionInterceptor implements HandlerInterceptor {
         //需要的权限
         String annotationValue = method.getAnnotation(PermissionCheck.class).value();
         //獲取權限权重
-        Permission needUserPermission = (Permission) RedisUtils.hget(MyString.permission_key, String.valueOf(annotationValue));
+        Permission needUserPermission = (Permission) RedisUtils.hget(MyString.permission_key, String.valueOf(annotationValue), Permission.class);
 
         User currentUser = ThreadLocalUtil.getCurrentUser();
 
         if (currentUser==null){
             throw new CustomException("没有权限");
         }
-        Permission currentUserPermission = (Permission) RedisUtils.hget(MyString.permission_key, String.valueOf(currentUser.getPermission()));
+        Permission currentUserPermission = (Permission) RedisUtils.hget(MyString.permission_key, String.valueOf(currentUser.getPermission()), Permission.class);
         /**
          * 10为系统管理员
          */

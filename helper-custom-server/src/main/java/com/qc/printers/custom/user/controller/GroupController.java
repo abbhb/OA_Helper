@@ -5,7 +5,6 @@ import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.annotation.PermissionCheck;
 import com.qc.printers.common.common.domain.entity.PageData;
-import com.qc.printers.common.user.domain.entity.Group;
 import com.qc.printers.custom.user.domain.vo.request.GroupAndUserVO;
 import com.qc.printers.custom.user.domain.vo.response.Duplicate;
 import com.qc.printers.custom.user.domain.vo.response.GroupAndUserFrontVO;

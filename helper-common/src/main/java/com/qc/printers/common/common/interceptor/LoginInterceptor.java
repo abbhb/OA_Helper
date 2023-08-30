@@ -60,7 +60,7 @@ public class LoginInterceptor implements HandlerInterceptor {
             throw new CustomException("请先登录!",Code.DEL_TOKEN);
         }
         log.info("### 解析token= {}", token);
-        String userId = (String) RedisUtils.get(token);
+        String userId = (String) RedisUtils.get(token, String.class);
         if (StringUtils.isEmpty(userId)){
             throw new CustomException("认证失败",Code.DEL_TOKEN);
         }

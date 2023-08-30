@@ -34,7 +34,7 @@ public class CommonConfigServiceImpl extends ServiceImpl<CommonConfigMapper, Com
         boolean a = super.save(entity);
         //更新redis
 
-        List<CommonConfig> commonConfigs = (List<CommonConfig>) RedisUtils.get(MyString.pre_common_config);
+        List<CommonConfig> commonConfigs = (List<CommonConfig>) RedisUtils.get(MyString.pre_common_config, List.class);
         if (commonConfigs == null) {
             commonConfigs = new ArrayList<>();
             commonConfigs.add(entity);
@@ -49,7 +49,7 @@ public class CommonConfigServiceImpl extends ServiceImpl<CommonConfigMapper, Com
     @Override
     public boolean removeById(Serializable id) {
         boolean a = super.removeById(id);
-        List<CommonConfig> commonConfigs = (List<CommonConfig>) RedisUtils.get(MyString.pre_common_config);
+        List<CommonConfig> commonConfigs = (List<CommonConfig>) RedisUtils.get(MyString.pre_common_config, List.class);
         if (commonConfigs != null) {
             Iterator iterator = commonConfigs.iterator();
             while (iterator.hasNext()) {
@@ -111,7 +111,7 @@ public class CommonConfigServiceImpl extends ServiceImpl<CommonConfigMapper, Com
     @Transactional
     @Override
     public CommonConfig getById(Serializable id) {
-        List<CommonConfig> commonConfigs = (List<CommonConfig>) RedisUtils.get(MyString.pre_common_config);
+        List<CommonConfig> commonConfigs = (List<CommonConfig>) RedisUtils.get(MyString.pre_common_config, List.class);
         if (commonConfigs == null) {
             List<CommonConfig> list = super.list();
             RedisUtils.set(MyString.pre_common_config, list);
@@ -132,7 +132,7 @@ public class CommonConfigServiceImpl extends ServiceImpl<CommonConfigMapper, Com
     @Transactional
     @Override
     public List<CommonConfig> list() {
-        List<CommonConfig> commonConfigs = (List<CommonConfig>) RedisUtils.get(MyString.pre_common_config);
+        List<CommonConfig> commonConfigs = (List<CommonConfig>) RedisUtils.get(MyString.pre_common_config, List.class);
         if (commonConfigs == null) {
             List<CommonConfig> list = super.list();
             RedisUtils.set(MyString.pre_common_config, list);
