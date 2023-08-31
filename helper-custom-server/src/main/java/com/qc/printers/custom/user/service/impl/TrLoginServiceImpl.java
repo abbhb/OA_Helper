@@ -18,7 +18,6 @@ import com.qc.printers.common.user.service.IUserService;
 import com.qc.printers.custom.user.domain.vo.response.LoginRes;
 import com.qc.printers.custom.user.service.TrLoginService;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -72,7 +71,7 @@ public class TrLoginServiceImpl implements TrLoginService {
             if (byId == null) {
                 throw new CustomException("认证失败", Code.DEL_TOKEN);
             }
-            String token = JWTUtil.getToken(String.valueOf(byId.getId()), String.valueOf(byId.getPermission()));
+            String token = JWTUtil.getToken(String.valueOf(byId.getId()));
             RedisUtils.set(token, String.valueOf(byId.getId()), 12 * 3600L, TimeUnit.SECONDS);
 
             LoginRes userResult = new LoginRes();
@@ -107,19 +106,7 @@ public class TrLoginServiceImpl implements TrLoginService {
         user.setSex(userObjectByToken.getString("sex"));
         user.setEmail(userObjectByToken.getString("email"));
         String permissionName = userObjectByToken.getString("permission_name");
-        if (StringUtils.isEmpty(permissionName)){
-            user.setPermission(2);
-        }else {
-            if (permissionName.equals("管理员")){
-                user.setPermission(1);
-            }else if (permissionName.equals("用户")){
-                user.setPermission(2);
-            }else if (permissionName.equals("系统管理员")){
-                user.setPermission(10);
-            }else {
-                user.setPermission(2);
-            }
-        }
+
         boolean save = iUserService.save(user);
         if (save){
             if (one==null){
@@ -144,7 +131,7 @@ public class TrLoginServiceImpl implements TrLoginService {
                     throw new CustomException("认证失败",Code.DEL_TOKEN);
                 }
             }
-            String token = JWTUtil.getToken(String.valueOf(user.getId()), String.valueOf(user.getPermission()));
+            String token = JWTUtil.getToken(String.valueOf(user.getId()));
             RedisUtils.set(token, String.valueOf(user.getId()), 12 * 3600L, TimeUnit.SECONDS);
             LoginRes userResult = new LoginRes();
             userResult.setToken(token);

@@ -8,20 +8,26 @@ import com.qc.printers.common.common.annotation.PermissionCheck;
 import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.common.utils.CASOauthUtil;
 import com.qc.printers.common.common.utils.JWTUtil;
+import com.qc.printers.common.common.utils.ThreadLocalUtil;
+import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.custom.user.domain.dto.LoginDTO;
 import com.qc.printers.custom.user.domain.vo.request.PasswordR;
 import com.qc.printers.custom.user.domain.vo.response.LoginRes;
+import com.qc.printers.custom.user.domain.vo.response.MenuResult;
 import com.qc.printers.custom.user.domain.vo.response.UserResult;
+import com.qc.printers.custom.user.service.MenuService;
 import com.qc.printers.custom.user.service.TrLoginService;
 import com.qc.printers.custom.user.service.UserService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 import java.util.Map;
 
 @RestController//@ResponseBody+@Controller
@@ -34,6 +40,9 @@ public class UserController {
 
     private final TrLoginService trLoginService;
     private final CASOauthUtil casOauthUtil;
+
+    @Autowired
+    private MenuService menuService;
 
     public UserController(UserService userService, TrLoginService trLoginService, CASOauthUtil casOauthUtil) {
         this.userService = userService;
@@ -149,7 +158,7 @@ public class UserController {
 
     @GetMapping("/user_manger")
     @NeedToken
-    @PermissionCheck("1")
+    @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:user:query")
     @ApiOperation(value = "用户管理获取所有用户", notes = "")
     public R<PageData<UserResult>> userManger(Integer pageNum, Integer pageSize, @RequestParam(required = false, name = "name") String name) {
         log.info("用户管理获取所有用户");
@@ -165,4 +174,14 @@ public class UserController {
         return R.success(userService.userPassword());
     }
 
+    @PostMapping("/menu")
+    @NeedToken
+    @ApiOperation(value = "获取菜单", notes = "")
+    public R<List<MenuResult>> menu() {
+        log.info("获取菜单");
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+        List<MenuResult> userMenu = menuService.getUserMenu(currentUser);
+        log.info("userMenu={}", userMenu);
+        return R.success(userMenu);
+    }
 }

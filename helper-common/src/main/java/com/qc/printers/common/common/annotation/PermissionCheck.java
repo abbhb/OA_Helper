@@ -15,5 +15,7 @@ import java.lang.annotation.Target;
 @Target(ElementType.METHOD)
 @Retention(RetentionPolicy.RUNTIME)
 public @interface PermissionCheck {
-    String value() default "2";//默认所有用户都有权限
+    String[] role() default "";//默认所有用户都有权限
+
+    String permission() default "";
 }

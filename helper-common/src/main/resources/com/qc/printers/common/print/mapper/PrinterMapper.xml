@@ -6,33 +6,32 @@
 
     <!-- public List<CountTop10VO> getCountTop10();-->
     <select id="getCountTop10" resultType="com.qc.printers.common.print.domain.vo.CountTop10VO">
-        SELECT * FROM(
-        SELECT
-        create_user as id,
-        user.name,
-        user.avatar,
-        sum( copies * single_document_paper_usage ) AS total
-        FROM printer, user
-        WHERE create_user = user.id
-        GROUP BY
-        create_user ORDER BY total DESC) tables
-        LIMIT 10
+        SELECT *
+        FROM (SELECT printer.create_user                       as id,
+                     user.name,
+                     user.avatar,
+                     sum(copies * single_document_paper_usage) AS total
+              FROM printer,
+                   user
+              WHERE printer.create_user = user.id
+              GROUP BY printer.create_user
+              ORDER BY total DESC) tables LIMIT 10
     </select>
     <!-- public List<CountTop10VO> getCountTop10EveryDay();-->
     <select id="getCountTop10EveryDay" resultType="com.qc.printers.common.print.domain.vo.CountTop10VO">
-        SELECT * FROM(
-        SELECT
-        printer.create_user as id,
-        user.name,
-        user.avatar,
-        sum( copies * single_document_paper_usage ) AS total
-        FROM
-        printer, user
-        WHERE create_user = user.id AND(printer.create_time BETWEEN CONCAT(CURDATE(),' 00:00:00') AND CONCAT(CURDATE(),'
+        SELECT *
+        FROM (SELECT printer.create_user                       as id,
+                     user.name,
+                     user.avatar,
+                     sum(copies * single_document_paper_usage) AS total
+              FROM printer,
+                   user
+              WHERE printer.create_user = user.id
+                AND (printer.create_time BETWEEN CONCAT(CURDATE(), ' 00:00:00') AND CONCAT(CURDATE(), '
         23:59:59'))
 
-        GROUP BY
-        create_user ORDER BY total DESC) tables LIMIT 10
+              GROUP BY printer.create_user
+              ORDER BY total DESC) tables LIMIT 10
     </select>
     <!--    public Integer getPrintCount();-->
     <select id="getPrintCount" resultType="java.lang.Integer">

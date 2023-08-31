@@ -81,16 +81,16 @@ public class CASOauthUtil {
         user.setSex(userJSONObject.getString("sex"));
         user.setName(userJSONObject.getString("name"));
         user.setUsername(userJSONObject.getString("username"));
-        if (!StringUtils.isEmpty(studentId)){
+        if (!StringUtils.isEmpty(studentId)) {
             user.setStudentId(studentId);
         }
-        if (!StringUtils.isEmpty(phone)){
+        if (!StringUtils.isEmpty(phone)) {
             user.setPhone(phone);
         }
         user.setAvatar(userJSONObject.getString("avatar"));
-        if (!StringUtils.isEmpty(permission)){
-            user.setPermission(Integer.valueOf(permission));
-        }
+//        if (!StringUtils.isEmpty(permission)){
+//            user.setPermission(Integer.valueOf(permission));
+//        }
         return user;
     }
 

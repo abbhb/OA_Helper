@@ -14,6 +14,8 @@ public class SysMenu implements Serializable {
      */
     private String name;
 
+    private String locale;
+
     /**
      * 父菜单ID
      */
@@ -29,15 +31,6 @@ public class SysMenu implements Serializable {
      */
     private String path;
 
-    /**
-     * 组件地址
-     */
-    private String component;
-
-    /**
-     * 路由参数
-     */
-    private String query;
 
     /**
      * 是否为外链
@@ -56,8 +49,6 @@ public class SysMenu implements Serializable {
      * 菜单类型（M目录 C菜单 F按钮）
      */
     private String type;
-
-    private Integer visible;
 
     private Integer status;
 

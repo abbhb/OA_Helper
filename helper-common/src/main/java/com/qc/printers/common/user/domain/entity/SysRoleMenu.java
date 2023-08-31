@@ -7,6 +7,8 @@ import java.io.Serializable;
 @Data
 public class SysRoleMenu implements Serializable {
 
+    private Long id;
+
     private Long roleId;
 
     private Long menuId;

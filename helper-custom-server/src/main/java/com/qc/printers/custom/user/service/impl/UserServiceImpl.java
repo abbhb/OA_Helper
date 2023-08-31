@@ -7,14 +7,17 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qc.printers.common.common.Code;
 import com.qc.printers.common.common.CustomException;
-import com.qc.printers.common.common.MyString;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.common.service.CommonService;
 import com.qc.printers.common.common.utils.*;
-import com.qc.printers.common.user.domain.entity.Permission;
+import com.qc.printers.common.user.domain.dto.UserInfo;
+import com.qc.printers.common.user.domain.entity.SysDept;
+import com.qc.printers.common.user.domain.entity.SysRole;
 import com.qc.printers.common.user.domain.entity.User;
+import com.qc.printers.common.user.service.ISysDeptService;
 import com.qc.printers.common.user.service.IUserService;
+import com.qc.printers.common.user.service.UserInfoService;
 import com.qc.printers.custom.user.domain.dto.LoginDTO;
 import com.qc.printers.custom.user.domain.vo.request.PasswordR;
 import com.qc.printers.custom.user.domain.vo.response.LoginRes;
@@ -31,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.stream.Collectors;
 
 import static com.qc.printers.common.common.utils.ParamsCalibration.checkSensitiveWords;
 
@@ -40,8 +44,15 @@ import static com.qc.printers.common.common.utils.ParamsCalibration.checkSensiti
 public class UserServiceImpl implements UserService {
     private final RestTemplate restTemplate;
     private final IUserService iUserService;
+
+    @Autowired
+    private ISysDeptService iSysDeptService;
+
     @Autowired
     private CASOauthUtil casOauthUtil;
+
+    @Autowired
+    private UserInfoService userInfoService;
     @Autowired
     private CommonService commonService;
 
@@ -136,7 +147,7 @@ public class UserServiceImpl implements UserService {
     @Transactional
     @Override
     public R<String> createUser(User user, Long userId) {
-        if (user.getPermission() == null) {
+        if (user.getDeptId() == null) {
             throw new CustomException("yichang");
         }
         if (StringUtils.isEmpty(user.getName())) {
@@ -151,13 +162,6 @@ public class UserServiceImpl implements UserService {
         }
         if (user.getUsername().contains("@")) {
             throw new CustomException("不可包含'@'");
-        }
-
-        if (user.getPermission().equals(1)) {
-            User byId = iUserService.getById(userId);
-            if (!byId.getPermission().equals(1)) {
-                return R.error("权限不足");
-            }
         }
         checkSensitiveWords(user.getName());
         boolean save = iUserService.save(user);
@@ -197,6 +201,24 @@ public class UserServiceImpl implements UserService {
         return iUserService.count();
     }
 
+
+    /**
+     * updateUserStatu的公共判断
+     *
+     * @param id
+     * @param currentUser
+     */
+    @Transactional
+    public void updateUserStatuVerdict(Long id, UserInfo currentUser) {
+        if (id.equals(currentUser.getId())) {
+            throw new CustomException("相信我，你自己管不好自己!");
+        }
+        if (userInfoService.isSuperAdmin(currentUser.getSysRoles(), currentUser.getId())) {
+            // 禁止此处操作大管理
+            throw new CustomException("你已越界");
+        }
+    }
+
     @Transactional
     @Override
     public boolean updateUserStatus(String id, String status) {
@@ -206,7 +228,7 @@ public class UserServiceImpl implements UserService {
         if (StringUtils.isEmpty(status)) {
             throw new CustomException("无操作对象");
         }
-        User currentUser = ThreadLocalUtil.getCurrentUser();
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
         if (currentUser == null) {
             throw new CustomException("授权问题");
         }
@@ -216,22 +238,7 @@ public class UserServiceImpl implements UserService {
             String[] split = id.split(",");
             for (String s :
                     split) {
-                //这部分代码感觉需要优化👇和下面的块是重复的
-                User byId = iUserService.getById(Long.valueOf(s));
-                if (byId == null) {
-                    //don't hava object
-                    throw new CustomException("没有对象");
-                }
-                if (byId.getPermission().equals(10)) {
-                    // 禁止操作大管理
-                    throw new CustomException("你已越界");
-                }
-                if (byId.getId().equals(currentUser.getId())) {
-                    throw new CustomException("相信我，你自己管不好自己!");
-                }
-                //这部分代码感觉需要优化👆
-
-
+                updateUserStatuVerdict(Long.valueOf(s), currentUser);
                 User user = new User();
                 user.setId(Long.valueOf(s));
                 user.setStatus(Integer.valueOf(status));
@@ -239,22 +246,7 @@ public class UserServiceImpl implements UserService {
             }
             update = iUserService.updateBatchById(users);
         } else {
-            //这部分代码感觉需要优化👇和上面块是重复的
-            User byId = iUserService.getById(Long.valueOf(id));
-            if (byId == null) {
-                //don't hava object
-                throw new CustomException("没有对象");
-            }
-            if (byId.getPermission().equals(10)) {
-                // 禁止操作大管理
-                throw new CustomException("你已越界");
-            }
-            if (byId.getId().equals(currentUser.getId())) {
-                throw new CustomException("相信我，你自己管不好自己!");
-            }
-            //这部分代码感觉需要优化👆
-
-
+            updateUserStatuVerdict(Long.valueOf(id), currentUser);
             LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
             lambdaUpdateWrapper.set(User::getStatus, Integer.valueOf(status));
             lambdaUpdateWrapper.eq(User::getId, Long.valueOf(id));
@@ -301,7 +293,7 @@ public class UserServiceImpl implements UserService {
         lambdaUpdateWrapper.set(User::getStudentId, user.getStudentId());
         lambdaUpdateWrapper.set(User::getUsername, user.getUsername());
         lambdaUpdateWrapper.set(User::getSex, user.getSex());
-        lambdaUpdateWrapper.set(User::getPermission, user.getPermission());
+        lambdaUpdateWrapper.set(User::getDeptId, user.getDeptId());
         lambdaUpdateWrapper.set(User::getStatus, user.getStatus());
         lambdaUpdateWrapper.set(User::getPhone, user.getPhone());
         lambdaUpdateWrapper.set(User::getAvatar, user.getAvatar());
@@ -342,7 +334,7 @@ public class UserServiceImpl implements UserService {
         lambdaUpdateWrapper.set(User::getStudentId, user.getStudentId());
         lambdaUpdateWrapper.set(User::getUsername, user.getUsername());
         lambdaUpdateWrapper.set(User::getSex, user.getSex());
-        lambdaUpdateWrapper.set(User::getPermission, user.getPermission());
+        lambdaUpdateWrapper.set(User::getDeptId, user.getDeptId());
         lambdaUpdateWrapper.set(User::getStatus, user.getStatus());
         lambdaUpdateWrapper.set(User::getPhone, user.getPhone());
         lambdaUpdateWrapper.set(User::getAvatar, user.getAvatar());
@@ -377,8 +369,11 @@ public class UserServiceImpl implements UserService {
         List<UserResult> results = new ArrayList<>();
         for (Object user : pageInfo.getRecords()) {
             User user1 = (User) user;
-            Permission permission = RedisUtils.hget(MyString.permission_key, String.valueOf(user1.getPermission()), Permission.class);
-            UserResult userResult = new UserResult(String.valueOf(user1.getId()), user1.getUsername(), user1.getName(), user1.getPhone(), user1.getSex(), String.valueOf(user1.getStudentId()), user1.getStatus(), user1.getCreateTime(), user1.getUpdateTime(), user1.getPermission(), permission.getName(), user1.getEmail(), user1.getAvatar());
+            //Todo:需要优化，将部门整个进缓存，在查询不到或者更改时更新单个缓存
+            SysDept sysDept = iSysDeptService.getById(user1.getDeptId());
+            UserInfo userInfo = userInfoService.getUserInfo(user1.getId());
+            List<String> collect = userInfo.getSysRoles().stream().map(SysRole::getRoleKey).collect(Collectors.toList());
+            UserResult userResult = new UserResult(String.valueOf(user1.getId()), user1.getUsername(), user1.getName(), user1.getPhone(), user1.getSex(), String.valueOf(user1.getStudentId()), user1.getStatus(), user1.getCreateTime(), user1.getUpdateTime(), String.valueOf(user1.getDeptId()), sysDept.getDeptName(), user1.getEmail(), user1.getAvatar(), collect);
             results.add(userResult);
         }
         pageData.setPages(pageInfo.getPages());
@@ -393,23 +388,21 @@ public class UserServiceImpl implements UserService {
 
     @Transactional
     @Override
-    public R<String> deleteUsers(String id, Long userId) {
+    public R<String> deleteUsers(String id) {
         if (StringUtils.isEmpty(id)) {
             return R.error("无操作对象");
         }
-        if (userId == null) {
-            throw new CustomException("环境异常");
-        }
-        User byId = iUserService.getById(userId);
-        if (byId.getPermission().equals(2)) {
-            //当前是User身份,不返回数据
-            return R.error("你好像没权限欸!");
+
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+        if (currentUser == null) {
+            throw new CustomException("权限异常");
         }
         Collection<Long> ids = new ArrayList<>();
         if (id.contains(",")) {
             String[] split = id.split(",");
             for (String s :
                     split) {
+
                 if (s.equals("1")) {
                     throw new CustomException("admin不可删除");
                 }
@@ -493,7 +486,7 @@ public class UserServiceImpl implements UserService {
         if (one.getStatus().equals(0)) {
             return R.error("账号已被禁用");
         }
-        String token = JWTUtil.getToken(String.valueOf(one.getId()), String.valueOf(one.getPermission()));
+        String token = JWTUtil.getToken(String.valueOf(one.getId()));
         if (user.getWeek()) {
             RedisUtils.set(token, String.valueOf(one.getId()), 7 * 24 * 3600L, TimeUnit.SECONDS);
         } else {
@@ -506,11 +499,12 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public R<UserResult> info() {
-        User currentUser = ThreadLocalUtil.getCurrentUser();
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
         if (currentUser == null) {
             return R.error(Code.DEL_TOKEN, "请先登录");
         }
-        Permission permission = (Permission) RedisUtils.hget(MyString.permission_key, String.valueOf(currentUser.getPermission()), Permission.class);
+        SysDept sysDept = iSysDeptService.getById(currentUser.getDeptId());
+
         String avatar = currentUser.getAvatar();
         if (StringUtils.isNotEmpty(avatar)) {
             if (!avatar.contains("http")) {
@@ -520,8 +514,8 @@ public class UserServiceImpl implements UserService {
         } else {
             avatar = "";
         }
-
-        UserResult userResult = new UserResult(String.valueOf(currentUser.getId()), currentUser.getUsername(), currentUser.getName(), currentUser.getPhone(), currentUser.getSex(), String.valueOf(currentUser.getStudentId()), currentUser.getStatus(), currentUser.getCreateTime(), currentUser.getUpdateTime(), currentUser.getPermission(), permission.getName(), currentUser.getEmail(), avatar);
+        List<String> collect = currentUser.getSysRoles().stream().map(SysRole::getRoleKey).collect(Collectors.toList());
+        UserResult userResult = new UserResult(String.valueOf(currentUser.getId()), currentUser.getUsername(), currentUser.getName(), currentUser.getPhone(), currentUser.getSex(), String.valueOf(currentUser.getStudentId()), currentUser.getStatus(), currentUser.getCreateTime(), currentUser.getUpdateTime(), String.valueOf(currentUser.getDeptId()), sysDept.getDeptName(), currentUser.getEmail(), avatar, collect);
 
         return R.success(userResult);
     }

@@ -6,6 +6,8 @@ import java.io.Serializable;
 
 @Data
 public class SysUserRole implements Serializable {
+    private Long id;
+
     private Long userId;
 
     private Long roleId;
