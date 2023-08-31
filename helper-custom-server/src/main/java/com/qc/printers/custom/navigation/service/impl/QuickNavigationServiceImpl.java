@@ -9,7 +9,7 @@ import com.qc.printers.common.navigation.domain.entity.QuickNavigationCategorize
 import com.qc.printers.common.navigation.domain.entity.QuickNavigationItem;
 import com.qc.printers.common.navigation.service.IQuickNavigationCategorizeService;
 import com.qc.printers.common.navigation.service.IQuickNavigationItemService;
-import com.qc.printers.common.user.domain.entity.User;
+import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.custom.navigation.domain.vo.QuickNavigationItemResult;
 import com.qc.printers.custom.navigation.domain.vo.QuickNavigationResult;
 import com.qc.printers.custom.navigation.service.QuickNavigationService;
@@ -33,7 +33,7 @@ public class QuickNavigationServiceImpl implements QuickNavigationService {
 
     @Override
     public R<List<QuickNavigationResult>> list(Long userId) {
-        User currentUser = ThreadLocalUtil.getCurrentUser();
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
         if (currentUser == null) {
             return R.error("异常1");
         }
@@ -65,7 +65,7 @@ public class QuickNavigationServiceImpl implements QuickNavigationService {
                 quickNavigationItemResult.setIntroduction(quickNavigationItem.getIntroduction());
                 quickNavigationItemResult.setType(quickNavigationItem.getType());
                 //markdown
-                quickNavigationItemResult.setContent(MySplit.splitString(quickNavigationItem.getContent(),currentUser.getPermission()));
+                quickNavigationItemResult.setContent(MySplit.splitString(quickNavigationItem.getContent(), currentUser.getSysRoles()));
                 quickNavigationItemResult.setCategorizeId(String.valueOf(quickNavigationItem.getCategorizeId()));
                 QuickNavigationCategorize quickNavigationCategorizeServiceById = iQuickNavigationCategorizeService.getById(quickNavigationItem.getCategorizeId());
                 if (quickNavigationCategorizeServiceById==null){

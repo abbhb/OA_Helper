@@ -33,7 +33,7 @@ public interface UserService {
 
     PageData<UserResult> getUserList(Integer pageNum, Integer pageSize, String name);
 
-    R<String> deleteUsers(String id, Long userId);
+    R<String> deleteUsers(String id);
 
     R<String> hasUserName(String username);
 

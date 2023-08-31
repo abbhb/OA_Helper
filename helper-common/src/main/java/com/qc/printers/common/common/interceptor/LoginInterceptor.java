@@ -7,8 +7,8 @@ import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.utils.JWTUtil;
 import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
-import com.qc.printers.common.user.domain.entity.User;
-import com.qc.printers.common.user.service.IUserService;
+import com.qc.printers.common.user.domain.dto.UserInfo;
+import com.qc.printers.common.user.service.UserInfoService;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -27,7 +27,7 @@ import java.lang.reflect.Method;
 @Api("此拦截器用于获取用户基本信息存在threadlocal内,并且校验是否登录")
 public class LoginInterceptor implements HandlerInterceptor {
     @Autowired
-    private IUserService iUserService;
+    private UserInfoService userInfoService;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -55,17 +55,17 @@ public class LoginInterceptor implements HandlerInterceptor {
         }
         // 获取token
         final String token = authHeader.substring(7);
-        if (StringUtils.isEmpty(token)){
+        if (StringUtils.isEmpty(token)) {
             //没有JWTtoken
-            throw new CustomException("请先登录!",Code.DEL_TOKEN);
+            throw new CustomException("请先登录!", Code.DEL_TOKEN);
         }
         log.info("### 解析token= {}", token);
         String userId = (String) RedisUtils.get(token, String.class);
-        if (StringUtils.isEmpty(userId)){
-            throw new CustomException("认证失败",Code.DEL_TOKEN);
+        if (StringUtils.isEmpty(userId)) {
+            throw new CustomException("认证失败", Code.DEL_TOKEN);
         }
-        User userByToken = iUserService.getById(Long.valueOf(userId));
-        ThreadLocalUtil.addCurrentUser(userByToken);
+        UserInfo userInfo = userInfoService.getUserInfo(Long.valueOf(userId));
+        ThreadLocalUtil.addCurrentUser(userInfo);
         return true;
     }
 

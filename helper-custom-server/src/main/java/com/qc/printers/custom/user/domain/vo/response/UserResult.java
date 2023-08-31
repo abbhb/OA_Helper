@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -31,12 +32,14 @@ public class UserResult implements Serializable {
     private LocalDateTime updateTime;
 
     //分组
-    private Integer permission;
+    private String deptId;
     //权限名
-    private String permissionName;
+    private String deptName;
 
     private String email;
 
     private String avatar;
+
+    private List<String> roles;
 
 }

@@ -15,8 +15,8 @@
 - [AI服务平台前端(本项目也是其中一部分的后端)](https://github.com/abbhb/Vue-PrinterSharing)
 - [AI服务平台DOC后端](https://github.com/abbhb/Printer-Doc)
 
-
 ## 运行
+
 直接maven拉一下依赖
 运行即可
 
@@ -24,6 +24,14 @@
 注意:如果是java8以上版本需要加上VM参数,不然可能出现报错
 一些反射找不到(但我现在没加也没报错)
 ```
+
+#### 权限规定
+
+list为菜单权限整个页面批量数据权限
+query为单个数据权限 结合角色数据限制来查询
+add 添加权限
+delete 删除权限
+update 修改权限
 
 ## 注意:
 

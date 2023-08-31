@@ -12,11 +12,11 @@ public class SysRole implements Serializable {
 
     private Long id;
 
-    private String name;
+    private String roleName;
 
-    private String key;
+    private String roleKey;
 
-    private Integer sort;
+    private Integer roleSort;
 
     private Integer status;
 

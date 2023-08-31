@@ -55,7 +55,7 @@ public class User implements Serializable {
     public Integer status;
 
     @ApiModelProperty(value = "部门")
-    public Integer deptId;
+    public Long deptId;
 //    public Long role;//权限更改为角色，再去查询角色所有的权限
 
     @ApiModelProperty(value = "电子邮箱")
