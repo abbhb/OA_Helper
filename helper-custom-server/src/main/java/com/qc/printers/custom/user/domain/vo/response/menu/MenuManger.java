@@ -1,12 +1,17 @@
-package com.qc.printers.common.user.domain.entity;
+package com.qc.printers.custom.user.domain.vo.response.menu;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
+@AllArgsConstructor
+@NoArgsConstructor
 @Data
-public class SysMenu implements Serializable {
+public class MenuManger implements Serializable {
     private Long id;
 
     /**
@@ -24,7 +29,7 @@ public class SysMenu implements Serializable {
     /**
      * 显示顺序
      */
-    private Integer orderNum;
+    private Integer sort;
 
     /**
      * 路由地址
@@ -69,10 +74,15 @@ public class SysMenu implements Serializable {
 
     private Long createUser;
 
+    private String createUserName;
+
     private LocalDateTime createTime;
 
     private Long updateUser;
 
+    private String updateUserName;
+
     private LocalDateTime updateTime;
 
+    private List<MenuManger> children;
 }
