@@ -40,6 +40,6 @@ public class UserResult implements Serializable {
 
     private String avatar;
 
-    private List<String> roles;
+    private List<RoleResp> roles;
 
 }

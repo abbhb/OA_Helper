@@ -21,6 +21,7 @@ import com.qc.printers.common.user.service.UserInfoService;
 import com.qc.printers.custom.user.domain.dto.LoginDTO;
 import com.qc.printers.custom.user.domain.vo.request.PasswordR;
 import com.qc.printers.custom.user.domain.vo.response.LoginRes;
+import com.qc.printers.custom.user.domain.vo.response.RoleResp;
 import com.qc.printers.custom.user.domain.vo.response.UserResult;
 import com.qc.printers.custom.user.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -32,6 +33,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
@@ -372,7 +374,7 @@ public class UserServiceImpl implements UserService {
             //Todo:需要优化，将部门整个进缓存，在查询不到或者更改时更新单个缓存
             SysDept sysDept = iSysDeptService.getById(user1.getDeptId());
             UserInfo userInfo = userInfoService.getUserInfo(user1.getId());
-            List<String> collect = userInfo.getSysRoles().stream().map(SysRole::getRoleKey).collect(Collectors.toList());
+            List<RoleResp> collect = userInfo.getSysRoles().stream().sorted(Comparator.comparing(SysRole::getRoleSort)).map(sysRole -> new RoleResp(String.valueOf(sysRole.getId()), sysRole.getRoleName(), sysRole.getRoleKey(), sysRole.getRoleSort())).collect(Collectors.toList());
             UserResult userResult = new UserResult(String.valueOf(user1.getId()), user1.getUsername(), user1.getName(), user1.getPhone(), user1.getSex(), String.valueOf(user1.getStudentId()), user1.getStatus(), user1.getCreateTime(), user1.getUpdateTime(), String.valueOf(user1.getDeptId()), sysDept.getDeptName(), user1.getEmail(), user1.getAvatar(), collect);
             results.add(userResult);
         }
@@ -514,7 +516,7 @@ public class UserServiceImpl implements UserService {
         } else {
             avatar = "";
         }
-        List<String> collect = currentUser.getSysRoles().stream().map(SysRole::getRoleKey).collect(Collectors.toList());
+        List<RoleResp> collect = currentUser.getSysRoles().stream().sorted(Comparator.comparing(SysRole::getRoleSort)).map(sysRole -> new RoleResp(String.valueOf(sysRole.getId()), sysRole.getRoleName(), sysRole.getRoleKey(), sysRole.getRoleSort())).collect(Collectors.toList());
         UserResult userResult = new UserResult(String.valueOf(currentUser.getId()), currentUser.getUsername(), currentUser.getName(), currentUser.getPhone(), currentUser.getSex(), String.valueOf(currentUser.getStudentId()), currentUser.getStatus(), currentUser.getCreateTime(), currentUser.getUpdateTime(), String.valueOf(currentUser.getDeptId()), sysDept.getDeptName(), currentUser.getEmail(), avatar, collect);
 
         return R.success(userResult);

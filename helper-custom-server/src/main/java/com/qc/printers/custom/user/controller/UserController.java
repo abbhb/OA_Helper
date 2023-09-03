@@ -8,15 +8,12 @@ import com.qc.printers.common.common.annotation.PermissionCheck;
 import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.common.utils.CASOauthUtil;
 import com.qc.printers.common.common.utils.JWTUtil;
-import com.qc.printers.common.common.utils.ThreadLocalUtil;
-import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.custom.user.domain.dto.LoginDTO;
 import com.qc.printers.custom.user.domain.vo.request.PasswordR;
 import com.qc.printers.custom.user.domain.vo.response.LoginRes;
-import com.qc.printers.custom.user.domain.vo.response.MenuResult;
 import com.qc.printers.custom.user.domain.vo.response.UserResult;
-import com.qc.printers.custom.user.service.MenuService;
+import com.qc.printers.custom.user.service.RoleService;
 import com.qc.printers.custom.user.service.TrLoginService;
 import com.qc.printers.custom.user.service.UserService;
 import io.swagger.annotations.Api;
@@ -38,11 +35,12 @@ import java.util.Map;
 public class UserController {
     private final UserService userService;
 
+    @Autowired
+    private RoleService roleService;
+
     private final TrLoginService trLoginService;
     private final CASOauthUtil casOauthUtil;
 
-    @Autowired
-    private MenuService menuService;
 
     public UserController(UserService userService, TrLoginService trLoginService, CASOauthUtil casOauthUtil) {
         this.userService = userService;
@@ -156,6 +154,14 @@ public class UserController {
         return R.success(userService.count());
     }
 
+    @GetMapping("/role_name")
+    @NeedToken
+    @ApiOperation(value = "获取角色的name", notes = "")
+    public R<List<String>> getroleNameByKey(@RequestParam(required = true, name = "role_key") String key) {
+        log.info("获取角色的name");
+        return R.success(roleService.getroleNameByKey(key));
+    }
+
     @GetMapping("/user_manger")
     @NeedToken
     @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:user:query")
@@ -174,14 +180,5 @@ public class UserController {
         return R.success(userService.userPassword());
     }
 
-    @PostMapping("/menu")
-    @NeedToken
-    @ApiOperation(value = "获取菜单", notes = "")
-    public R<List<MenuResult>> menu() {
-        log.info("获取菜单");
-        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
-        List<MenuResult> userMenu = menuService.getUserMenu(currentUser);
-        log.info("userMenu={}", userMenu);
-        return R.success(userMenu);
-    }
+
 }
