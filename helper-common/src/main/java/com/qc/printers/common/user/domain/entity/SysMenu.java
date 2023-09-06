@@ -1,5 +1,7 @@
 package com.qc.printers.common.user.domain.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -67,12 +69,17 @@ public class SysMenu implements Serializable {
      */
     private String icon;
 
+    @TableField(fill = FieldFill.INSERT)
     private Long createUser;
+
+    @TableField(fill = FieldFill.INSERT)
 
     private LocalDateTime createTime;
 
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updateUser;
 
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
 
 }

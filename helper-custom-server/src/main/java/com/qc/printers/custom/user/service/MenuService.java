@@ -10,4 +10,10 @@ public interface MenuService {
     List<MenuResult> getUserMenu(UserInfo userInfo);
 
     List<MenuManger> getMenuList();
+
+    String addMenu(MenuManger menuManger);
+
+    String updateMenu(MenuManger menuManger);
+
+    String deleteMenu(String id);
 }

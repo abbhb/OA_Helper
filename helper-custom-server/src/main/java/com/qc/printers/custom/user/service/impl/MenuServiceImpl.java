@@ -1,5 +1,8 @@
 package com.qc.printers.custom.user.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.qc.printers.common.common.CustomException;
+import com.qc.printers.common.common.utils.ThreadLocalUtil;
 import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.SysMenu;
 import com.qc.printers.common.user.service.ISysMenuService;
@@ -10,8 +13,10 @@ import com.qc.printers.custom.user.domain.vo.response.menu.MenuResultNode;
 import com.qc.printers.custom.user.domain.vo.response.menu.MetaNode;
 import com.qc.printers.custom.user.service.MenuService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.Comparator;
@@ -42,6 +47,7 @@ public class MenuServiceImpl implements MenuService {
             metaNode.setIcon(sysMenu.getIcon());
             metaNode.setOrder(sysMenu.getOrderNum());
             metaNode.setShow(sysMenu.getIsShow().equals(1));
+            metaNode.setFrame(sysMenu.getIsFrame().equals(1));
             metaNode.setLocale(sysMenu.getLocale());
             MenuResult menuResult = new MenuResult();
             List<MenuResultNode> menuResultNodes = new ArrayList<>();
@@ -56,6 +62,7 @@ public class MenuServiceImpl implements MenuService {
                 metaNode2.setIcon(sysMenu2.getIcon());
                 metaNode2.setOrder(sysMenu2.getOrderNum());
                 metaNode2.setShow(sysMenu2.getIsShow().equals(1));
+                metaNode2.setFrame(sysMenu2.getIsFrame().equals(1));
                 menuResultNode.setName(sysMenu2.getName());
                 menuResultNode.setPath(sysMenu2.getPath());
                 menuResultNode.setMeta(metaNode2);
@@ -170,5 +177,148 @@ public class MenuServiceImpl implements MenuService {
         }
         menuMangerList.sort(Comparator.comparing(MenuManger::getSort));
         return menuMangerList;
+    }
+
+    private void checkParamsBase(MenuManger menuManger) {
+        if (StringUtils.isEmpty(menuManger.getType())) {
+            throw new IllegalArgumentException("参数异常");
+        }
+        if (menuManger.getIsFrame() == null) {
+            menuManger.setIsFrame(0);
+        }
+        if ((!menuManger.getIsFrame().equals(1)) && (!menuManger.getIsFrame().equals(0))) {
+            menuManger.setIsFrame(0);
+        }
+        if (menuManger.getIsCache() == null) {
+            menuManger.setIsCache(0);
+        }
+        if ((!menuManger.getIsCache().equals(1)) && (!menuManger.getIsCache().equals(0))) {
+            menuManger.setIsCache(0);
+        }
+        if (menuManger.getIsShow() == null) {
+            menuManger.setIsShow(0);
+        }
+        if ((!menuManger.getIsShow().equals(1)) && (!menuManger.getIsShow().equals(0))) {
+            menuManger.setIsShow(0);
+        }
+        if (menuManger.getStatus() == null) {
+            menuManger.setStatus(1);
+        }
+        if ((!menuManger.getStatus().equals(1)) && (!menuManger.getStatus().equals(0))) {
+            menuManger.setStatus(1);
+        }
+        if (menuManger.getType().equals("M") || menuManger.getType().equals("C")) {
+            if (!menuManger.getIsFrame().equals(1)) {
+                if (StringUtils.isEmpty(menuManger.getPath())) {
+                    throw new CustomException("请输入路由Path");
+                }
+                if (StringUtils.isEmpty(menuManger.getName())) {
+                    throw new CustomException("请输入路由名称");
+                }
+            }
+            if (StringUtils.isEmpty(menuManger.getLocale())) {
+                throw new CustomException("请输入Locale");
+            }
+        }
+        if (menuManger.getType().equals("F")) {
+            if (StringUtils.isEmpty(menuManger.getLocale())) {
+                throw new CustomException("参数异常");
+            }
+        }
+        if (menuManger.getParentId() == null) {
+            menuManger.setParentId(0L);
+        }
+        if (menuManger.getSort() <= 0 || menuManger.getSort() > 1000) {
+            throw new CustomException("Sort参数不合理");
+        }
+
+    }
+
+    private void checkParamsAdd(MenuManger menuManger) {
+        checkParamsBase(menuManger);
+    }
+
+    private void checkParamsUpdate(MenuManger menuManger) {
+        checkParamsBase(menuManger);
+        if (menuManger.getId() == null) {
+            throw new CustomException("id null");
+        }
+    }
+
+    @Transactional
+    @Override
+    public String addMenu(MenuManger menuManger) {
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+        if (currentUser == null) {
+            throw new RuntimeException("未鉴权");
+        }
+        checkParamsAdd(menuManger);
+        SysMenu sysMenu = new SysMenu();
+        sysMenu.setId(null);
+        sysMenu.setIsFrame(menuManger.getIsFrame());
+        sysMenu.setIcon(menuManger.getIcon());
+        sysMenu.setLocale(menuManger.getLocale());
+        sysMenu.setName(menuManger.getName());
+        sysMenu.setPath(menuManger.getPath());
+        sysMenu.setPerms(menuManger.getPerms());
+        sysMenu.setType(menuManger.getType());
+        sysMenu.setIsCache(menuManger.getIsCache());
+        sysMenu.setIsShow(menuManger.getIsShow());
+        sysMenu.setStatus(menuManger.getStatus());
+        sysMenu.setOrderNum(menuManger.getSort());
+        sysMenu.setParentId(menuManger.getParentId());
+        boolean save = iSysMenuService.save(sysMenu);
+        if (save) {
+            return "添加菜单成功";
+        }
+        return "添加菜单失败";
+    }
+
+    @Transactional
+    @Override
+    public String updateMenu(MenuManger menuManger) {
+        checkParamsUpdate(menuManger);
+        LambdaUpdateWrapper<SysMenu> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        lambdaUpdateWrapper.eq(SysMenu::getId, menuManger.getId());
+        lambdaUpdateWrapper.set(SysMenu::getIcon, menuManger.getIcon());
+        lambdaUpdateWrapper.set(SysMenu::getIsCache, menuManger.getIsCache());
+        lambdaUpdateWrapper.set(SysMenu::getIsFrame, menuManger.getIsFrame());
+        lambdaUpdateWrapper.set(SysMenu::getIsShow, menuManger.getIsShow());
+        lambdaUpdateWrapper.set(SysMenu::getParentId, menuManger.getParentId());
+        lambdaUpdateWrapper.set(SysMenu::getPerms, menuManger.getPerms());
+        lambdaUpdateWrapper.set(SysMenu::getType, menuManger.getType());
+        lambdaUpdateWrapper.set(SysMenu::getPath, menuManger.getPath());
+        lambdaUpdateWrapper.set(SysMenu::getStatus, menuManger.getStatus());
+        lambdaUpdateWrapper.set(SysMenu::getLocale, menuManger.getLocale());
+        lambdaUpdateWrapper.set(SysMenu::getName, menuManger.getName());
+        lambdaUpdateWrapper.set(SysMenu::getOrderNum, menuManger.getSort());
+        boolean update = iSysMenuService.update(lambdaUpdateWrapper);
+        if (update) {
+            return "更新菜单成功";
+        }
+        return "更新菜单失败";
+    }
+
+
+    @Transactional
+    @Override
+    public String deleteMenu(String id) {
+        if (StringUtils.isEmpty(id)) {
+            throw new CustomException("id不能为空");
+        }
+        if (id.contains(",")) {
+            String[] ids = id.split(",");
+            for (String nid :
+                    ids
+            ) {
+                iSysMenuService.removeById(Long.valueOf(nid));
+            }
+            return "删除成功";
+        }
+        boolean b = iSysMenuService.removeById(id);
+        if (b) {
+            return "删除成功";
+        }
+        return "删除失败";
     }
 }
