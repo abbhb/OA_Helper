@@ -10,4 +10,5 @@ public class MetaNode implements Serializable {
     private String icon;
     private Integer order;
     private boolean isShow;
+    private boolean isFrame;
 }

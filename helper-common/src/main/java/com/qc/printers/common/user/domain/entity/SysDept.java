@@ -1,5 +1,8 @@
 package com.qc.printers.common.user.domain.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -60,24 +63,30 @@ public class SysDept implements Serializable {
     /**
      * 删除标志（0代表存在 1代表删除）
      */
+    @TableLogic
+    @TableField(fill = FieldFill.INSERT)
     private Integer isDeleted;
 
     /**
      * 创建时间
      */
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
     /**
      * 更新时间
      */
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
 
     /**
      * 创建用户
      */
+    @TableField(fill = FieldFill.INSERT)
     private Long createUser;
 
     /**
      * 更新用户
      */
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updateUser;
 }

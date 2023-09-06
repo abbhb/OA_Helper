@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.qc.printers.common.user.mapper.SysRoleMapper">
+    <!-- type 一般写全类名，java.util.Map, map 也可以使用 -->
+    <resultMap id="sysrole" type="com.qc.printers.common.user.domain.dto.RoleMenuDTO">
+        <result column="id" property="id"/>
+        <result column="role_name" property="roleName"/>
+        <result column="role_key" property="roleKey"/>
+        <result column="role_sort" property="roleSort"/>
+        <result column="status" property="status"/>
+        <result column="is_deleted" property="isDeleted"/>
+        <result column="create_user" property="createUser"/>
+        <result column="create_time" property="createTime"/>
+        <result column="update_user" property="updateUser"/>
+        <result column="update_time" property="updateTime"/>
+        <!-- property 可以随便指定，map 集合的 key -->
+        <collection property="sysRoleMenus" javaType="java.util.List" resultMap="sysRoleMenuMap"/>
+    </resultMap>
+
+    <resultMap id="sysRoleMenuMap" type="com.qc.printers.common.user.domain.entity.SysRoleMenu">
+        <result column="s2id" property="id"/>
+        <result column="s2rid" property="roleId"/>
+        <result column="s2mid" property="menuId"/>
+    </resultMap>
+
+    <select id="getAllSysRoleMenu" resultMap="sysrole">
+        SELECT s1.*, sys_role_menu.id s2id, sys_role_menu.role_id s2rid, sys_role_menu.menu_id s2mid
+        FROM sys_role s1
+                 LEFT JOIN sys_role_menu ON sys_role_menu.role_id
+            = s1.id
+        ORDER BY s1.role_sort
+    </select>
+
+</mapper>

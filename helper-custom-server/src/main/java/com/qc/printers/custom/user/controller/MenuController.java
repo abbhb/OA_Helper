@@ -11,11 +11,9 @@ import com.qc.printers.custom.user.service.MenuService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -51,5 +49,40 @@ public class MenuController {
         return R.success(userMenu);
     }
 
+    @PostMapping("/add")
+    @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:menu:add")
+    @NeedToken
+    @ApiOperation(value = "添加菜单", notes = "")
+    public R<String> add(@RequestBody MenuManger menuManger) {
+        log.info("添加菜单");
+        log.info("menuManger={}", menuManger);
+        return R.successOnlyObject(menuService.addMenu(menuManger));
+    }
+
+    @PutMapping("/update")
+    @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:menu:update")
+    @NeedToken
+    @ApiOperation(value = "update菜单", notes = "")
+    public R<String> update(@RequestBody MenuManger menuManger) {
+        log.info("update菜单");
+        log.info("menuManger={}", menuManger);
+        return R.successOnlyObject(menuService.updateMenu(menuManger));
+    }
+
+    @DeleteMapping("/delete")
+    @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:menu:delete")
+    @NeedToken
+    @ApiOperation(value = "删除菜单", notes = "")
+    public R<String> delete(String id) {
+        log.info("删除菜单.{}", id);
+//        List<MenuManger> userMenu = menuService.getMenuList();
+//        return R.successOnlyObject(userMenu);
+
+        if (StringUtils.isEmpty(id)) {
+            return R.error("参数不全");
+        }
+        return R.successOnlyObject(menuService.deleteMenu(id));
+
+    }
 
 }

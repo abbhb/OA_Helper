@@ -1,5 +1,8 @@
 package com.qc.printers.common.user.domain.entity;
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableLogic;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -20,15 +23,21 @@ public class SysRole implements Serializable {
 
     private Integer status;
 
-    private Integer dataScope;
 
+    //deleted
+    @TableLogic
+    @TableField(fill = FieldFill.INSERT)
     private Integer isDeleted;
 
+    @TableField(fill = FieldFill.INSERT)
     private Long createUser;
 
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updateUser;
 
+    @TableField(fill = FieldFill.INSERT_UPDATE)
     private LocalDateTime updateTime;
 }
