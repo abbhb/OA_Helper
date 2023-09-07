@@ -30,6 +30,7 @@
         FROM sys_role s1
                  LEFT JOIN sys_role_menu ON sys_role_menu.role_id
             = s1.id
+        WHERE s1.is_deleted = 0
         ORDER BY s1.role_sort
     </select>
 
