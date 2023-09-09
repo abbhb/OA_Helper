@@ -4,4 +4,5 @@ import com.baomidou.mybatisplus.extension.service.IService;
 import com.qc.printers.common.user.domain.entity.SysMenu;
 
 public interface ISysMenuService extends IService<SysMenu> {
+    Integer getHierarchicalSeries(Long thisId);
 }
