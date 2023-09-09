@@ -1,5 +1,6 @@
 package com.qc.printers.custom.user.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
@@ -252,6 +253,11 @@ public class MenuServiceImpl implements MenuService {
         if (currentUser == null) {
             throw new RuntimeException("未鉴权");
         }
+        // 如果当前的上级已经是第三级禁止添加
+        Integer hierarchicalSeries = iSysMenuService.getHierarchicalSeries(menuManger.getParentId());
+        if (hierarchicalSeries >= 3) {
+            throw new CustomException("禁止层级>3");
+        }
         checkParamsAdd(menuManger);
         SysMenu sysMenu = new SysMenu();
         sysMenu.setId(null);
@@ -274,10 +280,16 @@ public class MenuServiceImpl implements MenuService {
         return "添加菜单失败";
     }
 
+
     @Transactional
     @Override
     public String updateMenu(MenuManger menuManger) {
         checkParamsUpdate(menuManger);
+        // 如果当前的上级已经是第三级禁止更新
+        Integer hierarchicalSeries = iSysMenuService.getHierarchicalSeries(menuManger.getParentId());
+        if (hierarchicalSeries >= 3) {
+            throw new CustomException("禁止层级>3");
+        }
         LambdaUpdateWrapper<SysMenu> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         lambdaUpdateWrapper.eq(SysMenu::getId, menuManger.getId());
         lambdaUpdateWrapper.set(SysMenu::getIcon, menuManger.getIcon());
@@ -303,22 +315,38 @@ public class MenuServiceImpl implements MenuService {
     @Transactional
     @Override
     public String deleteMenu(String id) {
+        // todo: 此处有重大bug，子菜单级联删除，子菜单的子菜单也得如此
         if (StringUtils.isEmpty(id)) {
             throw new CustomException("id不能为空");
         }
         if (id.contains(",")) {
-            String[] ids = id.split(",");
-            for (String nid :
-                    ids
-            ) {
-                iSysMenuService.removeById(Long.valueOf(nid));
+            throw new CustomException("为了安全菜单禁止多选删除！");
+        }
+        LambdaQueryWrapper<SysMenu> sysMenuLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysMenuLambdaQueryWrapper.eq(SysMenu::getParentId, Long.valueOf(id));
+        List<SysMenu> children = iSysMenuService.list(sysMenuLambdaQueryWrapper);
+        if (children == null || children.size() == 0) {
+            iSysMenuService.removeById(Long.valueOf(id));
+            return "删除成功";
+        }
+        List<Long> needDeleteId = new ArrayList<>();
+        //递归删除
+        List<SysMenu> last = new ArrayList<>();
+        last.addAll(children);
+        while (last != null) {
+            List<SysMenu> lastCopy = new ArrayList<>(last);
+            last = new ArrayList<>();
+            for (SysMenu s :
+                    lastCopy) {
+                needDeleteId.add(s.getId());
+                LambdaQueryWrapper<SysMenu> sysMenuLambdaQueryWrapper2 = new LambdaQueryWrapper<>();
+                sysMenuLambdaQueryWrapper2.eq(SysMenu::getParentId, s.getId());
+                last.addAll(iSysMenuService.list(sysMenuLambdaQueryWrapper2));
             }
-            return "删除成功";
         }
-        boolean b = iSysMenuService.removeById(id);
-        if (b) {
-            return "删除成功";
-        }
-        return "删除失败";
+        iSysMenuService.removeByIds(needDeleteId);
+        return "删除成功";
     }
+
+
 }
