@@ -373,6 +373,7 @@ public class UserServiceImpl implements UserService {
             User user1 = (User) user;
             //Todo:需要优化，将部门整个进缓存，在查询不到或者更改时更新单个缓存
             SysDept sysDept = iSysDeptService.getById(user1.getDeptId());
+            //Todo:此处有问题，管理页不能查继承后的角色，得要原始赋予用户的角色，从部门继承的不能直接显示，或者需要却别开，不然很乱
             UserInfo userInfo = userInfoService.getUserInfo(user1.getId());
             List<RoleResp> collect = userInfo.getSysRoles().stream().sorted(Comparator.comparing(SysRole::getRoleSort)).map(sysRole -> new RoleResp(String.valueOf(sysRole.getId()), sysRole.getRoleName(), sysRole.getRoleKey(), sysRole.getRoleSort())).collect(Collectors.toList());
             UserResult userResult = new UserResult(String.valueOf(user1.getId()), user1.getUsername(), user1.getName(), user1.getPhone(), user1.getSex(), String.valueOf(user1.getStudentId()), user1.getStatus(), user1.getCreateTime(), user1.getUpdateTime(), String.valueOf(user1.getDeptId()), sysDept.getDeptName(), user1.getEmail(), user1.getAvatar(), collect);
