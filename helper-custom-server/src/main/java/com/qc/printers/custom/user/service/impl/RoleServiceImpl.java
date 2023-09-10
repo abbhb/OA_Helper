@@ -166,4 +166,10 @@ public class RoleServiceImpl implements RoleService {
         }
         return "删除成功";
     }
+
+    @Override
+    public List<SysRole> list() {
+        return iSysRoleService.list();
+    }
+
 }
