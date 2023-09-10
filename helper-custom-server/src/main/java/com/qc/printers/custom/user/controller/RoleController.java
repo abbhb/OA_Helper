@@ -3,6 +3,7 @@ package com.qc.printers.custom.user.controller;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.annotation.PermissionCheck;
+import com.qc.printers.common.user.domain.entity.SysRole;
 import com.qc.printers.custom.user.domain.vo.response.role.RoleManger;
 import com.qc.printers.custom.user.domain.vo.response.role.RoleMangerRoot;
 import com.qc.printers.custom.user.service.RoleService;
@@ -12,6 +13,8 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 
 @RestController
@@ -33,6 +36,17 @@ public class RoleController {
         RoleMangerRoot roleManger = roleService.getRoleList();
         log.info("roleManger={}", roleManger);
         return R.success(roleManger);
+    }
+
+    @NeedToken
+    @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:role:list")
+    @GetMapping("/list-tag")
+    @ApiOperation(value = "获取全部角色用作选择器", notes = "不携带菜单")
+    public R<List<SysRole>> listTag() {
+        log.info("获取角色");
+        List<SysRole> sysRoles = roleService.list();
+        log.info("sysRoles={}", sysRoles);
+        return R.success(sysRoles);
     }
 
     @PostMapping("/add")

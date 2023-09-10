@@ -1,5 +1,6 @@
 package com.qc.printers.custom.user.service;
 
+import com.qc.printers.common.user.domain.entity.SysRole;
 import com.qc.printers.custom.user.domain.vo.response.role.RoleManger;
 import com.qc.printers.custom.user.domain.vo.response.role.RoleMangerRoot;
 
@@ -15,4 +16,6 @@ public interface RoleService {
     String updateRole(RoleManger roleManger);
 
     String deleteRole(String id);
+
+    List<SysRole> list();
 }

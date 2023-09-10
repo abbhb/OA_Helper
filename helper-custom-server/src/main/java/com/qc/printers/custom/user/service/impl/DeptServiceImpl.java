@@ -101,7 +101,7 @@ public class DeptServiceImpl implements DeptService {
             for (SysRole sysRole :
                     deptManger.getRoles()) {
                 SysRoleDept sysRoleDept = new SysRoleDept();
-                sysRoleDept.setDeptId(deptManger.getId());
+                sysRoleDept.setDeptId(sysDept.getId());
                 sysRoleDept.setRoleId(sysRole.getId());
                 iSysRoleDeptService.save(sysRoleDept);
             }
@@ -129,7 +129,6 @@ public class DeptServiceImpl implements DeptService {
     @Transactional
     @Override
     public String updateDept(DeptManger deptManger) {
-        //todo: 角色部门关系
         if (deptManger.getId() == null) {
             throw new CustomException("无操作对象");
         }
@@ -168,6 +167,7 @@ public class DeptServiceImpl implements DeptService {
         iSysRoleDeptService.remove(sysRoleDeptLambdaQueryWrapper);
         //ReBuildNewRoleDept
         if (deptManger.getRoles() != null && deptManger.getRoles().size() > 0) {
+            log.info("{}", deptManger.getRoles());
             for (SysRole sysRole :
                     deptManger.getRoles()) {
                 SysRoleDept sysRoleDept = new SysRoleDept();
