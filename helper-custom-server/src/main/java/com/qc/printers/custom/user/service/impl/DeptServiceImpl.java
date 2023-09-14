@@ -176,8 +176,6 @@ public class DeptServiceImpl implements DeptService {
                 iSysRoleDeptService.save(sysRoleDept);
             }
         }
-
-
         return "更新成功";
     }
 
@@ -209,6 +207,27 @@ public class DeptServiceImpl implements DeptService {
             iSysDeptService.removeById(sysDept.getId());
         }
         return "删除成功";
+    }
+
+    @Override
+    public List<DeptManger> getDeptListOnlyTree() {
+        LambdaQueryWrapper<SysDept> sysDeptLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysDeptLambdaQueryWrapper.select(SysDept::getDeptName, SysDept::getId, SysDept::getParentId, SysDept::getStatus, SysDept::getOrderNum);
+        List<SysDept> list = iSysDeptService.list(sysDeptLambdaQueryWrapper);
+        list.sort((m1, m2) -> {
+            Long order1 = m1.getId();
+            Long order2 = m2.getId();
+            return order1.compareTo(order2);
+        });
+        if (list.size() < 1) {
+            throw new CustomException("系统异常，请添加根节点(id:0)");
+        }
+        DeptMangerHierarchyBuilder deptMangerHierarchyBuilder = new DeptMangerHierarchyBuilder(list, null, null, 0);
+        List<DeptManger> deptMangers = deptMangerHierarchyBuilder.buildHierarchy();
+
+        sortRecursion(deptMangers);
+
+        return deptMangers;
     }
 
 

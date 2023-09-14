@@ -12,4 +12,6 @@ public interface DeptService {
     String updateDept(DeptManger deptManger);
 
     String deleteDept(String id);
+
+    List<DeptManger> getDeptListOnlyTree();
 }

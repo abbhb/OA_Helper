@@ -94,11 +94,24 @@ public class UserController {
 
     @NeedToken
     @PutMapping("/update")
-    @ApiOperation(value = "token校验", notes = "没过期就data返回1告诉前端一声")
+    @ApiOperation(value = "用户更新自己信息", notes = "不是管理员更新接口")
     public R<String> update(@RequestBody User user) {
         boolean isTrue = userService.updateUserInfo(user);
         if (isTrue) {
             return R.success("修改成功");
+        }
+        return R.error("修改失败");
+    }
+
+    @NeedToken
+    @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:user:add")
+    @PutMapping("/updateByAdmin")
+    @ApiOperation(value = "用户更新自己信息", notes = "不是管理员更新接口")
+    public R<String> updateByAdmin(@RequestBody UserResult user) {
+        log.info("user:{}", user);
+        boolean isTrue = userService.updateByAdmin(user);
+        if (isTrue) {
+            return R.successOnlyObject("修改成功");
         }
         return R.error("修改失败");
     }
@@ -166,9 +179,9 @@ public class UserController {
     @NeedToken
     @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:user:query")
     @ApiOperation(value = "用户管理获取所有用户", notes = "")
-    public R<PageData<UserResult>> userManger(Integer pageNum, Integer pageSize, @RequestParam(required = false, name = "name") String name) {
+    public R<PageData<UserResult>> userManger(Integer pageNum, Integer pageSize, @RequestParam(required = false, name = "name") String name, @RequestParam(required = false, name = "deptId") Long deptId) {
         log.info("用户管理获取所有用户");
-        return R.success(userService.getUserList(pageNum, pageSize, name));
+        return R.success(userService.getUserList(pageNum, pageSize, name, deptId));
     }
 
 

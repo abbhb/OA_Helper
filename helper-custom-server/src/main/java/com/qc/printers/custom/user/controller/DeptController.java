@@ -36,6 +36,16 @@ public class DeptController {
         return R.success(deptList);
     }
 
+    @GetMapping("/list-only-tree")
+    @NeedToken
+    @ApiOperation(value = "获取全部部门仅包含tree选择的必须项", notes = "")
+    public R<List<DeptManger>> listOnlyTree() {
+        log.info("获取全部部门仅包含tree选择的必须项");
+        List<DeptManger> deptList = deptService.getDeptListOnlyTree();
+        log.info("userDept={}", deptList);
+        return R.success(deptList);
+    }
+
     @PostMapping("/add")
     @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:dept:add")
     @NeedToken
