@@ -14,15 +14,16 @@ import com.qc.printers.common.common.utils.*;
 import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.SysDept;
 import com.qc.printers.common.user.domain.entity.SysRole;
+import com.qc.printers.common.user.domain.entity.SysUserRole;
 import com.qc.printers.common.user.domain.entity.User;
-import com.qc.printers.common.user.service.ISysDeptService;
-import com.qc.printers.common.user.service.IUserService;
-import com.qc.printers.common.user.service.UserInfoService;
+import com.qc.printers.common.user.service.*;
 import com.qc.printers.custom.user.domain.dto.LoginDTO;
 import com.qc.printers.custom.user.domain.vo.request.PasswordR;
 import com.qc.printers.custom.user.domain.vo.response.LoginRes;
 import com.qc.printers.custom.user.domain.vo.response.RoleResp;
 import com.qc.printers.custom.user.domain.vo.response.UserResult;
+import com.qc.printers.custom.user.domain.vo.response.dept.DeptManger;
+import com.qc.printers.custom.user.service.DeptService;
 import com.qc.printers.custom.user.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -31,10 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.Comparator;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
@@ -59,11 +57,19 @@ public class UserServiceImpl implements UserService {
     private CommonService commonService;
 
     @Autowired
+    private ISysUserRoleService iSysUserRoleService;
+
+    @Autowired
+    private DeptService deptService;
+
+    @Autowired
+    private ISysRoleService iSysRoleService;
+
+    @Autowired
     public UserServiceImpl(RestTemplate restTemplate, IUserService iUserService) {
         this.restTemplate = restTemplate;
         this.iUserService = iUserService;
     }
-
 
 
 //    @Transactional
@@ -353,7 +359,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public PageData<UserResult> getUserList(Integer pageNum, Integer pageSize, String name) {
+    public PageData<UserResult> getUserList(Integer pageNum, Integer pageSize, String name, Long deptId) {
         if (pageNum == null) {
             throw new IllegalArgumentException("传参错误");
         }
@@ -364,6 +370,47 @@ public class UserServiceImpl implements UserService {
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         //添加过滤条件
         lambdaQueryWrapper.like(StringUtils.isNotEmpty(name), User::getName, name);
+
+        if (deptId != null) {
+            List<DeptManger> deptListOnlyTree = deptService.getDeptListOnlyTree();
+            List<DeptManger> deptMangers = deptListOnlyTree;
+            Set<DeptManger> childTemp = new HashSet<>();
+            Set<Long> childId = new HashSet<>();
+            int isDeptIdOrChild = 0;
+            while (deptMangers != null && deptMangers.size() > 0) {
+                for (DeptManger det :
+                        deptMangers) {
+                    if (det == null) {
+                        continue;
+                    }
+                    if (det.getChildren() != null && det.getChildren().size() > 0) {
+                        childTemp.addAll(det.getChildren());
+                    }
+                    if (det.getId().equals(deptId)) {
+                        if (det.getChildren() != null) {
+                            childTemp = new HashSet<>(det.getChildren());
+                        }
+                        isDeptIdOrChild = 1;
+                        childId.add(det.getId());
+                        break;
+                    }
+                    if (isDeptIdOrChild == 1) {
+                        childId.add(det.getId());
+                    }
+                }
+                if (childTemp.size() == 0) {
+                    break;
+                }
+                deptMangers = new ArrayList<>(childTemp);
+
+                childTemp = new HashSet<>();
+            }
+            if (childId.size() > 0) {
+                log.info("childId={}", childId);
+                lambdaQueryWrapper.in(User::getDeptId, childId);
+            }
+
+        }
         //添加排序条件
         lambdaQueryWrapper.orderByAsc(User::getCreateTime);//按照创建时间排序
         iUserService.page(pageInfo, lambdaQueryWrapper);
@@ -373,10 +420,27 @@ public class UserServiceImpl implements UserService {
             User user1 = (User) user;
             //Todo:需要优化，将部门整个进缓存，在查询不到或者更改时更新单个缓存
             SysDept sysDept = iSysDeptService.getById(user1.getDeptId());
-            //Todo:此处有问题，管理页不能查继承后的角色，得要原始赋予用户的角色，从部门继承的不能直接显示，或者需要却别开，不然很乱
-            UserInfo userInfo = userInfoService.getUserInfo(user1.getId());
-            List<RoleResp> collect = userInfo.getSysRoles().stream().sorted(Comparator.comparing(SysRole::getRoleSort)).map(sysRole -> new RoleResp(String.valueOf(sysRole.getId()), sysRole.getRoleName(), sysRole.getRoleKey(), sysRole.getRoleSort())).collect(Collectors.toList());
-            UserResult userResult = new UserResult(String.valueOf(user1.getId()), user1.getUsername(), user1.getName(), user1.getPhone(), user1.getSex(), String.valueOf(user1.getStudentId()), user1.getStatus(), user1.getCreateTime(), user1.getUpdateTime(), String.valueOf(user1.getDeptId()), sysDept.getDeptName(), user1.getEmail(), user1.getAvatar(), collect);
+            //从部门继承的不能直接显示，或者需要却别开，不然很乱
+            LambdaQueryWrapper<SysUserRole> sysRoleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            sysRoleLambdaQueryWrapper.eq(SysUserRole::getUserId, user1.getId());
+            List<RoleResp> collect = new ArrayList<>();
+            List<SysUserRole> list = iSysUserRoleService.list(sysRoleLambdaQueryWrapper);
+            if (list != null && list.size() > 0) {
+                List<Long> rolesId = list.stream().map(SysUserRole::getRoleId).toList();
+                List<SysRole> sysRoles = iSysRoleService.listByIds(rolesId);
+                collect = sysRoles.stream().sorted(Comparator.comparing(SysRole::getRoleSort)).map(sysRole -> new RoleResp(String.valueOf(sysRole.getId()), sysRole.getRoleName(), sysRole.getRoleKey(), sysRole.getRoleSort())).collect(Collectors.toList());
+            }
+
+            String avatar = user1.getAvatar();
+            if (StringUtils.isNotEmpty(avatar)) {
+                if (!avatar.contains("http")) {
+                    String imageUrl = commonService.getImageUrl(avatar);
+                    avatar = imageUrl;
+                }
+            } else {
+                avatar = "";
+            }
+            UserResult userResult = new UserResult(String.valueOf(user1.getId()), user1.getUsername(), user1.getName(), user1.getPhone(), user1.getSex(), String.valueOf(user1.getStudentId()), user1.getStatus(), user1.getCreateTime(), user1.getUpdateTime(), String.valueOf(user1.getDeptId()), sysDept.getDeptName(), user1.getEmail(), avatar, collect);
             results.add(userResult);
         }
         pageData.setPages(pageInfo.getPages());
@@ -594,5 +658,50 @@ public class UserServiceImpl implements UserService {
         boolean update = iUserService.update(userLambdaUpdateWrapper);
         return update;
     }
+
+    @Transactional
+    @Override
+    public boolean updateByAdmin(UserResult user) {
+        if (StringUtils.isEmpty(user.getId())) {
+            throw new CustomException("无操作对象");
+        }
+        if (StringUtils.isEmpty(user.getName())) {
+            throw new CustomException("用户昵称不能为空");
+        }
+        List<RoleResp> roles = user.getRoles();
+        LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        lambdaUpdateWrapper.eq(User::getId, Long.valueOf(user.getId()));
+        if (user.getUsername().equals("admin")) {
+            // admin
+            lambdaUpdateWrapper.set(User::getAvatar, user.getAvatar());
+            lambdaUpdateWrapper.set(User::getPhone, user.getPhone());
+            lambdaUpdateWrapper.set(User::getStudentId, user.getStudentId());
+            lambdaUpdateWrapper.set(User::getSex, user.getSex());
+
+        } else {
+            lambdaUpdateWrapper.set(User::getEmail, user.getEmail());
+            lambdaUpdateWrapper.set(User::getDeptId, user.getDeptId());
+            lambdaUpdateWrapper.set(User::getAvatar, user.getAvatar());
+            lambdaUpdateWrapper.set(User::getPhone, user.getPhone());
+            lambdaUpdateWrapper.set(User::getStudentId, user.getStudentId());
+            lambdaUpdateWrapper.set(User::getStatus, user.getStatus());
+            lambdaUpdateWrapper.set(User::getSex, user.getSex());
+        }
+
+
+        boolean update = iUserService.update(lambdaUpdateWrapper);
+        LambdaQueryWrapper<SysUserRole> sysUserRoleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysUserRoleLambdaQueryWrapper.eq(SysUserRole::getUserId, Long.valueOf(user.getId()));
+        iSysUserRoleService.remove(sysUserRoleLambdaQueryWrapper);
+        for (RoleResp role : roles) {
+            SysUserRole sysUserRole = new SysUserRole();
+            sysUserRole.setUserId(Long.valueOf(user.getId()));
+            sysUserRole.setRoleId(Long.valueOf(role.getId()));
+            iSysUserRoleService.save(sysUserRole);
+        }
+        return update;
+
+    }
+
 
 }

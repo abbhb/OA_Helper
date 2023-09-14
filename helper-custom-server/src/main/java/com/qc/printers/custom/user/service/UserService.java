@@ -31,7 +31,7 @@ public interface UserService {
 
     R<String> updateUser(String userid, String name, String username, String phone, String idNumber, String status, String grouping, String sex, String token);
 
-    PageData<UserResult> getUserList(Integer pageNum, Integer pageSize, String name);
+    PageData<UserResult> getUserList(Integer pageNum, Integer pageSize, String name, Long deptId);
 
     R<String> deleteUsers(String id);
 
@@ -48,4 +48,6 @@ public interface UserService {
     Integer userPassword();
 
     boolean setPassword(PasswordR passwordR);
+
+    boolean updateByAdmin(UserResult user);
 }
