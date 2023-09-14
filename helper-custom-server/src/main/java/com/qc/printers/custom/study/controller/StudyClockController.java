@@ -73,7 +73,7 @@ public class StudyClockController {
     @PostMapping("/get_admin_day_data")
     @ApiOperation(value = "获取日数据")
     @NeedToken
-    @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:study:query")
+    @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:study:list")
     public R<PageData<List<KeepDayDataVO>>> getAdminDayData(@RequestBody AdminDayDataParamsVO adminDayDataParamsVO) {
         log.info("获取日数据");
         return studyClockService.getAdminDayData(adminDayDataParamsVO);
