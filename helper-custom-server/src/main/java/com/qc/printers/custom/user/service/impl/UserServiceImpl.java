@@ -672,12 +672,35 @@ public class UserServiceImpl implements UserService {
         LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         lambdaUpdateWrapper.eq(User::getId, Long.valueOf(user.getId()));
         if (user.getUsername().equals("admin")) {
+            UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+            if (currentUser == null) {
+                throw new CustomException("禁止未授权用户操作admin");
+            }
+            if (!currentUser.getUsername().equals("admin")) {
+                throw new CustomException("禁止未授权用户操作admin");
+            }
             // admin
             lambdaUpdateWrapper.set(User::getAvatar, user.getAvatar());
             lambdaUpdateWrapper.set(User::getPhone, user.getPhone());
             lambdaUpdateWrapper.set(User::getStudentId, user.getStudentId());
             lambdaUpdateWrapper.set(User::getSex, user.getSex());
 
+            LambdaQueryWrapper<SysUserRole> sysUserRoleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            sysUserRoleLambdaQueryWrapper.eq(SysUserRole::getUserId, Long.valueOf(user.getId()));
+            iSysUserRoleService.remove(sysUserRoleLambdaQueryWrapper);
+            int haveSuper = 0;
+            for (RoleResp role : roles) {
+                SysUserRole sysUserRole = new SysUserRole();
+                sysUserRole.setUserId(Long.valueOf(user.getId()));
+                if (Long.valueOf(role.getId()).equals(1L)) {
+                    haveSuper = 1;
+                }
+                sysUserRole.setRoleId(Long.valueOf(role.getId()));
+                iSysUserRoleService.save(sysUserRole);
+            }
+            if (haveSuper == 0) {
+                throw new CustomException("禁止删除超级管理员角色");
+            }
         } else {
             lambdaUpdateWrapper.set(User::getEmail, user.getEmail());
             lambdaUpdateWrapper.set(User::getDeptId, user.getDeptId());
@@ -686,19 +709,24 @@ public class UserServiceImpl implements UserService {
             lambdaUpdateWrapper.set(User::getStudentId, user.getStudentId());
             lambdaUpdateWrapper.set(User::getStatus, user.getStatus());
             lambdaUpdateWrapper.set(User::getSex, user.getSex());
+
+            LambdaQueryWrapper<SysUserRole> sysUserRoleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            sysUserRoleLambdaQueryWrapper.eq(SysUserRole::getUserId, Long.valueOf(user.getId()));
+            iSysUserRoleService.remove(sysUserRoleLambdaQueryWrapper);
+            for (RoleResp role : roles) {
+                SysUserRole sysUserRole = new SysUserRole();
+                sysUserRole.setUserId(Long.valueOf(user.getId()));
+                if (Long.valueOf(role.getId()).equals(1L)) {
+                    throw new CustomException("禁止添加超级管理员角色！");
+                }
+                sysUserRole.setRoleId(Long.valueOf(role.getId()));
+                iSysUserRoleService.save(sysUserRole);
+            }
+
         }
 
 
         boolean update = iUserService.update(lambdaUpdateWrapper);
-        LambdaQueryWrapper<SysUserRole> sysUserRoleLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        sysUserRoleLambdaQueryWrapper.eq(SysUserRole::getUserId, Long.valueOf(user.getId()));
-        iSysUserRoleService.remove(sysUserRoleLambdaQueryWrapper);
-        for (RoleResp role : roles) {
-            SysUserRole sysUserRole = new SysUserRole();
-            sysUserRole.setUserId(Long.valueOf(user.getId()));
-            sysUserRole.setRoleId(Long.valueOf(role.getId()));
-            iSysUserRoleService.save(sysUserRole);
-        }
         return update;
 
     }

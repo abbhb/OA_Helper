@@ -28,7 +28,7 @@ public class RoleController {
 
 
     @PostMapping("/list")
-    @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:role:list")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:role:list")
     @NeedToken
     @ApiOperation(value = "获取全部角色", notes = "")
     public R<RoleMangerRoot> list() {
@@ -49,7 +49,7 @@ public class RoleController {
     }
 
     @PostMapping("/add")
-    @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:role:add")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:role:add")
     @NeedToken
     @ApiOperation(value = "添加角色", notes = "")
     public R<String> add(@RequestBody RoleManger roleManger) {
@@ -59,7 +59,7 @@ public class RoleController {
     }
 
     @PutMapping("/update")
-    @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:role:update")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:role:update")
     @NeedToken
     @ApiOperation(value = "update角色", notes = "")
     public R<String> update(@RequestBody RoleManger roleManger) {
@@ -69,7 +69,7 @@ public class RoleController {
     }
 
     @DeleteMapping("/delete")
-    @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:role:delete")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:role:delete")
     @NeedToken
     @ApiOperation(value = "删除角色", notes = "")
     public R<String> delete(String id) {

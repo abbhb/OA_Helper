@@ -39,3 +39,8 @@ update 修改权限
 + minio 报连接错误可能是时区问题，minio需要美国1时区
 + token 存在cookies 方便管理
 + 避坑：mysql8 key value不能作为字段名
+
+## 初始化项目：【必须】
+
+创建superadmin角色,id必须为1L
+创建一个用户名为admin的用户，为该用户绑定1L的角色
