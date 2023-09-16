@@ -26,7 +26,7 @@ public class DeptController {
     private DeptService deptService;
 
     @PostMapping("/list")
-    @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:dept:list")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:dept:list")
     @NeedToken
     @ApiOperation(value = "获取全部部门", notes = "")
     public R<List<DeptManger>> list() {
@@ -47,7 +47,7 @@ public class DeptController {
     }
 
     @PostMapping("/add")
-    @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:dept:add")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:dept:add")
     @NeedToken
     @ApiOperation(value = "添加部门", notes = "")
     public R<String> add(@RequestBody DeptManger deptManger) {
@@ -57,7 +57,7 @@ public class DeptController {
     }
 
     @PutMapping("/update")
-    @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:dept:update")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:dept:update")
     @NeedToken
     @ApiOperation(value = "update部门", notes = "")
     public R<String> update(@RequestBody DeptManger deptManger) {
@@ -67,7 +67,7 @@ public class DeptController {
     }
 
     @DeleteMapping("/delete")
-    @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:dept:delete")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:dept:delete")
     @NeedToken
     @ApiOperation(value = "删除部门", notes = "")
     public R<String> delete(String id) {

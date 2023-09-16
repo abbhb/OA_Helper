@@ -43,7 +43,7 @@ public class MySplit {
         }
         StringBuilder newContent = new StringBuilder();
 
-        if (sysRoles.stream().anyMatch(sysRole -> sysRole.getRoleKey().equals("superadmin") || sysRole.getRoleKey().equals("lsadmin"))) {
+        if (sysRoles.stream().anyMatch(sysRole -> sysRole.getRoleKey().equals("superadmin"))) {
 
             int last = 0;
             for (int i = 0; i < mapList.size(); i++) {

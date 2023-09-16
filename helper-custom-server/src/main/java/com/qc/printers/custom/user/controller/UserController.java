@@ -104,9 +104,9 @@ public class UserController {
     }
 
     @NeedToken
-    @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:user:update")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:user:update")
     @PutMapping("/updateByAdmin")
-    @ApiOperation(value = "用户更新自己信息", notes = "不是管理员更新接口")
+    @ApiOperation(value = "管理员更新用户信息", notes = "管理员更新接口")
     public R<String> updateByAdmin(@RequestBody UserResult user) {
         log.info("user:{}", user);
         boolean isTrue = userService.updateByAdmin(user);
@@ -177,7 +177,7 @@ public class UserController {
 
     @GetMapping("/user_manger")
     @NeedToken
-    @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:user:list")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:user:list")
     @ApiOperation(value = "用户管理获取所有用户", notes = "")
     public R<PageData<UserResult>> userManger(Integer pageNum, Integer pageSize, @RequestParam(required = false, name = "name") String name, @RequestParam(required = false, name = "deptId") Long deptId) {
         log.info("用户管理获取所有用户");

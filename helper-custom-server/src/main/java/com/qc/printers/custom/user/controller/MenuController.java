@@ -39,7 +39,7 @@ public class MenuController {
     }
 
     @PostMapping("/list")
-    @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:menu:list")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:menu:list")
     @NeedToken
     @ApiOperation(value = "获取全部菜单", notes = "")
     public R<List<MenuManger>> list() {
@@ -50,7 +50,7 @@ public class MenuController {
     }
 
     @PostMapping("/add")
-    @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:menu:add")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:menu:add")
     @NeedToken
     @ApiOperation(value = "添加菜单", notes = "")
     public R<String> add(@RequestBody MenuManger menuManger) {
@@ -60,7 +60,7 @@ public class MenuController {
     }
 
     @PutMapping("/update")
-    @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:menu:update")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:menu:update")
     @NeedToken
     @ApiOperation(value = "update菜单", notes = "")
     public R<String> update(@RequestBody MenuManger menuManger) {
@@ -70,7 +70,7 @@ public class MenuController {
     }
 
     @DeleteMapping("/delete")
-    @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:menu:delete")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:menu:delete")
     @NeedToken
     @ApiOperation(value = "删除菜单", notes = "")
     public R<String> delete(String id) {

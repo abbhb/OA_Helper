@@ -63,7 +63,7 @@ public class PrintController {
      */
     @GetMapping("/getAllHistoryPrints")
     @NeedToken
-    @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:print:query")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:print:query")
     @ApiOperation(value = "获取历史打印记录", notes = "所有人历史记录：需要有管理员权限")
     public R<PageData<PrinterResult>> getAllHistoryPrints(@RequestParam("page_num") Integer pageNum, @RequestParam("page_size") Integer pageSize, String name, String date, String user) {
         if (pageNum == null) {
@@ -80,7 +80,7 @@ public class PrintController {
     
     @GetMapping("/getAllUserPrinter")
     @NeedToken
-    @PermissionCheck(role = {"superadmin", "lsadmin"}, permission = "sys:user:query")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:user:query")
     @ApiOperation(value = "获取所有打印者", notes = "没打印过的也会包括在内")
     public R<List<ValueLabelResult>> getAllUserPrinter() {
         return printerService.getAllUserPrinter();
