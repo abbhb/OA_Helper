@@ -34,13 +34,16 @@ public class IndexImageServiceImpl implements IndexImageService {
             Integer order2 = m2.getSort();
             return order1.compareTo(order2);
         });
-        //todo:bug没正确去重
-        Set<IndexImage> collect = new HashSet<>(list);
-        List<String> strings = new ArrayList<>();
-        for (IndexImage indexImage : collect) {
+        Set<String> strings = new HashSet<>();
+        List<String> stringList = new ArrayList<>();
+        for (IndexImage indexImage : list) {
+            if (!strings.contains(indexImage.getLabel())) {
+                stringList.add(indexImage.getLabel());
+            }
             strings.add(indexImage.getLabel());
+
         }
-        return strings;
+        return stringList;
     }
 
     @Override
