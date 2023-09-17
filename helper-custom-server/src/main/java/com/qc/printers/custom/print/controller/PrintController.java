@@ -5,7 +5,6 @@ import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.annotation.PermissionCheck;
 import com.qc.printers.common.common.domain.entity.PageData;
-import com.qc.printers.common.common.domain.vo.ValueLabelResult;
 import com.qc.printers.common.common.service.CommonService;
 import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.print.domain.entity.PrintDocumentTypeStatistic;
@@ -63,7 +62,7 @@ public class PrintController {
      */
     @GetMapping("/getAllHistoryPrints")
     @NeedToken
-    @PermissionCheck(role = {"superadmin"}, permission = "sys:print:query")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:print:list")
     @ApiOperation(value = "获取历史打印记录", notes = "所有人历史记录：需要有管理员权限")
     public R<PageData<PrinterResult>> getAllHistoryPrints(@RequestParam("page_num") Integer pageNum, @RequestParam("page_size") Integer pageSize, String name, String date, String user) {
         if (pageNum == null) {
@@ -78,14 +77,6 @@ public class PrintController {
         return printerService.listAllPrinter(pageNum, pageSize, name, user);
     }
     
-    @GetMapping("/getAllUserPrinter")
-    @NeedToken
-    @PermissionCheck(role = {"superadmin"}, permission = "sys:user:query")
-    @ApiOperation(value = "获取所有打印者", notes = "没打印过的也会包括在内")
-    public R<List<ValueLabelResult>> getAllUserPrinter() {
-        return printerService.getAllUserPrinter();
-    }
-
 
     @GetMapping("/getUserPrintTopList")
     @NeedToken

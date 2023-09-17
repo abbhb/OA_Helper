@@ -671,6 +671,7 @@ public class UserServiceImpl implements UserService {
         List<RoleResp> roles = user.getRoles();
         LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         lambdaUpdateWrapper.eq(User::getId, Long.valueOf(user.getId()));
+        //admin
         if (user.getUsername().equals("admin")) {
             UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
             if (currentUser == null) {
@@ -702,10 +703,12 @@ public class UserServiceImpl implements UserService {
                 throw new CustomException("禁止删除超级管理员角色");
             }
         } else {
+            //非admin
             lambdaUpdateWrapper.set(User::getEmail, user.getEmail());
             lambdaUpdateWrapper.set(User::getDeptId, user.getDeptId());
             lambdaUpdateWrapper.set(User::getAvatar, user.getAvatar());
             lambdaUpdateWrapper.set(User::getPhone, user.getPhone());
+            lambdaUpdateWrapper.set(User::getName, user.getName());
             lambdaUpdateWrapper.set(User::getStudentId, user.getStudentId());
             lambdaUpdateWrapper.set(User::getStatus, user.getStatus());
             lambdaUpdateWrapper.set(User::getSex, user.getSex());
