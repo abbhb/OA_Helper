@@ -153,12 +153,18 @@ public class RoleServiceImpl implements RoleService {
             for (String nid :
                     ids
             ) {
+                if (nid.equals("1")) {
+                    throw new CustomException("系统角色不可删除");
+                }
                 iSysRoleService.removeById(Long.valueOf(nid));
                 LambdaQueryWrapper<SysRoleMenu> sysRoleMenuLambdaQueryWrapper = new LambdaQueryWrapper<>();
                 sysRoleMenuLambdaQueryWrapper.eq(SysRoleMenu::getRoleId, nid);
                 iSysRoleMenuService.remove(sysRoleMenuLambdaQueryWrapper);
             }
         } else {
+            if (id.equals("1")) {
+                throw new CustomException("系统角色不可删除");
+            }
             iSysRoleService.removeById(Long.valueOf(id));
             LambdaQueryWrapper<SysRoleMenu> sysRoleMenuLambdaQueryWrapper = new LambdaQueryWrapper<>();
             sysRoleMenuLambdaQueryWrapper.eq(SysRoleMenu::getRoleId, id);

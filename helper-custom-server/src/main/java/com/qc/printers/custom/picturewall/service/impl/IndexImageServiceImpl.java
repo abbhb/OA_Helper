@@ -6,8 +6,10 @@ import com.qc.printers.common.picturewall.domain.entity.IndexImage;
 import com.qc.printers.common.picturewall.service.IIndexImageService;
 import com.qc.printers.custom.picturewall.service.IndexImageService;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -47,15 +49,71 @@ public class IndexImageServiceImpl implements IndexImageService {
     }
 
     @Override
-    public List<String> labelImage(String label) {
+    public List<IndexImage> labelImage(String label) {
         LambdaQueryWrapper<IndexImage> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.select(IndexImage::getImage).eq(IndexImage::getLabel, label);
+        lambdaQueryWrapper.select(IndexImage::getImage, IndexImage::getExtra).eq(IndexImage::getLabel, label);
         lambdaQueryWrapper.orderByAsc(IndexImage::getSort);
         List<IndexImage> list = iIndexImageService.list(lambdaQueryWrapper);
-        List<String> strings = new ArrayList<>();
         for (IndexImage indexImage : list) {
-            strings.add(minIoProperties.getUrl()+"/"+minIoProperties.getBucketName()+"/"+indexImage.getImage());
+            indexImage.setImage(minIoProperties.getUrl() + "/" + minIoProperties.getBucketName() + "/" + indexImage.getImage());
         }
-        return strings;
+        return list;
+    }
+
+
+    @Transactional
+    @Override
+    public String addIndexImage(IndexImage indexImage) {
+        if (indexImage == null) {
+            throw new IllegalArgumentException("请检查");
+        }
+        if (StringUtils.isEmpty(indexImage.getImage())) {
+            throw new IllegalArgumentException("必须包含图片");
+        }
+        if (StringUtils.isEmpty(indexImage.getLabel())) {
+            throw new IllegalArgumentException("必须包含标签");
+        }
+        if (indexImage.getSort() == null) {
+            throw new IllegalArgumentException("请输入排序");
+        }
+        iIndexImageService.save(indexImage);
+        return "添加成功";
+    }
+
+    @Transactional
+    @Override
+    public String updateIndexImage(IndexImage indexImage) {
+        if (indexImage == null) {
+            throw new IllegalArgumentException("请检查");
+        }
+        if (indexImage.getId() == null) {
+            throw new IllegalArgumentException("请检查");
+        }
+        if (StringUtils.isEmpty(indexImage.getImage())) {
+            throw new IllegalArgumentException("必须包含图片");
+        }
+        if (StringUtils.isEmpty(indexImage.getLabel())) {
+            throw new IllegalArgumentException("必须包含标签");
+        }
+        if (indexImage.getSort() == null) {
+            throw new IllegalArgumentException("请输入排序");
+        }
+        iIndexImageService.updateById(indexImage);
+        return "更新成功";
+    }
+
+    @Transactional
+    @Override
+    public String deleteIndexImage(Long id) {
+        if (id == null) {
+            throw new IllegalArgumentException("请检查");
+        }
+        iIndexImageService.removeById(id);
+        return "删除成功";
+    }
+
+    @Override
+    public List<IndexImage> list() {
+        return iIndexImageService.list();
     }
 }
