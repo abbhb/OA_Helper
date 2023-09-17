@@ -63,6 +63,7 @@ public class Printer implements Serializable {
     /**
      * 谁打印
      */
+    @TableField(fill = FieldFill.INSERT)
     private Long createUser;
 
     /**

@@ -14,6 +14,9 @@ public class ISysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> imp
 
     @Override
     public Integer getHierarchicalSeries(Long thisId) {
+        if (thisId.equals(0L)) {
+            return 0;
+        }
         int cengji = 0;
         SysMenu byId = this.getById(thisId);
         if (byId == null) {
