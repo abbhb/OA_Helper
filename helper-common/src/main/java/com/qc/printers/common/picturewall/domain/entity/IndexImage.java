@@ -13,4 +13,6 @@ public class IndexImage implements Serializable {
     private String image;
 
     private Integer sort;
+
+    private String extra;
 }
