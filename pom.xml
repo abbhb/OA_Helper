@@ -115,6 +115,11 @@
                 <artifactId>hutool-all</artifactId>
                 <version>${hutool.version}</version>
             </dependency>
+            <dependency>
+                <groupId>org.jetbrains</groupId>
+                <artifactId>annotations</artifactId>
+                <version>24.0.1</version>
+            </dependency>
         </dependencies>
     </dependencyManagement>
 
