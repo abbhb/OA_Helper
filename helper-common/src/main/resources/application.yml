@@ -1,0 +1,85 @@
+server:
+  port: 55550
+  servlet:
+    # Controller统一前缀
+    context-path: /api
+spring:
+  servlet:
+    multipart:
+      max-file-size: -1
+      max-request-size: -1
+  profiles:
+    active: dev
+  application:
+    name: printes
+  datasource:
+    druid:
+      driver-class-name: com.mysql.cj.jdbc.Driver
+      url: jdbc:mysql://${helper.mysql.ip}:${helper.mysql.port}/print?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+      username: ${helper.mysql.username}
+      password: ${helper.mysql.password}
+    type: com.alibaba.druid.pool.DruidDataSource
+  redis:
+    database: ${helper.redis.database}
+    port: ${helper.redis.port}
+    password: ${helper.redis.password}
+    jedis:
+      pool:
+        max-active: 40
+        max-wait: -1
+        max-idle: 50
+        min-idle: 25
+    timeout: 6000
+    host: ${helper.redis.ip}
+mybatis-plus:
+  configuration:
+    #在映射实体或者属性时，将数据库中表名和字段名中的下划线去掉，按照驼峰命名法映射
+    map-underscore-to-camel-case: true
+    #上边这个开启sql日志
+    #    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+    log-impl: org.apache.ibatis.logging.nologging.NoLoggingImpl
+    cache-enabled: false
+  global-config:
+    #雪花算法
+    db-config:
+      id-type: ASSIGN_ID
+
+# ====================== ↓↓↓↓↓↓ MinIO文件服务器 ↓↓↓↓↓↓ ======================
+minio:
+  url: http://10.15.247.254:9090
+  accessKey: N2T6ZfARSupeUYbn
+  secretKey: nqcG5pG9Qc104lHrWgVZCYrc2JZSyS0v
+  bucketName: aistudio
+
+# ====================== ↓↓↓↓↓↓ CAS认证相关配置 ↓↓↓↓↓↓ #############################################
+cas:
+  baseUrl: http://10.15.247.254:55555/
+  clientId: 93519f52770144c7afa01c1f76409d81
+  clientSecret: 0a28768c96db4ab79eec56b70fade03c
+study:
+  minOldTime: 420 #单位：分钟
+  # 就是10点前的意思
+  maxFirstTime: 10
+
+rocketmq:
+  name-server: 192.168.12.12:10911
+  # 默认的消息组
+  producer:
+    group: chatGroup
+    send-message-timeout: 10000 # 发送消息超时时间，单位：毫秒。默认为 3000 。
+    compress-message-body-threshold: 4096 # 消息压缩阀值，当消息体的大小超过该阀值后，进行消息压缩。默认为 4 * 1024B
+    max-message-size: 4194304 # 消息体的最大允许大小。。默认为 4 * 1024 * 1024B
+    retry-times-when-send-failed: 3 # 同步发送消息时，失败重试次数。默认为 2 次。
+    retry-times-when-send-async-failed: 3 # 异步发送消息时，失败重试次数。默认为 2 次。
+    retry-next-server: false # 发送消息给 Broker 时，如果发送失败，是否重试另外一台 Broker 。默认为 false
+    #    access-key: java # Access Key ，可阅读 https://github.com/apache/rocketmq/blob/master/docs/cn/acl/user_guide.md 文档
+    #    secret-key: 123456 # Secret Key
+    enable-msg-trace: true # 是否开启消息轨迹功能。默认为 true 开启。可阅读 https://github.com/apache/rocketmq/blob/master/docs/cn/msg_trace/user_guide.md 文档
+    customized-trace-topic: RMQ_SYS_TRACE_TOPIC # 自定义消息轨迹的 Topic 。默认为 RMQ_SYS_TRACE_TOPIC 。
+  # Consumer 配置项
+  consumer:
+    #    access-key: java # Access Key ，可阅读 https://github.com/apache/rocketmq/blob/master/docs/cn/acl/user_guide.md 文档
+    #    secret-key: 123456 # Secret Key
+    listeners: # 配置某个消费分组，是否监听指定 Topic 。结构为 Map<消费者分组, <Topic, Boolean>> 。默认情况下，不配置表示监听。
+      erbadagang-consumer-group:
+        topic1: false # 关闭 test-consumer-group 对 topic1 的监听消费
