@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -17,6 +18,8 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 public class User implements Serializable {
     public static final long serialVersionUID = 1L;
+
+    public static final long UID_SYSTEM = 1659939726386827265L;
 
     //value属性用于指定主键的字段
     //type属性用于设置主键生成策略，默认雪花算法
@@ -79,6 +82,9 @@ public class User implements Serializable {
     public LocalDateTime loginDate;
 
     @ApiModelProperty(value = "最后登录的ip")
-    public String loginIp;
+    @TableField(value = "login_ip", typeHandler = JacksonTypeHandler.class)
+    public IpInfo loginIp;
+
+    public Integer activeStatus;
 
 }

@@ -17,6 +17,11 @@
             <artifactId>helper-common-starter</artifactId>
             <version>1.0-SNAPSHOT</version>
         </dependency>
+        <dependency>
+            <groupId>com.qc.printers</groupId>
+            <artifactId>helper-transaction</artifactId>
+            <version>1.0-SNAPSHOT</version>
+        </dependency>
     </dependencies>
 
     <build>
