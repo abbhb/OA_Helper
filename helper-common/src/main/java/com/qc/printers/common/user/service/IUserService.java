@@ -1,21 +1,14 @@
 package com.qc.printers.common.user.service;
 
-import com.baomidou.mybatisplus.extension.service.IService;
-import com.qc.printers.common.common.domain.vo.request.CursorPageBaseReq;
-import com.qc.printers.common.common.domain.vo.response.CursorPageBaseResp;
-import com.qc.printers.common.user.domain.entity.User;
-import com.qc.printers.common.user.domain.enums.ChatActiveStatusEnum;
+import com.qc.printers.common.user.domain.dto.UserInfo;
+import com.qc.printers.common.user.domain.entity.SysRole;
 
-import java.util.List;
+import java.util.Set;
 
-public interface IUserService extends IService<User> {
+public interface IUserService {
 
-    public CursorPageBaseResp<User> getCursorPage(List<Long> memberUidList, CursorPageBaseReq request, ChatActiveStatusEnum online);
+    UserInfo getUserInfo(Long userId);
 
-    public List<User> getMemberList();
-
-    public Integer getOnlineCount();
-
-    public Integer getOnlineCount(List<Long> memberUidList);
+    boolean isSuperAdmin(Set<SysRole> roleSet, Long userId);
 
 }

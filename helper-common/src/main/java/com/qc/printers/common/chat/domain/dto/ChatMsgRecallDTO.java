@@ -15,8 +15,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 @NoArgsConstructor
 public class ChatMsgRecallDTO {
-    private Long msgId;
-    private Long roomId;
+    private String msgId;
+    private String roomId;
     //撤回的用户
-    private Long recallUid;
+    private String recallUid;
+
+    public ChatMsgRecallDTO(Long id, Long roomId, Long recallUid) {
+        this.msgId = String.valueOf(id);
+        this.roomId = String.valueOf(roomId);
+        this.recallUid = String.valueOf(recallUid);
+    }
 }

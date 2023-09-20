@@ -1,5 +1,6 @@
 package com.qc.printers.common.common;
 
+import com.qc.printers.common.common.exception.FrequencyControlException;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.ControllerAdvice;
@@ -37,13 +38,18 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(CustomException.class)
     public R<String> customExceptionHandler(CustomException e, HttpServletResponse response) {
-        if (e.getCode()!=null){
-            if (e.getCode().equals(Code.DEL_TOKEN)){
+        if (e.getCode() != null) {
+            if (e.getCode().equals(Code.DEL_TOKEN)) {
                 //token过期了
-                return R.error(Code.DEL_TOKEN,e.getMessage());
+                return R.error(Code.DEL_TOKEN, e.getMessage());
             }
         }
         return R.error(e.getMessage());
+    }
+
+    @ExceptionHandler(FrequencyControlException.class)
+    public R<String> frequencyControlExceptionHandler(FrequencyControlException e, HttpServletResponse response) {
+        return R.error(e.getErrorMsg());
     }
 
     /**
@@ -53,7 +59,7 @@ public class GlobalExceptionHandler {
      */
     @ExceptionHandler(RuntimeException.class)
     public R<String> runtimeExceptionHandler(Exception e) {
-        if (e.getCause() instanceof SQLIntegrityConstraintViolationException){
+        if (e.getCause() instanceof SQLIntegrityConstraintViolationException) {
 //            if(e.getMessage().contains("Duplicate entry")){//设置过约束，某个值唯一的话
 //                String[] split = e.getMessage().split(" ");
 //

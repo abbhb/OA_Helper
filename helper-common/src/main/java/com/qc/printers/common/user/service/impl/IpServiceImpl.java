@@ -6,11 +6,11 @@ import cn.hutool.core.util.StrUtil;
 import cn.hutool.http.HttpUtil;
 import cn.hutool.json.JSONUtil;
 import com.qc.printers.common.common.handler.GlobalUncaughtExceptionHandler;
+import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.dto.IpResult;
 import com.qc.printers.common.user.domain.entity.IpDetail;
 import com.qc.printers.common.user.domain.entity.IpInfo;
 import com.qc.printers.common.user.domain.entity.User;
-import com.qc.printers.common.user.service.IUserService;
 import com.qc.printers.common.user.service.IpService;
 import com.qc.printers.common.user.service.cache.UserCache;
 import lombok.extern.slf4j.Slf4j;
@@ -40,7 +40,7 @@ public class IpServiceImpl implements IpService, DisposableBean {
                     GlobalUncaughtExceptionHandler.getInstance()));
 
     @Autowired
-    private IUserService iUserService;
+    private UserDao userDao;
     @Autowired
     private UserCache userCache;
 
@@ -91,7 +91,7 @@ public class IpServiceImpl implements IpService, DisposableBean {
     @Override
     public void refreshIpDetailAsync(Long uid) {
         EXECUTOR.execute(() -> {
-            User user = iUserService.getById(uid);
+            User user = userDao.getById(uid);
             IpInfo ipInfo = user.getLoginIp();
             if (Objects.isNull(ipInfo)) {
                 return;
@@ -106,7 +106,7 @@ public class IpServiceImpl implements IpService, DisposableBean {
                 User update = new User();
                 update.setId(uid);
                 update.setLoginIp(ipInfo);
-                iUserService.updateById(update);
+                userDao.updateById(update);
                 userCache.userInfoChange(uid);
             } else {
                 log.error("get ip detail fail ip:{},uid:{}", ip, uid);

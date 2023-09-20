@@ -29,12 +29,12 @@ import com.qc.printers.common.common.domain.vo.request.CursorPageBaseReq;
 import com.qc.printers.common.common.domain.vo.response.CursorPageBaseResp;
 import com.qc.printers.common.common.event.GroupMemberAddEvent;
 import com.qc.printers.common.common.utils.AssertUtil;
+import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.domain.enums.WSBaseResp;
 import com.qc.printers.common.user.domain.vo.response.ws.ChatMemberResp;
 import com.qc.printers.common.user.domain.vo.response.ws.WSMemberChange;
-import com.qc.printers.common.user.service.IUserService;
 import com.qc.printers.common.user.service.cache.UserCache;
 import com.qc.printers.common.user.service.impl.PushService;
 import org.jetbrains.annotations.NotNull;
@@ -75,7 +75,7 @@ public class RoomAppServiceImpl implements RoomAppService {
     @Autowired
     private GroupMemberDao groupMemberDao;
     @Autowired
-    private IUserService iUserService;
+    private UserDao userDao;
     @Autowired
     private ChatService chatService;
     @Autowired
@@ -138,7 +138,7 @@ public class RoomAppServiceImpl implements RoomAppService {
             onlineNum = userCache.getOnlineNum();
         } else {
             List<Long> memberUidList = groupMemberDao.getMemberUidList(roomGroup.getId());
-            onlineNum = iUserService.getOnlineCount(memberUidList).longValue();
+            onlineNum = userDao.getOnlineCount(memberUidList).longValue();
         }
         GroupRoleAPPEnum groupRole = getGroupRole(uid, roomGroup, room);
         return MemberResp.builder()
@@ -170,7 +170,7 @@ public class RoomAppServiceImpl implements RoomAppService {
         Room room = roomCache.get(request.getRoomId());
         AssertUtil.isNotEmpty(room, "房间号有误");
         if (isHotGroup(room)) {//全员群展示所有用户100名
-            List<User> memberList = iUserService.getMemberList();
+            List<User> memberList = userDao.getMemberList();
             List<UserInfo> collect = memberList.stream().map(user -> new UserInfo(user)).collect(Collectors.toList());
             return MemberAdapter.buildMemberList(collect);
         } else {

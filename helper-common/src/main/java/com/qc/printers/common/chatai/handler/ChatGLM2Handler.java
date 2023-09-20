@@ -61,7 +61,7 @@ public class ChatGLM2Handler extends AbstractChatAIHandler {
     protected void init() {
         super.init();
         if (isUse()) {
-            User userInfo = iUserService.getById(glm2Properties.getAIUserId());
+            User userInfo = userDao.getById(glm2Properties.getAIUserId());
             if (userInfo == null) {
                 log.error("根据AIUserId:{} 找不到用户信息", glm2Properties.getAIUserId());
                 throw new RuntimeException("根据AIUserId找不到用户信息");

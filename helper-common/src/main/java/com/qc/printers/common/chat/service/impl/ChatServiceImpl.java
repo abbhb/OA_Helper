@@ -34,10 +34,10 @@ import com.qc.printers.common.common.domain.vo.request.CursorPageBaseReq;
 import com.qc.printers.common.common.domain.vo.response.CursorPageBaseResp;
 import com.qc.printers.common.common.event.MessageSendEvent;
 import com.qc.printers.common.common.utils.AssertUtil;
+import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.domain.enums.ChatActiveStatusEnum;
 import com.qc.printers.common.user.domain.vo.response.ws.ChatMemberResp;
-import com.qc.printers.common.user.service.IUserService;
 import com.qc.printers.common.user.service.cache.UserCache;
 import com.qc.printers.transaction.service.MQProducer;
 import lombok.extern.slf4j.Slf4j;
@@ -65,7 +65,7 @@ public class ChatServiceImpl implements ChatService {
     @Autowired
     private MessageDao messageDao;
     @Autowired
-    private IUserService iUserService;
+    private UserDao userDao;
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
     @Autowired
@@ -148,18 +148,18 @@ public class ChatServiceImpl implements ChatService {
         List<ChatMemberResp> resultList = new ArrayList<>();//最终列表
         Boolean isLast = Boolean.FALSE;
         if (activeStatusEnum == ChatActiveStatusEnum.ONLINE) {//在线列表
-            CursorPageBaseResp<User> cursorPage = iUserService.getCursorPage(memberUidList, new CursorPageBaseReq(request.getPageSize(), timeCursor), ChatActiveStatusEnum.ONLINE);
+            CursorPageBaseResp<User> cursorPage = userDao.getCursorPage(memberUidList, new CursorPageBaseReq(request.getPageSize(), timeCursor), ChatActiveStatusEnum.ONLINE);
             resultList.addAll(MemberAdapter.buildMember(cursorPage.getList()));//添加在线列表
             if (cursorPage.getIsLast()) {//如果是最后一页,从离线列表再补点数据
                 activeStatusEnum = ChatActiveStatusEnum.OFFLINE;
                 Integer leftSize = request.getPageSize() - cursorPage.getList().size();
-                cursorPage = iUserService.getCursorPage(memberUidList, new CursorPageBaseReq(leftSize, null), ChatActiveStatusEnum.OFFLINE);
+                cursorPage = userDao.getCursorPage(memberUidList, new CursorPageBaseReq(leftSize, null), ChatActiveStatusEnum.OFFLINE);
                 resultList.addAll(MemberAdapter.buildMember(cursorPage.getList()));//添加离线线列表
             }
             timeCursor = cursorPage.getCursor();
             isLast = cursorPage.getIsLast();
         } else if (activeStatusEnum == ChatActiveStatusEnum.OFFLINE) {//离线列表
-            CursorPageBaseResp<User> cursorPage = iUserService.getCursorPage(memberUidList, new CursorPageBaseReq(request.getPageSize(), timeCursor), ChatActiveStatusEnum.OFFLINE);
+            CursorPageBaseResp<User> cursorPage = userDao.getCursorPage(memberUidList, new CursorPageBaseReq(request.getPageSize(), timeCursor), ChatActiveStatusEnum.OFFLINE);
             resultList.addAll(MemberAdapter.buildMember(cursorPage.getList()));//添加离线线列表
             timeCursor = cursorPage.getCursor();
             isLast = cursorPage.getIsLast();
@@ -228,7 +228,7 @@ public class ChatServiceImpl implements ChatService {
     @Cacheable(cacheNames = "member", key = "'memberList.'+#req.roomId")
     public List<ChatMemberListResp> getMemberList(ChatMessageMemberReq req) {
         if (Objects.equals(1L, req.getRoomId())) {//大群聊可看见所有人
-            return iUserService.getMemberList()
+            return userDao.getMemberList()
                     .stream()
                     .map(a -> {
                         ChatMemberListResp resp = new ChatMemberListResp();

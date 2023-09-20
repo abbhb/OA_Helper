@@ -4,10 +4,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
+import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.SysMenu;
 import com.qc.printers.common.user.service.ISysMenuService;
-import com.qc.printers.common.user.service.IUserService;
 import com.qc.printers.custom.user.domain.vo.response.menu.MenuManger;
 import com.qc.printers.custom.user.domain.vo.response.menu.MenuResult;
 import com.qc.printers.custom.user.domain.vo.response.menu.MenuResultNode;
@@ -33,7 +33,7 @@ public class MenuServiceImpl implements MenuService {
     private ISysMenuService iSysMenuService;
 
     @Autowired
-    private IUserService iUserService;
+    private UserDao userDao;
 
 
     @Override
@@ -116,13 +116,13 @@ public class MenuServiceImpl implements MenuService {
             menuManger.setCreateUserName("信息缺失");
             menuManger.setUpdateUserName("信息缺失");
             if (sysMenu.getCreateUser() != null) {
-                menuManger.setCreateUserName(iUserService.getById(sysMenu.getCreateUser()).getName());
+                menuManger.setCreateUserName(userDao.getById(sysMenu.getCreateUser()).getName());
             }
             if (sysMenu.getUpdateUser() != null) {
                 if (sysMenu.getUpdateUser().equals(sysMenu.getCreateUser())) {
                     menuManger.setUpdateUserName(menuManger.getCreateUserName());
                 } else {
-                    menuManger.setUpdateUserName(iUserService.getById(sysMenu.getUpdateUser()).getName());
+                    menuManger.setUpdateUserName(userDao.getById(sysMenu.getUpdateUser()).getName());
                 }
             }
             menuManger.setUpdateTime(sysMenu.getUpdateTime());
@@ -152,20 +152,20 @@ public class MenuServiceImpl implements MenuService {
                 menuManger2.setCreateUserName("信息缺失");
                 menuManger2.setUpdateUserName("信息缺失");
                 if (sysMenu.getCreateUser() != null) {
-                    menuManger2.setCreateUserName(iUserService.getById(sysMenu2.getCreateUser()).getName());
+                    menuManger2.setCreateUserName(userDao.getById(sysMenu2.getCreateUser()).getName());
                 }
                 if (sysMenu.getUpdateUser() != null) {
                     if (sysMenu.getUpdateUser().equals(sysMenu2.getCreateUser())) {
                         menuManger2.setUpdateUserName(menuManger2.getCreateUserName());
                     } else {
-                        menuManger2.setUpdateUserName(iUserService.getById(sysMenu2.getUpdateUser()).getName());
+                        menuManger2.setUpdateUserName(userDao.getById(sysMenu2.getUpdateUser()).getName());
                     }
                 }
                 menuManger2.setUpdateTime(sysMenu2.getUpdateTime());
                 menuManger2.setParentId(sysMenu2.getParentId());
                 menuManger2.setUpdateUser(sysMenu2.getUpdateUser());
                 //第三层--叶子
-                List<MenuManger> collect3 = list.stream().filter(sysMenu3 -> sysMenu3.getParentId().equals(menuManger2.getId())).map(newsysMeny3 -> new MenuManger(newsysMeny3.getId(), newsysMeny3.getName(), newsysMeny3.getLocale(), newsysMeny3.getParentId(), newsysMeny3.getOrderNum(), newsysMeny3.getPath(), newsysMeny3.getIsFrame(), newsysMeny3.getIsCache(), newsysMeny3.getType(), newsysMeny3.getIsShow(), newsysMeny3.getStatus(), newsysMeny3.getPerms(), newsysMeny3.getIcon(), newsysMeny3.getCreateUser(), iUserService.getById(newsysMeny3.getCreateUser()).getName(), newsysMeny3.getCreateTime(), newsysMeny3.getUpdateUser(), iUserService.getById(newsysMeny3.getUpdateUser()).getName(), newsysMeny3.getUpdateTime(), null)).collect(Collectors.toList());
+                List<MenuManger> collect3 = list.stream().filter(sysMenu3 -> sysMenu3.getParentId().equals(menuManger2.getId())).map(newsysMeny3 -> new MenuManger(newsysMeny3.getId(), newsysMeny3.getName(), newsysMeny3.getLocale(), newsysMeny3.getParentId(), newsysMeny3.getOrderNum(), newsysMeny3.getPath(), newsysMeny3.getIsFrame(), newsysMeny3.getIsCache(), newsysMeny3.getType(), newsysMeny3.getIsShow(), newsysMeny3.getStatus(), newsysMeny3.getPerms(), newsysMeny3.getIcon(), newsysMeny3.getCreateUser(), userDao.getById(newsysMeny3.getCreateUser()).getName(), newsysMeny3.getCreateTime(), newsysMeny3.getUpdateUser(), userDao.getById(newsysMeny3.getUpdateUser()).getName(), newsysMeny3.getUpdateTime(), null)).collect(Collectors.toList());
                 collect3.sort(Comparator.comparing(MenuManger::getSort));
                 menuManger2.setChildren(collect3);
                 menuMangerList2.add(menuManger2);

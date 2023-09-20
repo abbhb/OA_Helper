@@ -93,8 +93,8 @@ public class MemberAdapter {
         WSMemberChange wsMemberChange = new WSMemberChange();
         wsMemberChange.setActiveStatus(user.getActiveStatus());
         wsMemberChange.setLastOptTime(DateUtils.localDateTimeToDate(user.getLoginDate()));
-        wsMemberChange.setUid(user.getId());
-        wsMemberChange.setRoomId(roomId);
+        wsMemberChange.setUid(String.valueOf(user.getId()));
+        wsMemberChange.setRoomId(String.valueOf(roomId));
         wsMemberChange.setChangeType(CHANGE_TYPE_ADD);
         wsBaseResp.setData(wsMemberChange);
         return wsBaseResp;
@@ -104,8 +104,8 @@ public class MemberAdapter {
         WSBaseResp<WSMemberChange> wsBaseResp = new WSBaseResp<>();
         wsBaseResp.setType(WSRespTypeEnum.MEMBER_CHANGE.getType());
         WSMemberChange wsMemberChange = new WSMemberChange();
-        wsMemberChange.setUid(uid);
-        wsMemberChange.setRoomId(roomId);
+        wsMemberChange.setUid(String.valueOf(uid));
+        wsMemberChange.setRoomId(String.valueOf(roomId));
         wsMemberChange.setChangeType(CHANGE_TYPE_REMOVE);
         wsBaseResp.setData(wsMemberChange);
         return wsBaseResp;

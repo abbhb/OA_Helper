@@ -1,170 +1,150 @@
 package com.qc.printers.common.user.service.impl;
 
-import cn.hutool.core.collection.CollectionUtil;
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
-import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qc.printers.common.common.CustomException;
-import com.qc.printers.common.common.domain.enums.NormalOrNoEnum;
-import com.qc.printers.common.common.domain.vo.request.CursorPageBaseReq;
-import com.qc.printers.common.common.domain.vo.response.CursorPageBaseResp;
-import com.qc.printers.common.common.utils.CursorUtils;
-import com.qc.printers.common.user.domain.entity.User;
-import com.qc.printers.common.user.domain.enums.ChatActiveStatusEnum;
-import com.qc.printers.common.user.mapper.UserMapper;
-import com.qc.printers.common.user.service.IUserService;
+import com.qc.printers.common.user.dao.UserDao;
+import com.qc.printers.common.user.domain.dto.UserInfo;
+import com.qc.printers.common.user.domain.entity.*;
+import com.qc.printers.common.user.service.*;
 import com.qc.printers.common.user.service.cache.UserCache;
-import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.Serializable;
-import java.util.Collection;
+import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
+import java.util.Set;
 
 @Transactional
 @Service
-public class IUserServiceImpl extends ServiceImpl<UserMapper, User> implements IUserService {
+public class IUserServiceImpl implements IUserService {
+    @Autowired
+    private UserDao userDao;
 
     @Autowired
     private UserCache userCache;
 
-    //重写save方法,校验用户名重复
-    //不使用唯一索引是为了逻辑删除后避免用户名不能再次使用
-    @Transactional
-    @Override
-    public boolean save(User entity) {
-        if (StringUtils.isEmpty(entity.getUsername())) {
-            throw new CustomException("err:user:save");
+    @Autowired
+    private ISysRoleDeptService iSysRoleDeptService;
+
+    @Autowired
+    private ISysRoleMenuService iSysRoleMenuService;
+
+    @Autowired
+    private ISysUserRoleService iSysUserRoleService;
+
+    @Autowired
+    private ISysMenuService iSysMenuService;
+
+    @Autowired
+    private ISysRoleService iSysRoleService;
+
+
+    public UserInfo getUserInfo(Long userId) {
+        if (userId == null) {
+            throw new IllegalArgumentException("userId为空");
         }
-        LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.eq(User::getUsername, entity.getUsername());
-        //会自动加上条件判断没有删除
-        int count = super.count(lambdaQueryWrapper);
-        if (count > 0) {
-            throw new CustomException("用户名已经存在");
+        UserInfo userInfo = new UserInfo();
+        User user = userDao.getById(userId);
+        if (user == null) {
+            throw new CustomException("请重试！");
         }
-        return super.save(entity);
-    }
+        BeanUtils.copyProperties(user, userInfo);
+        LambdaQueryWrapper<SysRoleDept> roleDeptLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        roleDeptLambdaQueryWrapper.eq(SysRoleDept::getDeptId, user.getDeptId());
+        List<SysRoleDept> sysRoleDeptList = iSysRoleDeptService.list(roleDeptLambdaQueryWrapper);
+        //该用户所拥有的不重复的roleId
+        Set<Long> userRoleIdList = new HashSet<>();
+        for (SysRoleDept s :
+                sysRoleDeptList) {
+            userRoleIdList.add(s.getRoleId());
+        }
+        LambdaQueryWrapper<SysUserRole> sysUserRoleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysUserRoleLambdaQueryWrapper.eq(SysUserRole::getUserId, user.getId());
+        List<SysUserRole> list = iSysUserRoleService.list(sysUserRoleLambdaQueryWrapper);
+        for (SysUserRole sysUserRole :
+                list) {
+            userRoleIdList.add(sysUserRole.getRoleId());
+        }
 
-    @Override
-    public boolean saveOrUpdate(User entity) {
-        return super.saveOrUpdate(entity);
-    }
-
-    @Override
-    public boolean saveOrUpdateBatch(Collection<User> entityList, int batchSize) {
-        return super.saveOrUpdateBatch(entityList, batchSize);
-    }
-
-    @Override
-    public boolean updateBatchById(Collection<User> entityList, int batchSize) {
-        return super.updateBatchById(entityList, batchSize);
-    }
-
-    @Override
-    public boolean saveOrUpdateBatch(Collection<User> entityList) {
-        for (User user :
-                entityList) {
-            if (user.getId() != null) {
-                userCache.userInfoChange(user.getId());
+        Set<SysRole> sysRoles;
+        if (userRoleIdList.size() == 0) {
+            sysRoles = new HashSet<>();
+        } else {
+            sysRoles = new HashSet<>(iSysRoleService.listByIds(userRoleIdList));
+        }
+        if (isSuperAdmin(sysRoles, null)) {
+            userInfo.setSysMenus(new HashSet<>(iSysMenuService.list()));
+            userInfo.setSysRoles(sysRoles);
+            return userInfo;
+        }
+        //不重复的菜单id
+        Set<Long> menuIdList = new HashSet<>();
+        for (Long roleId :
+                userRoleIdList) {
+            LambdaQueryWrapper<SysRoleMenu> sysRoleMenuLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            sysRoleMenuLambdaQueryWrapper.eq(SysRoleMenu::getRoleId, roleId);
+            List<SysRoleMenu> list1 = iSysRoleMenuService.list(sysRoleMenuLambdaQueryWrapper);
+            for (SysRoleMenu sysRoleMenu :
+                    list1) {
+                menuIdList.add(sysRoleMenu.getMenuId());
             }
         }
-        return super.saveOrUpdateBatch(entityList);
-    }
+        Set<SysMenu> sysMenus;
+        if (menuIdList.size() == 0) {
+            sysMenus = new HashSet<>();
 
-    @Override
-    public boolean removeById(Serializable id) {
-        userCache.delUserInfo((Long) id);
-        return super.removeById(id);
-    }
+        } else {
+            sysMenus = new HashSet<>(iSysMenuService.listByIds(menuIdList));
 
-    @Transactional
-    @Override
-    public boolean removeByMap(Map<String, Object> columnMap) {
-        throw new CustomException("防止没有更新缓存，禁用");
-    }
-
-    @Transactional
-    @Override
-    public boolean remove(Wrapper<User> queryWrapper) {
-        User one = super.getOne(queryWrapper);
-        userCache.delUserInfo(one.getId());
-        return super.remove(queryWrapper);
-    }
-
-    @Override
-    public boolean removeByIds(Collection<? extends Serializable> idList) {
-        for (Serializable id :
-                idList) {
-            userCache.userInfoChange((Long) id);
         }
-        return super.removeByIds(idList);
-    }
-
-    @Override
-    public boolean updateById(User entity) {
-        userCache.userInfoChange(entity.getId());
-        return super.updateById(entity);
-    }
-
-    @Override
-    public boolean update(Wrapper<User> updateWrapper) {
-        User one = super.getOne(updateWrapper);
-        userCache.userInfoChange(one.getId());
-        return super.update(updateWrapper);
-    }
-
-    @Override
-    public boolean update(User entity, Wrapper<User> updateWrapper) {
-        User one = super.getOne(updateWrapper);
-        userCache.userInfoChange(one.getId());
-        return super.update(entity, updateWrapper);
-    }
-
-    @Override
-    public boolean updateBatchById(Collection<User> entityList) {
-        for (User user :
-                entityList) {
-            userCache.userInfoChange(user.getId());
+        if (sysMenus == null) {
+            throw new CustomException("请重试！");
         }
-        return super.updateBatchById(entityList);
+
+        userInfo.setSysMenus(sysMenus);
+        userInfo.setSysRoles(sysRoles);
+        return userInfo;
     }
 
-    @Override
-    public boolean saveOrUpdate(User entity, Wrapper<User> updateWrapper) {
-        throw new CustomException("目的不明确");
-    }
-
-    public CursorPageBaseResp<User> getCursorPage(List<Long> memberUidList, CursorPageBaseReq request, ChatActiveStatusEnum online) {
-        return CursorUtils.getCursorPageByMysql(this, request, wrapper -> {
-            wrapper.eq(User::getActiveStatus, online.getStatus());//筛选上线或者离线的
-            wrapper.in(CollectionUtils.isNotEmpty(memberUidList), User::getId, memberUidList);//普通群对uid列表做限制
-        }, User::getLoginDate);
-    }
-
-    public List<User> getMemberList() {
-        return lambdaQuery()
-                .eq(User::getStatus, NormalOrNoEnum.NORMAL.getStatus())
-                .orderByDesc(User::getLoginDate)//最近活跃的1000个人，可以用lastOptTime字段，但是该字段没索引，updateTime可平替
-                .last("limit 1000")//毕竟是大群聊，人数需要做个限制
-                .select(User::getId, User::getName, User::getAvatar)
-                .list();
-
-    }
-
-    public Integer getOnlineCount() {
-        return getOnlineCount(null);
-    }
-
-    public Integer getOnlineCount(List<Long> memberUidList) {
-        return lambdaQuery()
-                .eq(User::getActiveStatus, ChatActiveStatusEnum.ONLINE.getStatus())
-                .in(CollectionUtil.isNotEmpty(memberUidList), User::getId, memberUidList)
-                .count();
+    public boolean isSuperAdmin(Set<SysRole> roleSet, Long userId) {
+        if (roleSet != null) {
+            if (roleSet.stream().anyMatch(sysRole -> sysRole.getRoleKey() != null && sysRole.getRoleKey().equals("userDaoadmin"))) {
+                return true;
+            }
+            return false;
+        }
+        if (userId == null) {
+            throw new IllegalArgumentException("userId为空");
+        }
+        UserInfo userInfo = new UserInfo();
+        User user = userDao.getById(userId);
+        if (user == null) {
+            throw new CustomException("请重试！");
+        }
+        BeanUtils.copyProperties(user, userInfo);
+        LambdaQueryWrapper<SysRoleDept> roleDeptLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        roleDeptLambdaQueryWrapper.eq(SysRoleDept::getDeptId, user.getDeptId());
+        List<SysRoleDept> sysRoleDeptList = iSysRoleDeptService.list(roleDeptLambdaQueryWrapper);
+        //该用户所拥有的不重复的roleId
+        Set<Long> userRoleIdList = new HashSet<>();
+        for (SysRoleDept s :
+                sysRoleDeptList) {
+            userRoleIdList.add(s.getRoleId());
+        }
+        LambdaQueryWrapper<SysUserRole> sysUserRoleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysUserRoleLambdaQueryWrapper.eq(SysUserRole::getUserId, user.getId());
+        List<SysUserRole> list = iSysUserRoleService.list(sysUserRoleLambdaQueryWrapper);
+        for (SysUserRole sysUserRole :
+                list) {
+            userRoleIdList.add(sysUserRole.getRoleId());
+        }
+        Set<SysRole> sysRoles = new HashSet<>(iSysRoleService.listByIds(userRoleIdList));
+        if (sysRoles.stream().anyMatch(sysRole -> sysRole.getRoleKey() != null && sysRole.getRoleKey().equals("userDaoadmin"))) {
+            return true;
+        }
+        return false;
     }
 
 }

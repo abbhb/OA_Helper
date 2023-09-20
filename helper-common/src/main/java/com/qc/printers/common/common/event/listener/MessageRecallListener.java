@@ -34,7 +34,7 @@ public class MessageRecallListener {
     @TransactionalEventListener(classes = MessageRecallEvent.class, fallbackExecution = true)
     public void evictMsg(MessageRecallEvent event) {
         ChatMsgRecallDTO recallDTO = event.getRecallDTO();
-        msgCache.evictMsg(recallDTO.getMsgId());
+        msgCache.evictMsg(Long.valueOf(recallDTO.getMsgId()));
     }
 
     @Async

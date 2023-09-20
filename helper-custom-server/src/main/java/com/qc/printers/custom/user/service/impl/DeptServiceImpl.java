@@ -3,6 +3,7 @@ package com.qc.printers.custom.user.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.qc.printers.common.common.CustomException;
+import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.entity.SysDept;
 import com.qc.printers.common.user.domain.entity.SysRole;
 import com.qc.printers.common.user.domain.entity.SysRoleDept;
@@ -10,7 +11,6 @@ import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.service.ISysDeptService;
 import com.qc.printers.common.user.service.ISysRoleDeptService;
 import com.qc.printers.common.user.service.ISysRoleService;
-import com.qc.printers.common.user.service.IUserService;
 import com.qc.printers.custom.user.domain.vo.response.dept.DeptManger;
 import com.qc.printers.custom.user.service.DeptService;
 import com.qc.printers.custom.user.utils.DeptMangerHierarchyBuilder;
@@ -33,7 +33,7 @@ public class DeptServiceImpl implements DeptService {
     private ISysDeptService iSysDeptService;
 
     @Autowired
-    private IUserService iUserService;
+    private UserDao userDao;
 
     @Autowired
     private ISysRoleDeptService iSysRoleDeptService;
@@ -194,7 +194,7 @@ public class DeptServiceImpl implements DeptService {
         for (SysDept sysDept : list) {
             LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
             userLambdaQueryWrapper.eq(User::getDeptId, sysDept.getId());
-            int count = iUserService.count(userLambdaQueryWrapper);
+            int count = userDao.count(userLambdaQueryWrapper);
             if (count != 0) {
                 throw new CustomException("[" + sysDept.getDeptName() + "]部门下存在用户！禁止直接删除");
             }
