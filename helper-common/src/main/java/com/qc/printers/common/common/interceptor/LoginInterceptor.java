@@ -1,14 +1,17 @@
 package com.qc.printers.common.common.interceptor;
 
 
+import cn.hutool.extra.servlet.ServletUtil;
 import com.qc.printers.common.common.Code;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.annotation.NeedToken;
+import com.qc.printers.common.common.domain.dto.RequestInfo;
 import com.qc.printers.common.common.utils.JWTUtil;
 import com.qc.printers.common.common.utils.RedisUtils;
+import com.qc.printers.common.common.utils.RequestHolder;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
 import com.qc.printers.common.user.domain.dto.UserInfo;
-import com.qc.printers.common.user.service.UserInfoService;
+import com.qc.printers.common.user.service.IUserService;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -27,7 +30,7 @@ import java.lang.reflect.Method;
 @Api("此拦截器用于获取用户基本信息存在threadlocal内,并且校验是否登录")
 public class LoginInterceptor implements HandlerInterceptor {
     @Autowired
-    private UserInfoService userInfoService;
+    private IUserService iUserService;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -64,8 +67,12 @@ public class LoginInterceptor implements HandlerInterceptor {
         if (StringUtils.isEmpty(userId)) {
             throw new CustomException("认证失败", Code.DEL_TOKEN);
         }
-        UserInfo userInfo = userInfoService.getUserInfo(Long.valueOf(userId));
+        UserInfo userInfo = iUserService.getUserInfo(Long.valueOf(userId));
         ThreadLocalUtil.addCurrentUser(userInfo);
+        RequestInfo info = new RequestInfo();
+        info.setUid(userInfo.getId());
+        info.setIp(ServletUtil.getClientIP(request));
+        RequestHolder.set(info);
         return true;
     }
 
@@ -73,5 +80,6 @@ public class LoginInterceptor implements HandlerInterceptor {
     public void afterCompletion(HttpServletRequest request, HttpServletResponse response, Object handler, Exception ex) throws Exception {
         //防止内存泄露，对ThreadLocal里的对象进行清除
         ThreadLocalUtil.remove();
+        RequestHolder.remove();
     }
 }

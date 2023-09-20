@@ -8,7 +8,8 @@ import com.qc.printers.common.common.domain.vo.response.CursorPageBaseResp;
 import com.qc.printers.common.common.utils.CursorUtils;
 import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.user.domain.dto.UserInfo;
-import com.qc.printers.common.user.service.UserInfoService;
+import com.qc.printers.common.user.service.IUserService;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -22,10 +23,11 @@ import java.util.stream.Collectors;
  * Date: 2023-03-27
  */
 @Component
+@Slf4j
 public class UserCache {
 
     @Autowired
-    private UserInfoService userInfoService;
+    private IUserService userInfoService;
 
 
     public Long getOnlineNum() {
@@ -76,6 +78,7 @@ public class UserCache {
         String offlineKey = RedisKey.getKey(RedisKey.OFFLINE_UID_ZET);
         //移除上线线表
         RedisUtils.zRemove(onlineKey, uid);
+        log.info("4444444444444");
         //更新上线表
         RedisUtils.zAdd(offlineKey, uid, optTime.getTime());
     }

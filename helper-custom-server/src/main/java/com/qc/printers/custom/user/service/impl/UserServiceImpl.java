@@ -11,12 +11,19 @@ import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.common.service.CommonService;
 import com.qc.printers.common.common.utils.*;
+import com.qc.printers.common.user.dao.UserDao;
+import com.qc.printers.common.user.domain.dto.SummeryInfoDTO;
 import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.SysDept;
 import com.qc.printers.common.user.domain.entity.SysRole;
 import com.qc.printers.common.user.domain.entity.SysUserRole;
 import com.qc.printers.common.user.domain.entity.User;
-import com.qc.printers.common.user.service.*;
+import com.qc.printers.common.user.domain.vo.request.user.SummeryInfoReq;
+import com.qc.printers.common.user.service.ISysDeptService;
+import com.qc.printers.common.user.service.ISysRoleService;
+import com.qc.printers.common.user.service.ISysUserRoleService;
+import com.qc.printers.common.user.service.IUserService;
+import com.qc.printers.common.user.service.cache.UserCache;
 import com.qc.printers.custom.user.domain.dto.LoginDTO;
 import com.qc.printers.custom.user.domain.vo.request.PasswordR;
 import com.qc.printers.custom.user.domain.vo.response.LoginRes;
@@ -43,16 +50,17 @@ import static com.qc.printers.common.common.utils.ParamsCalibration.checkSensiti
 @Slf4j
 public class UserServiceImpl implements UserService {
     private final RestTemplate restTemplate;
-    private final IUserService iUserService;
+    @Autowired
+    private UserDao userDao;
+    @Autowired
+    private IUserService iUserService;
 
     @Autowired
     private ISysDeptService iSysDeptService;
 
     @Autowired
-    private CASOauthUtil casOauthUtil;
+    private UserCache userCache;
 
-    @Autowired
-    private UserInfoService userInfoService;
     @Autowired
     private CommonService commonService;
 
@@ -66,9 +74,8 @@ public class UserServiceImpl implements UserService {
     private ISysRoleService iSysRoleService;
 
     @Autowired
-    public UserServiceImpl(RestTemplate restTemplate, IUserService iUserService) {
+    public UserServiceImpl(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
-        this.iUserService = iUserService;
     }
 
 
@@ -134,13 +141,13 @@ public class UserServiceImpl implements UserService {
 //            throw new CustomException("不可包含'@'");
 //        }
 //        checkSensitiveWords(user.getName());
-//        boolean save = iUserService.save(user);
+//        boolean save = userDao.save(user);
 //        if (!save){
 //            throw new CustomException("认证失败");
 //        }
 //        LambdaQueryWrapper<User> queryWrapper = new LambdaQueryWrapper<>();
 //        queryWrapper.eq(User::getId,Long.valueOf(user.getId()));
-//        User one = iUserService.getOne(queryWrapper);
+//        User one = userDao.getOne(queryWrapper);
 //        if (one==null){
 //            throw new CustomException("登录业务异常!");
 //        }
@@ -172,7 +179,7 @@ public class UserServiceImpl implements UserService {
             throw new CustomException("不可包含'@'");
         }
         checkSensitiveWords(user.getName());
-        boolean save = iUserService.save(user);
+        boolean save = userDao.save(user);
         if (save) {
             return R.success("创建成功");
         }
@@ -206,7 +213,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Integer count() {
-        return iUserService.count();
+        return userDao.count();
     }
 
 
@@ -221,7 +228,7 @@ public class UserServiceImpl implements UserService {
         if (id.equals(currentUser.getId())) {
             throw new CustomException("相信我，你自己管不好自己!");
         }
-        if (userInfoService.isSuperAdmin(currentUser.getSysRoles(), currentUser.getId())) {
+        if (iUserService.isSuperAdmin(currentUser.getSysRoles(), currentUser.getId())) {
             // 禁止此处操作大管理
             throw new CustomException("你已越界");
         }
@@ -252,13 +259,13 @@ public class UserServiceImpl implements UserService {
                 user.setStatus(Integer.valueOf(status));
                 users.add(user);
             }
-            update = iUserService.updateBatchById(users);
+            update = userDao.updateBatchById(users);
         } else {
             updateUserStatuVerdict(Long.valueOf(id), currentUser);
             LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
             lambdaUpdateWrapper.set(User::getStatus, Integer.valueOf(status));
             lambdaUpdateWrapper.eq(User::getId, Long.valueOf(id));
-            update = iUserService.update(lambdaUpdateWrapper);
+            update = userDao.update(lambdaUpdateWrapper);
         }
         if (update) {
             return true;
@@ -305,7 +312,7 @@ public class UserServiceImpl implements UserService {
         lambdaUpdateWrapper.set(User::getStatus, user.getStatus());
         lambdaUpdateWrapper.set(User::getPhone, user.getPhone());
         lambdaUpdateWrapper.set(User::getAvatar, user.getAvatar());
-        boolean update = iUserService.update(lambdaUpdateWrapper);
+        boolean update = userDao.update(lambdaUpdateWrapper);
         if (update) {
             return R.success("更新成功");
         }
@@ -346,7 +353,7 @@ public class UserServiceImpl implements UserService {
         lambdaUpdateWrapper.set(User::getStatus, user.getStatus());
         lambdaUpdateWrapper.set(User::getPhone, user.getPhone());
         lambdaUpdateWrapper.set(User::getAvatar, user.getAvatar());
-        boolean update = iUserService.update(lambdaUpdateWrapper);
+        boolean update = userDao.update(lambdaUpdateWrapper);
         if (update) {
             return R.success("更新成功");
         }
@@ -413,7 +420,7 @@ public class UserServiceImpl implements UserService {
         }
         //添加排序条件
         lambdaQueryWrapper.orderByAsc(User::getCreateTime);//按照创建时间排序
-        iUserService.page(pageInfo, lambdaQueryWrapper);
+        userDao.page(pageInfo, lambdaQueryWrapper);
         PageData<UserResult> pageData = new PageData<>();
         List<UserResult> results = new ArrayList<>();
         for (Object user : pageInfo.getRecords()) {
@@ -475,14 +482,14 @@ public class UserServiceImpl implements UserService {
                 }
                 ids.add(Long.valueOf(s));
             }
-            iUserService.removeByIds(ids);
+            userDao.removeByIds(ids);
         } else {
             if (Long.valueOf(id).equals(1L)) {
                 throw new CustomException("admin不可删除");
             }
             LambdaQueryWrapper<User> lambdaUpdateWrapper = new LambdaQueryWrapper<>();
             lambdaUpdateWrapper.eq(User::getId, Long.valueOf(id));
-            iUserService.remove(lambdaUpdateWrapper);
+            userDao.remove(lambdaUpdateWrapper);
         }
 
         return R.success("删除成功");
@@ -492,7 +499,7 @@ public class UserServiceImpl implements UserService {
     public R<String> hasUserName(String username) {
         LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
         userLambdaQueryWrapper.eq(User::getUsername, username);
-        int count = iUserService.count(userLambdaQueryWrapper);
+        int count = userDao.count(userLambdaQueryWrapper);
         if (count == 0) {
             return R.success("可用");
         }
@@ -515,14 +522,14 @@ public class UserServiceImpl implements UserService {
             }
             LambdaQueryWrapper<User> userLambdaQueryWrapperCount = new LambdaQueryWrapper<>();
             userLambdaQueryWrapperCount.eq(User::getEmail, emails);
-            int count = iUserService.count(userLambdaQueryWrapperCount);
+            int count = userDao.count(userLambdaQueryWrapperCount);
             if (count > 0) {
                 throw new CustomException("该账号已经绑定过帐号了!");
             }
             LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
             lambdaUpdateWrapper.set(User::getEmail, emails);
             lambdaUpdateWrapper.eq(User::getId, Long.valueOf(id.asString()));
-            boolean update = iUserService.update(lambdaUpdateWrapper);
+            boolean update = userDao.update(lambdaUpdateWrapper);
             if (update) {
                 return R.success("绑定成功");
             }
@@ -539,7 +546,7 @@ public class UserServiceImpl implements UserService {
         }
         LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
         userLambdaQueryWrapper.eq(User::getUsername, user.getUsername());
-        User one = iUserService.getOne(userLambdaQueryWrapper);
+        User one = userDao.getOne(userLambdaQueryWrapper);
         if (one == null) {
             return R.error("用户名或密码错误");
         }
@@ -611,7 +618,7 @@ public class UserServiceImpl implements UserService {
         }
         lambdaUpdateWrapper.set(User::getSex, user.getSex());
         lambdaUpdateWrapper.set(User::getStudentId, user.getStudentId());
-        boolean update = iUserService.update(lambdaUpdateWrapper);
+        boolean update = userDao.update(lambdaUpdateWrapper);
         return update;
     }
 
@@ -655,7 +662,7 @@ public class UserServiceImpl implements UserService {
         String md5Encryptions = PWDMD5.getMD5Encryption(passwordR.getNewPassword(), salt);
         userLambdaUpdateWrapper.set(User::getPassword, md5Encryptions);
         userLambdaUpdateWrapper.set(User::getSalt, salt);
-        boolean update = iUserService.update(userLambdaUpdateWrapper);
+        boolean update = userDao.update(userLambdaUpdateWrapper);
         return update;
     }
 
@@ -729,10 +736,36 @@ public class UserServiceImpl implements UserService {
         }
 
 
-        boolean update = iUserService.update(lambdaUpdateWrapper);
+        boolean update = userDao.update(lambdaUpdateWrapper);
         return update;
 
     }
 
+
+    @Override
+    public List<SummeryInfoDTO> getSummeryUserInfo(SummeryInfoReq req) {
+        //需要前端同步的uid
+        List<Long> uidList = getNeedSyncUidList(req.getReqList());
+        //加载用户信息
+        Map<Long, UserInfo> userInfoBatch = userCache.getUserInfoBatch(uidList);
+        return req.getReqList()
+                .stream()
+                .map(a -> userInfoBatch.containsKey(a.getUid()) ? new SummeryInfoDTO(a.getUid(), true, userInfoBatch.get(a.getUid()).getName(), userInfoBatch.get(a.getUid()).getAvatar(), "未知") : SummeryInfoDTO.skip(a.getUid()))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+    }
+
+    private List<Long> getNeedSyncUidList(List<SummeryInfoReq.infoReq> reqList) {
+        List<Long> result = new ArrayList<>();
+        List<Long> userModifyTime = userCache.getUserModifyTime(reqList.stream().map(SummeryInfoReq.infoReq::getUid).collect(Collectors.toList()));
+        for (int i = 0; i < reqList.size(); i++) {
+            SummeryInfoReq.infoReq infoReq = reqList.get(i);
+            Long modifyTime = userModifyTime.get(i);
+            if (Objects.isNull(infoReq.getLastModifyTime()) || (Objects.nonNull(modifyTime) && modifyTime > infoReq.getLastModifyTime())) {
+                result.add(infoReq.getUid());
+            }
+        }
+        return result;
+    }
 
 }

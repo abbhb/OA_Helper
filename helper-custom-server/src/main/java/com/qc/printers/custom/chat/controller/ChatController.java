@@ -10,6 +10,7 @@ import com.qc.printers.common.chat.domain.vo.response.ChatMessageResp;
 import com.qc.printers.common.chat.service.ChatService;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.FrequencyControl;
+import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.domain.vo.response.CursorPageBaseResp;
 import com.qc.printers.common.common.utils.RequestHolder;
 import com.qc.printers.common.user.domain.vo.response.ws.ChatMemberResp;
@@ -32,6 +33,7 @@ import java.util.List;
  * @author <a href="https://github.com/zongzibinbin">abin</a>
  * @since 2023-03-19
  */
+@CrossOrigin("*")
 @RestController
 @RequestMapping("/chat")
 @Api(tags = "聊天室相关接口")
@@ -51,6 +53,7 @@ public class ChatController {
         return R.success(memberPage);
     }
 
+
     @GetMapping("/member/list")
     @ApiOperation("房间内的所有群成员列表-@专用（废弃）")
     @Deprecated
@@ -65,6 +68,8 @@ public class ChatController {
         return R.success(chatService.getMemberStatistic());
     }
 
+    @CrossOrigin("*")
+    @NeedToken
     @GetMapping("/public/msg/page")
     @ApiOperation("消息列表")
 //    @FrequencyControl(time = 120, count = 20, target = FrequencyControl.Target.IP)
@@ -73,7 +78,8 @@ public class ChatController {
         return R.success(msgPage);
     }
 
-
+    @CrossOrigin("*")
+    @NeedToken
     @PostMapping("/msg")
     @ApiOperation("发送消息")
     @FrequencyControl(time = 5, count = 3, target = FrequencyControl.Target.UID)
@@ -85,6 +91,7 @@ public class ChatController {
         return R.success(chatService.getMsgResp(msgId, RequestHolder.get().getUid()));
     }
 
+    @NeedToken
     @PutMapping("/msg/mark")
     @ApiOperation("消息标记")
     @FrequencyControl(time = 10, count = 5, target = FrequencyControl.Target.UID)
@@ -93,6 +100,13 @@ public class ChatController {
         return R.success("成功");
     }
 
+    /**
+     * 只有群管理员能撤回任意消息
+     *
+     * @param request
+     * @return
+     */
+    @NeedToken
     @PutMapping("/msg/recall")
     @ApiOperation("撤回消息")
     @FrequencyControl(time = 20, count = 3, target = FrequencyControl.Target.UID)

@@ -6,8 +6,8 @@ import com.qc.printers.common.chat.domain.vo.request.ChatMessageReq;
 import com.qc.printers.common.chat.domain.vo.request.msg.TextMsgReq;
 import com.qc.printers.common.chat.service.ChatService;
 import com.qc.printers.common.config.ThreadPoolConfig;
+import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.entity.User;
-import com.qc.printers.common.user.service.IUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,7 +22,7 @@ public abstract class AbstractChatAIHandler {
     @Autowired
     protected ChatService chatService;
     @Autowired
-    protected IUserService iUserService;
+    protected UserDao userDao;
     @Autowired
     @Qualifier(ThreadPoolConfig.AICHAT_EXECUTOR)
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
@@ -74,7 +74,7 @@ public abstract class AbstractChatAIHandler {
 
 
     protected void answerMsg(String text, Message replyMessage) {
-        User userInfo = iUserService.getById(replyMessage.getFromUid());
+        User userInfo = userDao.getById(replyMessage.getFromUid());
         text = "@" + userInfo.getName() + " " + text;
         if (text.length() < 800) {
             save(text, replyMessage);

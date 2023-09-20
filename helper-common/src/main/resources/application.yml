@@ -22,13 +22,7 @@ spring:
   redis:
     database: ${helper.redis.database}
     port: ${helper.redis.port}
-    jedis:
-      pool:
-        max-active: 40
-        max-wait: -1
-        max-idle: 50
-        min-idle: 25
-    timeout: 6000
+    timeout: 1800000
     host: ${helper.redis.ip}
 mybatis-plus:
   configuration:
@@ -61,7 +55,7 @@ study:
   maxFirstTime: 10
 
 rocketmq:
-  name-server: 192.168.12.12:10911
+  name-server: 192.168.12.12:9876
   # 默认的消息组
   producer:
     group: chatGroup

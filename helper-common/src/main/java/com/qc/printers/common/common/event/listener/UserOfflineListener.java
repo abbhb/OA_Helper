@@ -2,8 +2,8 @@ package com.qc.printers.common.common.event.listener;
 
 import com.qc.printers.common.common.event.UserOfflineEvent;
 import com.qc.printers.common.common.utils.DateUtils;
+import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.entity.User;
-import com.qc.printers.common.user.service.IUserService;
 import com.qc.printers.common.user.service.WebSocketService;
 import com.qc.printers.common.user.service.adapter.WSAdapter;
 import com.qc.printers.common.user.service.cache.UserCache;
@@ -24,7 +24,7 @@ public class UserOfflineListener {
     @Autowired
     private WebSocketService webSocketService;
     @Autowired
-    private IUserService iUserService;
+    private UserDao userDao;
     @Autowired
     private UserCache userCache;
     @Autowired
@@ -47,7 +47,7 @@ public class UserOfflineListener {
         update.setId(user.getId());
         update.setLoginDate(user.getLoginDate());
 //        update.setActiveStatus(ChatActiveStatusEnum.OFFLINE.getStatus());
-        iUserService.updateById(update);
+        userDao.updateById(update);
     }
 
 }

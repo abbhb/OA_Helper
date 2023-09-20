@@ -27,15 +27,15 @@ public class ChatMessageResp {
     @Data
     public static class UserInfo {
         @ApiModelProperty("用户id")
-        private Long uid;
+        private String uid;
     }
 
     @Data
     public static class Message {
         @ApiModelProperty("消息id")
-        private Long id;
+        private String id;
         @ApiModelProperty("房间id")
-        private Long roomId;
+        private String roomId;
         @ApiModelProperty("消息发送时间")
         private Date sendTime;
         @ApiModelProperty("消息类型 1正常文本 2.撤回消息")

@@ -28,6 +28,7 @@ import java.util.List;
  * @author <a href="https://github.com/zongzibinbin">abin</a>
  * @since 2023-03-19
  */
+@CrossOrigin("*")
 @RestController
 @RequestMapping("/room")
 @Api(tags = "聊天室相关接口")
@@ -42,6 +43,7 @@ public class RoomController {
         Long uid = RequestHolder.get().getUid();
         return R.success(roomService.getGroupDetail(uid, request.getId()));
     }
+
 
     @GetMapping("/public/group/member/page")
     @ApiOperation("群成员列表")

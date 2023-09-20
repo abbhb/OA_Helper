@@ -8,7 +8,9 @@ import com.qc.printers.common.common.annotation.PermissionCheck;
 import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.common.utils.CASOauthUtil;
 import com.qc.printers.common.common.utils.JWTUtil;
+import com.qc.printers.common.user.domain.dto.SummeryInfoDTO;
 import com.qc.printers.common.user.domain.entity.User;
+import com.qc.printers.common.user.domain.vo.request.user.SummeryInfoReq;
 import com.qc.printers.custom.user.domain.dto.LoginDTO;
 import com.qc.printers.custom.user.domain.vo.request.PasswordR;
 import com.qc.printers.custom.user.domain.vo.response.LoginRes;
@@ -24,6 +26,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import java.util.List;
 import java.util.Map;
 
@@ -193,5 +196,10 @@ public class UserController {
         return R.success(userService.userPassword());
     }
 
+    @PostMapping("/public/summary/userInfo/batch")
+    @ApiOperation("用户聚合信息-返回的代表需要刷新的")
+    public R<List<SummeryInfoDTO>> getSummeryUserInfo(@Valid @RequestBody SummeryInfoReq req) {
+        return R.success(userService.getSummeryUserInfo(req));
+    }
 
 }

@@ -43,7 +43,7 @@ public class GPTChatAIHandler extends AbstractChatAIHandler {
     protected void init() {
         super.init();
         if (isUse()) {
-            User userInfo = iUserService.getById(chatGPTProperties.getAIUserId());
+            User userInfo = userDao.getById(chatGPTProperties.getAIUserId());
             if (userInfo == null) {
                 log.error("根据AIUserId:{} 找不到用户信息", chatGPTProperties.getAIUserId());
                 throw new RuntimeException("根据AIUserId: " + chatGPTProperties.getAIUserId() + " 找不到用户信息");

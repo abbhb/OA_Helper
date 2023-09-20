@@ -7,14 +7,13 @@ import com.qc.printers.common.common.Code;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.domain.entity.Token;
-import com.qc.printers.common.common.service.CommonService;
 import com.qc.printers.common.common.utils.CASOauthUtil;
 import com.qc.printers.common.common.utils.JWTUtil;
 import com.qc.printers.common.common.utils.RedisUtils;
+import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.entity.TrLogin;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.service.ITrLoginService;
-import com.qc.printers.common.user.service.IUserService;
 import com.qc.printers.custom.user.domain.vo.response.LoginRes;
 import com.qc.printers.custom.user.service.TrLoginService;
 import lombok.extern.slf4j.Slf4j;
@@ -36,15 +35,14 @@ public class TrLoginServiceImpl implements TrLoginService {
     private final RestTemplate restTemplate;
 
     private final ITrLoginService iTrLoginService;
-    private final CommonService commonService;
+
 
     @Autowired
-    private IUserService iUserService;
+    private UserDao userDao;
 
-    public TrLoginServiceImpl(RestTemplate restTemplate, ITrLoginService iTrLoginService, CommonService commonService) {
+    public TrLoginServiceImpl(RestTemplate restTemplate, ITrLoginService iTrLoginService) {
         this.restTemplate = restTemplate;
         this.iTrLoginService = iTrLoginService;
-        this.commonService = commonService;
     }
 
     @Transactional
@@ -67,7 +65,7 @@ public class TrLoginServiceImpl implements TrLoginService {
         TrLogin one = iTrLoginService.getOne(wrapper);
         if (one!=null&&one.getStatus().equals(1)) {
             //已经绑定
-            User byId = iUserService.getById(one.getUserId());
+            User byId = userDao.getById(one.getUserId());
             if (byId == null) {
                 throw new CustomException("认证失败", Code.DEL_TOKEN);
             }
@@ -107,7 +105,7 @@ public class TrLoginServiceImpl implements TrLoginService {
         user.setEmail(userObjectByToken.getString("email"));
         String permissionName = userObjectByToken.getString("permission_name");
 
-        boolean save = iUserService.save(user);
+        boolean save = userDao.save(user);
         if (save){
             if (one==null){
                 //添加账号并绑定然后登录

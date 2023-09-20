@@ -10,12 +10,12 @@ import com.qc.printers.common.common.event.UserOfflineEvent;
 import com.qc.printers.common.common.event.UserOnlineEvent;
 import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.config.ThreadPoolConfig;
+import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.dto.WSChannelExtraDTO;
 import com.qc.printers.common.user.domain.entity.IpInfo;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.domain.enums.WSBaseResp;
 import com.qc.printers.common.user.domain.vo.request.ws.WSAuthorize;
-import com.qc.printers.common.user.service.IUserService;
 import com.qc.printers.common.user.service.WebSocketService;
 import com.qc.printers.common.user.service.adapter.WSAdapter;
 import com.qc.printers.common.user.service.cache.UserCache;
@@ -70,7 +70,7 @@ public class WebSocketServiceImpl implements WebSocketService {
      */
     private static final String LOGIN_CODE = "loginCode";
     @Autowired
-    private IUserService iUserService;
+    private UserDao userDao;
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
     @Autowired
@@ -132,7 +132,7 @@ public class WebSocketServiceImpl implements WebSocketService {
         String userId = (String) RedisUtils.get(wsAuthorize.getToken(), String.class);
         boolean verifySuccess = StringUtils.isNotEmpty(userId);
         if (verifySuccess) {//用户校验成功给用户登录
-            User user = iUserService.getById(Long.valueOf(userId));
+            User user = userDao.getById(Long.valueOf(userId));
             loginSuccess(channel, user, wsAuthorize.getToken());
         } else { //让前端的token失效
             sendMsg(channel, WSAdapter.buildInvalidateTokenResp());
@@ -152,6 +152,9 @@ public class WebSocketServiceImpl implements WebSocketService {
         if (!online) {
             user.setLoginDate(LocalDateTime.now());
             IpInfo loginIp = user.getLoginIp();
+            if (loginIp == null) {
+                loginIp = new IpInfo();
+            }
             loginIp.refreshIp(NettyUtil.getAttr(channel, NettyUtil.IP));
             user.setLoginIp(loginIp);
             applicationEventPublisher.publishEvent(new UserOnlineEvent(this, user));

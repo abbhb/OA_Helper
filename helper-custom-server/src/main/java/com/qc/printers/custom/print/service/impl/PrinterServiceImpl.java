@@ -7,14 +7,13 @@ import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.common.domain.vo.ValueLabelResult;
 import com.qc.printers.common.common.service.CommonService;
-import com.qc.printers.common.common.utils.FileMD5;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
 import com.qc.printers.common.config.MinIoProperties;
-import com.qc.printers.common.print.domain.entity.PrintDocumentTypeStatistic;
 import com.qc.printers.common.print.domain.entity.Printer;
 import com.qc.printers.common.print.domain.vo.CountTop10VO;
 import com.qc.printers.common.print.mapper.PrinterMapper;
 import com.qc.printers.common.print.service.IPrinterService;
+import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.mapper.UserMapper;
 import com.qc.printers.common.user.service.IUserService;
@@ -24,18 +23,11 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.FileNotFoundException;
-import java.io.IOException;
-import java.io.InputStream;
-import java.net.URL;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 @Service
 @Slf4j
@@ -46,6 +38,9 @@ public class PrinterServiceImpl implements PrinterService {
 
     @Autowired
     private IUserService iUserService;
+
+    @Autowired
+    private UserDao userDao;
 
     @Autowired
     private MinIoProperties minIoProperties;
@@ -227,7 +222,7 @@ public class PrinterServiceImpl implements PrinterService {
             return R.error("文件名里不允许包含？请修改后在打印");
         }
         boolean isDuplex = !duplex.equals(1);
-        User one = iUserService.getOne(new LambdaQueryWrapper<User>().eq(User::getUsername, username));
+        User one = userDao.getOne(new LambdaQueryWrapper<User>().eq(User::getUsername, username));
         if (one==null){
             throw new CustomException("用户不存在");
         }

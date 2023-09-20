@@ -10,10 +10,10 @@ import com.qc.printers.common.chat.service.adapter.RoomAdapter;
 import com.qc.printers.common.chat.service.cache.GroupMemberCache;
 import com.qc.printers.common.chat.service.cache.MsgCache;
 import com.qc.printers.common.common.event.GroupMemberAddEvent;
+import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.domain.enums.WSBaseResp;
 import com.qc.printers.common.user.domain.vo.response.ws.WSMemberChange;
-import com.qc.printers.common.user.service.IUserService;
 import com.qc.printers.common.user.service.WebSocketService;
 import com.qc.printers.common.user.service.cache.UserCache;
 import com.qc.printers.common.user.service.impl.PushService;
@@ -48,7 +48,7 @@ public class GroupMemberAddListener {
     @Autowired
     private GroupMemberDao groupMemberDao;
     @Autowired
-    private IUserService iUserService;
+    private UserDao userDao;
     @Autowired
     private GroupMemberCache groupMemberCache;
     @Autowired
@@ -74,7 +74,7 @@ public class GroupMemberAddListener {
         RoomGroup roomGroup = event.getRoomGroup();
         List<Long> memberUidList = groupMemberCache.getMemberUidList(roomGroup.getRoomId());
         List<Long> uidList = memberList.stream().map(GroupMember::getUid).collect(Collectors.toList());
-        List<User> users = iUserService.listByIds(uidList);
+        List<User> users = userDao.listByIds(uidList);
         users.forEach(user -> {
             WSBaseResp<WSMemberChange> ws = MemberAdapter.buildMemberAddWS(roomGroup.getRoomId(), user);
             pushService.sendPushMsg(ws, memberUidList);

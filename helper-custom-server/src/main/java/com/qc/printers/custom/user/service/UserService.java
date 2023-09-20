@@ -3,11 +3,15 @@ package com.qc.printers.custom.user.service;
 
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.domain.entity.PageData;
+import com.qc.printers.common.user.domain.dto.SummeryInfoDTO;
 import com.qc.printers.common.user.domain.entity.User;
+import com.qc.printers.common.user.domain.vo.request.user.SummeryInfoReq;
 import com.qc.printers.custom.user.domain.dto.LoginDTO;
 import com.qc.printers.custom.user.domain.vo.request.PasswordR;
 import com.qc.printers.custom.user.domain.vo.response.LoginRes;
 import com.qc.printers.custom.user.domain.vo.response.UserResult;
+
+import java.util.List;
 
 public interface UserService {
 //    R<UserResult> login(String code);
@@ -50,4 +54,7 @@ public interface UserService {
     boolean setPassword(PasswordR passwordR);
 
     boolean updateByAdmin(UserResult user);
+
+    List<SummeryInfoDTO> getSummeryUserInfo(SummeryInfoReq req);
+
 }
