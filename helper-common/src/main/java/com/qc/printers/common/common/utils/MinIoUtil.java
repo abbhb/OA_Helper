@@ -1,9 +1,17 @@
 package com.qc.printers.common.common.utils;
 
+import cn.hutool.core.date.DatePattern;
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.io.file.FileNameUtil;
+import cn.hutool.core.util.StrUtil;
+import com.qc.printers.common.common.utils.oss.domain.OssReq;
+import com.qc.printers.common.common.utils.oss.domain.OssResp;
 import com.qc.printers.common.config.MinIoProperties;
+import io.minio.GetPresignedObjectUrlArgs;
 import io.minio.MinioClient;
 import io.minio.ObjectStat;
 import io.minio.PutObjectOptions;
+import io.minio.http.Method;
 import io.minio.messages.Bucket;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
@@ -16,7 +24,9 @@ import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
 import java.io.InputStream;
 import java.net.URLEncoder;
+import java.util.Date;
 import java.util.List;
+import java.util.Optional;
 
 @Slf4j
 @Component
@@ -193,6 +203,42 @@ public class MinIoUtil {
     @SneakyThrows(Exception.class)
     public static String getFileUrl(String bucketName, String fileName) {
         return minioClient.presignedGetObject(bucketName, fileName);
+    }
+
+    /**
+     * 返回临时带签名、过期时间一天、Get请求方式的访问URL
+     */
+    @SneakyThrows
+    public OssResp getPreSignedObjectUrl(OssReq req) {
+        String absolutePath = req.isAutoPath() ? generateAutoPath(req) : req.getFilePath() + StrUtil.SLASH + req.getFileName();
+        String url = minioClient.getPresignedObjectUrl(
+                GetPresignedObjectUrlArgs.builder()
+                        .method(Method.PUT)
+                        .bucket(minIoProperties.getBucketName())
+                        .object(absolutePath)
+                        .expiry(60 * 60 * 24)
+                        .build());
+        return OssResp.builder()
+                .uploadUrl(url)
+                .downloadUrl(getDownloadUrl(minIoProperties.getBucketName(), absolutePath))
+                .build();
+    }
+
+    private String getDownloadUrl(String bucket, String pathFile) {
+        return minIoProperties.getUrl() + StrUtil.SLASH + bucket + pathFile;
+    }
+
+    /**
+     * 生成随机文件名，防止重复
+     *
+     * @return
+     */
+    public String generateAutoPath(OssReq req) {
+        String uid = Optional.ofNullable(req.getUid()).map(String::valueOf).orElse("000000");
+        cn.hutool.core.lang.UUID uuid = cn.hutool.core.lang.UUID.fastUUID();
+        String suffix = FileNameUtil.getSuffix(req.getFileName());
+        String yearAndMonth = DateUtil.format(new Date(), DatePattern.NORM_MONTH_PATTERN);
+        return req.getFilePath() + StrUtil.SLASH + yearAndMonth + StrUtil.SLASH + uid + StrUtil.SLASH + uuid + StrUtil.DOT + suffix;
     }
 
 }
