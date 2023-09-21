@@ -140,6 +140,7 @@ public class UserController {
         return R.error("修改失败");
     }
 
+    @CrossOrigin("*")
     @NeedToken
     @PostMapping("/info")
     @ApiOperation(value = "获取用户信息", notes = "")
