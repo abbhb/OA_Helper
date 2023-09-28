@@ -51,6 +51,7 @@ public class RoomController {
         return R.success(roomService.getMemberPage(request));
     }
 
+
     @GetMapping("/group/member/list")
     @ApiOperation("房间内的所有群成员列表-@专用")
     public R<List<ChatMemberListResp>> getMemberList(@Valid ChatMessageMemberReq request) {

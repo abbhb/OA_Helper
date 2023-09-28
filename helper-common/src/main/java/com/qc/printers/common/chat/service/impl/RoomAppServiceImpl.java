@@ -37,6 +37,7 @@ import com.qc.printers.common.user.domain.vo.response.ws.ChatMemberResp;
 import com.qc.printers.common.user.domain.vo.response.ws.WSMemberChange;
 import com.qc.printers.common.user.service.cache.UserCache;
 import com.qc.printers.common.user.service.impl.PushService;
+import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
@@ -55,6 +56,7 @@ import java.util.stream.Collectors;
  * Author: <a href="https://github.com/zongzibinbin">abin</a>
  * Date: 2023-07-22
  */
+@Slf4j
 @Service
 public class RoomAppServiceImpl implements RoomAppService {
 
@@ -167,11 +169,12 @@ public class RoomAppServiceImpl implements RoomAppService {
     @Override
     @Cacheable(cacheNames = "member", key = "'memberList.'+#request.roomId")
     public List<ChatMemberListResp> getMemberList(ChatMessageMemberReq request) {
+        log.info("roomId = {}", request.getRoomId());
         Room room = roomCache.get(request.getRoomId());
         AssertUtil.isNotEmpty(room, "房间号有误");
         if (isHotGroup(room)) {//全员群展示所有用户100名
             List<User> memberList = userDao.getMemberList();
-            List<UserInfo> collect = memberList.stream().map(user -> new UserInfo(user)).collect(Collectors.toList());
+            List<UserInfo> collect = memberList.stream().map(UserInfo::new).collect(Collectors.toList());
             return MemberAdapter.buildMemberList(collect);
         } else {
             RoomGroup roomGroup = roomGroupCache.get(request.getRoomId());
