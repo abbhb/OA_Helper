@@ -80,19 +80,19 @@ public class UserDao extends ServiceImpl<UserMapper, User> {
     @Transactional
     @Override
     public boolean saveOrUpdate(User entity) {
-        return this.saveOrUpdate(entity);
+        return super.saveOrUpdate(entity);
     }
 
     @Transactional
     @Override
     public boolean saveOrUpdateBatch(Collection<User> entityList, int batchSize) {
-        return this.saveOrUpdateBatch(entityList, batchSize);
+        return super.saveOrUpdateBatch(entityList, batchSize);
     }
 
 
     @Override
     public boolean updateBatchById(Collection<User> entityList, int batchSize) {
-        return this.updateBatchById(entityList, batchSize);
+        return super.updateBatchById(entityList, batchSize);
     }
 
     @Override
@@ -103,13 +103,13 @@ public class UserDao extends ServiceImpl<UserMapper, User> {
                 userCache.userInfoChange(user.getId());
             }
         }
-        return this.saveOrUpdateBatch(entityList);
+        return super.saveOrUpdateBatch(entityList);
     }
 
     @Override
     public boolean removeById(Serializable id) {
         userCache.delUserInfo((Long) id);
-        return this.removeById(id);
+        return super.removeById(id);
     }
 
     @Transactional
@@ -123,7 +123,7 @@ public class UserDao extends ServiceImpl<UserMapper, User> {
     public boolean remove(Wrapper<User> queryWrapper) {
         User one = this.getOne(queryWrapper);
         userCache.delUserInfo(one.getId());
-        return this.remove(queryWrapper);
+        return super.remove(queryWrapper);
     }
 
     @Override
@@ -132,7 +132,7 @@ public class UserDao extends ServiceImpl<UserMapper, User> {
                 idList) {
             userCache.userInfoChange((Long) id);
         }
-        return this.removeByIds(idList);
+        return super.removeByIds(idList);
     }
 
     @Override
@@ -142,27 +142,30 @@ public class UserDao extends ServiceImpl<UserMapper, User> {
     }
 
 
+    @Transactional
     @Override
     public boolean update(Wrapper<User> updateWrapper) {
         User one = this.getOne(updateWrapper);
         userCache.userInfoChange(one.getId());
-        return this.update(updateWrapper);
+        return super.update(updateWrapper);
     }
 
+    @Transactional
     @Override
     public boolean update(User entity, Wrapper<User> updateWrapper) {
         User one = this.getOne(updateWrapper);
         userCache.userInfoChange(one.getId());
-        return this.update(entity, updateWrapper);
+        return super.update(entity, updateWrapper);
     }
 
+    @Transactional
     @Override
     public boolean updateBatchById(Collection<User> entityList) {
         for (User user :
                 entityList) {
             userCache.userInfoChange(user.getId());
         }
-        return this.updateBatchById(entityList);
+        return super.updateBatchById(entityList);
     }
 
     @Override
