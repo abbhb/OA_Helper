@@ -61,6 +61,7 @@ public class ChatController {
         return R.success(chatService.getMemberList(chatMessageMemberReq));
     }
 
+
     @GetMapping("public/member/statistic")
     @ApiOperation("群成员人数统计")
     @Deprecated

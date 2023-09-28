@@ -2,7 +2,7 @@ package com.qc.printers.common.chatai.properties;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.stereotype.Component;
+import org.springframework.context.annotation.Configuration;
 
 /**
  * ChatGLM2 配置文件
@@ -11,7 +11,7 @@ import org.springframework.stereotype.Component;
  * @date 2023/06/30
  */
 @Data
-@Component
+@Configuration
 @ConfigurationProperties(prefix = "chatai.chatglm2")
 public class ChatGLM2Properties {
 
