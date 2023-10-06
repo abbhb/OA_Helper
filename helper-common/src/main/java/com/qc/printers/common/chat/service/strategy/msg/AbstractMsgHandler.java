@@ -15,6 +15,7 @@ public abstract class AbstractMsgHandler {
 
     @PostConstruct
     private void init() {
+        //实现类都会继承该抽象模板，都会注册为组件，在注册时在工厂注册
         MsgHandlerFactory.register(getMsgTypeEnum().getType(), this);
     }
 

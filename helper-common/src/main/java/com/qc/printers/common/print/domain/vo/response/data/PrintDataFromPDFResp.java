@@ -26,7 +26,7 @@ public class PrintDataFromPDFResp {
 
 
     /**
-     * 下载链接
+     * 预览图下载链接
      */
     private String filePDFImageUrl;
 
@@ -34,5 +34,16 @@ public class PrintDataFromPDFResp {
      * 文件有多少页
      */
     private Integer pageNums;
+
+    /**
+     * 1为成功
+     * 0为失败
+     */
+    private Integer status;
+
+    /**
+     * 失败的话原因
+     */
+    private String message;
 
 }

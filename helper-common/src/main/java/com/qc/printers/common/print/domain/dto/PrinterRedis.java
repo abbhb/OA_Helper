@@ -30,6 +30,7 @@ public class PrinterRedis extends Printer implements Serializable {
 
     //当前状态，缩略图为异步的，不计入
     /**
+     * 0某步出错直接失败
      * 1为用户刚上传
      * 2为开始转pdf了
      * 3为pdf转完了
@@ -37,6 +38,11 @@ public class PrinterRedis extends Printer implements Serializable {
      * 5打印完成；
      */
     private Integer sTU;
+
+    /**
+     * 失败原因
+     */
+    private String message;
 
     /**
      * 总页数
