@@ -10,6 +10,8 @@ import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.print.domain.entity.PrintDocumentTypeStatistic;
 import com.qc.printers.common.print.domain.vo.CountTop10VO;
 import com.qc.printers.custom.print.domain.vo.PrinterResult;
+import com.qc.printers.custom.print.domain.vo.response.PrintImageResp;
+import com.qc.printers.custom.print.domain.vo.response.PrinterBaseResp;
 import com.qc.printers.custom.print.service.PrinterService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -45,7 +47,7 @@ public class PrintController {
         log.info("pageStart={},pageEnd={},copiesNum={},username={},duplex={}", pageStart, pageEnd, copiesNum,username,duplex);
         return printerService.addPrinterLog(file, Integer.valueOf(pageStart), Integer.valueOf(pageEnd), Integer.valueOf(copiesNum),username,Integer.valueOf(duplex),fileName);
     }
-    
+
     
     /**
      * 获取历史打印记录
@@ -126,4 +128,22 @@ public class PrintController {
     public R<Integer> getTodayPrintCount() {
         return printerService.getTodayPrintCount();
     }
+
+    @CrossOrigin("*")
+    @NeedToken
+    @PostMapping("/uploadPrintFile")
+    @ApiOperation("上传需要打印的文件")
+    public R<String> uploadPrintFile(MultipartFile file) {
+        return R.success(printerService.uploadPrintFile(file));
+
+    }
+
+    @CrossOrigin("*")
+    @NeedToken
+    @GetMapping("/thumbnail polling")
+    @ApiOperation("轮询接口，查询缩略图状态，有就返回，没告诉前端")
+    public R<PrinterBaseResp<PrintImageResp>> thumbnailPolling(Long id) {
+        return R.success(printerService.thumbnailPolling(id));
+    }
+
 }

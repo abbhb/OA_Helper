@@ -163,7 +163,7 @@ public class GPTChatAIHandler extends AbstractChatAIHandler {
         if (CollectionUtils.isEmpty(extra.getAtUidList())) {
             return false;
         }
-        if (!extra.getAtUidList().contains(chatGPTProperties.getAIUserId())) {
+        if (!extra.getAtUidList().contains(String.valueOf(chatGPTProperties.getAIUserId()))) {
             return false;
         }
 

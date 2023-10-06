@@ -35,4 +35,16 @@ public class MQProducer {
                 .build();
         rocketMQTemplate.send(topic, build);
     }
+
+    /**
+     * 发布且携带Tag
+     */
+    public void sendMessageWithTags(String topic, Object body, String tags) {
+        // 创建消息
+        Message<Object> rocketMQMessage = MessageBuilder.withPayload(body)
+                .setHeader("rocketmq_TAGS", tags) // 设置标签
+                .build();
+        // 发送消息
+        rocketMQTemplate.send(topic, rocketMQMessage);
+    }
 }

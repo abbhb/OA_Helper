@@ -25,7 +25,7 @@ public class TextMsgResp {
     @ApiModelProperty("消息链接映射")
     private Map<String, UrlInfo> urlContentMap;
     @ApiModelProperty("艾特的uid")
-    private List<Long> atUidList;
+    private List<String> atUidList;
     @ApiModelProperty("父消息，如果没有父消息，返回的是null")
     private ReplyMsg reply;
 

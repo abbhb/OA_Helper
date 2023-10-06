@@ -39,7 +39,7 @@ public class ChatGPTProperties {
     /**
      * 用户每小时条数限制
      */
-    private Integer limit = 20;
+    private Integer limit = 40;
 
     /**
      * 最大令牌
