@@ -99,6 +99,9 @@ public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<Tex
 //                log.info("请求二维码 = " + msg.text());
                 log.info("错误的类型，不应该出现登录！直接传入token进行验证即可！");
                 break;
+            case AUTHORIZE:
+                log.info("主动认证{}", wsBaseReq.getData());
+                this.webSocketService.authorize(ctx.channel(), new WSAuthorize(wsBaseReq.getData()));
             case HEARTBEAT:
                 break;
             default:

@@ -76,19 +76,20 @@ public abstract class AbstractChatAIHandler {
     protected void answerMsg(String text, Message replyMessage) {
         User userInfo = userDao.getById(replyMessage.getFromUid());
         text = "@" + userInfo.getName() + " " + text;
-        if (text.length() < 800) {
-            save(text, replyMessage);
-        } else {
-            int maxLen = 800;
-            int len = text.length();
-            int count = (len + maxLen - 1) / maxLen;
+//        if (text.length() < 800) {
+//        } else {
+//            int maxLen = 800;
+//            int len = text.length();
+//            int count = (len + maxLen - 1) / maxLen;
+//
+//            for (int i = 0; i < count; i++) {
+//                int start = i * maxLen;
+//                int end = Math.min(start + maxLen, len);
+//                save(text.substring(start, end), replyMessage);
+//            }
+//        }
+        save(text, replyMessage);
 
-            for (int i = 0; i < count; i++) {
-                int start = i * maxLen;
-                int end = Math.min(start + maxLen, len);
-                save(text.substring(start, end), replyMessage);
-            }
-        }
     }
 
     private void save(String text, Message replyMessage) {

@@ -73,7 +73,7 @@ public class UserDao extends ServiceImpl<UserMapper, User> {
         if (count > 0) {
             throw new CustomException("用户名已经存在");
         }
-        return this.save(entity);
+        return super.save(entity);
     }
 
 

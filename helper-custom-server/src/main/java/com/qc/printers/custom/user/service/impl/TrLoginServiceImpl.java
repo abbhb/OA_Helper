@@ -103,11 +103,12 @@ public class TrLoginServiceImpl implements TrLoginService {
         user.setStatus(1);
         user.setSex(userObjectByToken.getString("sex"));
         user.setEmail(userObjectByToken.getString("email"));
-        String permissionName = userObjectByToken.getString("permission_name");
-
+//        String permissionName = userObjectByToken.getString("permission_name");
+        user.setDeptId(1L);
+        user.setCreateUser(1L);
         boolean save = userDao.save(user);
-        if (save){
-            if (one==null){
+        if (save) {
+            if (one == null) {
                 //添加账号并绑定然后登录
                 TrLogin trLogin = new TrLogin();
                 trLogin.setStatus(1);

@@ -60,7 +60,7 @@ public class TextMsgHandler extends AbstractMsgHandler {
         }
         if (CollectionUtil.isNotEmpty(body.getAtUidList())) {
             List<Long> atUidList = body.getAtUidList();
-            Set<Long> collect = atUidList.stream().collect(Collectors.toSet());
+            Set<Long> collect = new HashSet<>(atUidList);
             Map<Long, UserInfo> batch = userCache.getUserInfoBatch(collect);
             AssertUtil.equal(atUidList.size(), batch.values().size(), "@用户不存在");
             boolean atAll = body.getAtUidList().contains(0L);
@@ -89,14 +89,15 @@ public class TextMsgHandler extends AbstractMsgHandler {
 
         }
         //判断消息url跳转
-        Map<String, UrlInfo> urlContentMap = URL_TITLE_DISCOVER.getUrlContentMap(body.getContent());
-        extra.setUrlContentMap(urlContentMap);
+        extra.setUrlContentMap(null);
+        if (body.getContent().length() <= 500) {
+            Map<String, UrlInfo> urlContentMap = URL_TITLE_DISCOVER.getUrlContentMap(body.getContent());
+            extra.setUrlContentMap(urlContentMap);
+        }
         //艾特功能
         if (CollectionUtil.isNotEmpty(body.getAtUidList())) {
-            extra.setAtUidList(body.getAtUidList());
-
+            extra.setAtUidList(body.getAtUidList().stream().map(String::valueOf).collect(Collectors.toSet()));
         }
-
         messageDao.updateById(update);
     }
 
@@ -105,7 +106,13 @@ public class TextMsgHandler extends AbstractMsgHandler {
         TextMsgResp resp = new TextMsgResp();
         resp.setContent(msg.getContent());
         resp.setUrlContentMap(Optional.ofNullable(msg.getExtra()).map(MessageExtra::getUrlContentMap).orElse(null));
-        resp.setAtUidList(Optional.ofNullable(msg.getExtra()).map(MessageExtra::getAtUidList).orElse(null));
+        if (msg.getExtra().getAtUidList() != null && msg.getExtra().getAtUidList().size() > 0) {
+            List<String> collect = msg.getExtra().getAtUidList().stream().map(String::valueOf).collect(Collectors.toList());
+            resp.setAtUidList(collect);
+        } else {
+            resp.setAtUidList(null);
+        }
+
         //回复消息
         Optional<Message> reply = Optional.ofNullable(msg.getReplyMsgId())
                 .map(msgCache::getMsg)

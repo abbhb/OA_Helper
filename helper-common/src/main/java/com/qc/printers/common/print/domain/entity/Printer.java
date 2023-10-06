@@ -74,6 +74,13 @@ public class Printer implements Serializable {
 
     //文件地址
     private String url;
-    
-    
+
+    /**
+     * 最中是否打印成功
+     * 0为未打印
+     * 1：为打印成功
+     */
+    private Integer isPrint;
+
+
 }

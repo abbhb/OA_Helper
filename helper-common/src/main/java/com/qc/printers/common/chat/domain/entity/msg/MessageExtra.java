@@ -8,8 +8,8 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * Description: 消息扩展属性
@@ -28,7 +28,7 @@ public class MessageExtra implements Serializable {
     //消息撤回详情
     private MsgRecall recall;
     //艾特的uid
-    private List<Long> atUidList;
+    private Set<String> atUidList;
     //文件消息
     private FileMsgDTO fileMsg;
     //图片消息

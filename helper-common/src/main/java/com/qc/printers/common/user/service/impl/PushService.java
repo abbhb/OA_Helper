@@ -32,4 +32,8 @@ public class PushService {
     public void sendPushMsg(WSBaseResp<?> msg) {
         mqProducer.sendMsg(MQConstant.PUSH_TOPIC, new PushMessageDTO(msg));
     }
+
+    public void sendPushMsg(Object ob) {
+
+    }
 }

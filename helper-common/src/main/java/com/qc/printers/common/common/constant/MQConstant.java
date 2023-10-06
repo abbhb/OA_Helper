@@ -4,6 +4,21 @@ package com.qc.printers.common.common.constant;
  * @author zhongzb create on 2021/06/10
  */
 public interface MQConstant {
+    /**
+     * pdf转缩略图
+     */
+    String SEND_PDF_IMAGE_TOPIC = "print_pdf_toimage_send_msg";
+    String SEND_PDF_IMAGE_GROUP = "print_pdf_toimage_send_msg_group";
+    /**
+     * 转pdf发送mq
+     */
+    String SEND_FILE_TOPDF_TOPIC = "print_filetopdf_send_msg";
+    String SEND_FILE_TOPDF_GROUP = "print_filetopdf_send_msg_group";
+    /**
+     * 打印任务发送mq
+     */
+    String SEND_PRINT_TOPIC = "print_send_msg";
+    String SEND_PRINT_GROUP = "print_send_msg_group";
 
     /**
      * 消息发送mq

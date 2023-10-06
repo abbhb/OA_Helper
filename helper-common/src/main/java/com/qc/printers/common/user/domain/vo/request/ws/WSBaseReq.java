@@ -12,7 +12,6 @@ public class WSBaseReq {
     /**
      * 请求类型 1.请求登录二维码，2心跳检测
      *
-     * @see com.abin.mallchat.common.user.domain.enums.WSReqTypeEnum
      */
     private Integer type;
 

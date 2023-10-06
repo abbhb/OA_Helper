@@ -22,7 +22,7 @@ import java.util.List;
 public class TextMsgReq {
 
     @NotBlank(message = "内容不能为空")
-    @Size(max = 1024, message = "消息内容过长，服务器扛不住啊，兄dei")
+    @Size(max = 4000, message = "消息内容过长，服务器扛不住啊，兄dei")
     @ApiModelProperty("消息内容")
     private String content;
 
