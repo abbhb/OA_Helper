@@ -10,6 +10,7 @@ import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.print.domain.entity.PrintDocumentTypeStatistic;
 import com.qc.printers.common.print.domain.vo.CountTop10VO;
 import com.qc.printers.custom.print.domain.vo.PrinterResult;
+import com.qc.printers.custom.print.domain.vo.response.PrintFileConfigResp;
 import com.qc.printers.custom.print.domain.vo.response.PrintImageResp;
 import com.qc.printers.custom.print.domain.vo.response.PrinterBaseResp;
 import com.qc.printers.custom.print.service.PrinterService;
@@ -144,6 +145,14 @@ public class PrintController {
     @ApiOperation("轮询接口，查询缩略图状态，有就返回，没告诉前端")
     public R<PrinterBaseResp<PrintImageResp>> thumbnailPolling(Long id) {
         return R.success(printerService.thumbnailPolling(id));
+    }
+
+    @CrossOrigin("*")
+    @NeedToken
+    @GetMapping("/file_configuration_polling")
+    @ApiOperation("文件配置轮询接口，查询缩略图状态，有就返回，没告诉前端")
+    public R<PrinterBaseResp<PrintFileConfigResp>> fileConfigurationPolling(Long id) {
+        return R.success(printerService.fileConfigurationPolling(id));
     }
 
 }

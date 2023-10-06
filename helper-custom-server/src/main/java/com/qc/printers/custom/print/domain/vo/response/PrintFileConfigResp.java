@@ -1,6 +1,8 @@
 package com.qc.printers.custom.print.domain.vo.response;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 
@@ -8,6 +10,8 @@ import java.io.Serializable;
  * 文件配置轮询具体内容
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class PrintFileConfigResp implements Serializable {
     //打印文件的id
     private Long id;
