@@ -1,10 +1,13 @@
 package com.qc.printers.common.common.event.listener.chat;
 
+import com.qc.printers.common.common.MyString;
 import com.qc.printers.common.common.constant.MQConstant;
 import com.qc.printers.common.common.event.print.FileToPDFEvent;
 import com.qc.printers.common.common.utils.MinIoUtil;
+import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.common.utils.oss.domain.OssReq;
 import com.qc.printers.common.common.utils.oss.domain.OssResp;
+import com.qc.printers.common.print.domain.dto.PrinterRedis;
 import com.qc.printers.common.print.domain.entity.Printer;
 import com.qc.printers.common.print.domain.enums.PrintReqTypeEnum;
 import com.qc.printers.common.print.domain.vo.request.PrintBaseReq;
@@ -39,6 +42,9 @@ public class FileToPDFListener {
         Printer printer = iPrinterService.getById(printId);
         OssResp preSignedObjectUrl = minIoUtil.getPreSignedObjectUrl(new OssReq("/", printer.getName(), printId, true));
         PrintDataFileToPDFReq printDataFileToPDFReq = new PrintDataFileToPDFReq(String.valueOf(printer.getId()), printer.getUrl(), preSignedObjectUrl.getDownloadUrl(), preSignedObjectUrl.getUploadUrl());
+        PrinterRedis printerRedis = RedisUtils.get(MyString.print + printId, PrinterRedis.class);
+        printerRedis.setSTU(2);
+        RedisUtils.set(MyString.print + printId, printerRedis);
         mqProducer.sendMessageWithTags(MQConstant.SEND_FILE_TOPDF_TOPIC, new PrintBaseReq<>(PrintReqTypeEnum.TOPDF.getType(), printDataFileToPDFReq), "req");
     }
 }

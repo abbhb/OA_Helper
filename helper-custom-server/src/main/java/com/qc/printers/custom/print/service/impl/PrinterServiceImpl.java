@@ -307,7 +307,7 @@ public class PrinterServiceImpl implements PrinterService {
     }
 
     @Override
-    public PrinterBaseResp<PrintImageResp> thumbnailPolling(Long id) {
+    public PrinterBaseResp thumbnailPolling(Long id) {
         if (!RedisUtils.hasKey(MyString.print + id)) {
             throw new CustomException("请刷新重试");
         }
@@ -316,6 +316,13 @@ public class PrinterServiceImpl implements PrinterService {
             throw new CustomException("请刷新重试");
         }
         PrinterBaseResp<PrintImageResp> printImageRespPrinterBaseResp = new PrinterBaseResp<>();
+        if (printerRedis.getSTU().equals(0)) {
+            //失败了，提示用户重试！
+            PrinterBaseResp<String> temp = new PrinterBaseResp<>();
+            temp.setType(2);
+            temp.setData(printerRedis.getMessage());
+            return temp;
+        }
         if (printerRedis.getSTU() < 3) {
             printImageRespPrinterBaseResp.setType(0);
             return printImageRespPrinterBaseResp;
@@ -334,7 +341,7 @@ public class PrinterServiceImpl implements PrinterService {
     }
 
     @Override
-    public PrinterBaseResp<PrintFileConfigResp> fileConfigurationPolling(Long id) {
+    public PrinterBaseResp fileConfigurationPolling(Long id) {
         if (!RedisUtils.hasKey(MyString.print + id)) {
             throw new CustomException("请刷新重试");
         }
