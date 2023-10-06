@@ -37,4 +37,9 @@ public class PrinterRedis extends Printer implements Serializable {
      * 5打印完成；
      */
     private Integer sTU;
+
+    /**
+     * 总页数
+     */
+    private Integer pageNums;
 }

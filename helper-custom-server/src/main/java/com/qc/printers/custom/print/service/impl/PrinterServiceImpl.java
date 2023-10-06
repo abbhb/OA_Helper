@@ -8,7 +8,6 @@ import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.common.domain.vo.ValueLabelResult;
 import com.qc.printers.common.common.event.print.FileToPDFEvent;
-import com.qc.printers.common.common.event.print.PDFToImageEvent;
 import com.qc.printers.common.common.service.CommonService;
 import com.qc.printers.common.common.utils.MinIoUtil;
 import com.qc.printers.common.common.utils.RedisUtils;
@@ -26,6 +25,7 @@ import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.mapper.UserMapper;
 import com.qc.printers.common.user.service.IUserService;
 import com.qc.printers.custom.print.domain.vo.PrinterResult;
+import com.qc.printers.custom.print.domain.vo.response.PrintFileConfigResp;
 import com.qc.printers.custom.print.domain.vo.response.PrintImageResp;
 import com.qc.printers.custom.print.domain.vo.response.PrinterBaseResp;
 import com.qc.printers.custom.print.service.PrinterService;
@@ -293,25 +293,15 @@ public class PrinterServiceImpl implements PrinterService {
         PrinterRedis printerRedis = new PrinterRedis();
         BeanUtils.copyProperties(printer, printerRedis);
         printerRedis.setSTU(1);
-        if (fileKey.endsWith(".pdf")) {
-            printerRedis.setSTU(3);
-            printerRedis.setPdfUrl(fileUrl);
-        }
+        printerRedis.setNeedPrintPagesIndex(1);//从第一页开始
+        printerRedis.setPageNums(0);
         OssResp preSignedObjectUrl = minIoUtil.getPreSignedObjectUrl(new OssReq("/temp-image", printer.getName(), printer.getId(), true));
         printerRedis.setImageUploadUrl(preSignedObjectUrl.getUploadUrl());
         printerRedis.setImageDownloadUrl(preSignedObjectUrl.getDownloadUrl());
         printerRedis.setCanGetImage(false);
         RedisUtils.set(MyString.print + printer.getId(), printerRedis);
-
-        //如果不是pdf开始转换
+        //如果不是pdf开始转换，修改为统一进入该事件，是不是pdf处理端区分
         applicationEventPublisher.publishEvent(new FileToPDFEvent(this, printer.getId()));
-
-        //是pdf就直接开始缩略图转换，缩略图和文件状态统一由前端轮询
-        applicationEventPublisher.publishEvent(new PDFToImageEvent(this, printer.getId()));
-
-        if (fileKey.endsWith(".pdf")) {
-            return "如不需要预览可以开始打印了";
-        }
         return "上传成功，请等待转换!";
 
     }
@@ -337,6 +327,30 @@ public class PrinterServiceImpl implements PrinterService {
         if (StringUtils.isNotEmpty(printerRedis.getImageDownloadUrl())) {
             printImageRespPrinterBaseResp.setType(1);
             printImageRespPrinterBaseResp.setData(new PrintImageResp(id, printerRedis.getImageDownloadUrl()));
+            return printImageRespPrinterBaseResp;
+        }
+        printImageRespPrinterBaseResp.setType(0);
+        return printImageRespPrinterBaseResp;
+    }
+
+    @Override
+    public PrinterBaseResp<PrintFileConfigResp> fileConfigurationPolling(Long id) {
+        if (!RedisUtils.hasKey(MyString.print + id)) {
+            throw new CustomException("请刷新重试");
+        }
+        PrinterRedis printerRedis = RedisUtils.get(MyString.print + id, PrinterRedis.class);
+        if (printerRedis == null) {
+            throw new CustomException("请刷新重试");
+        }
+        PrinterBaseResp<PrintFileConfigResp> printImageRespPrinterBaseResp = new PrinterBaseResp<>();
+        if (printerRedis.getSTU() < 3) {
+            printImageRespPrinterBaseResp.setType(0);
+            return printImageRespPrinterBaseResp;
+        }
+
+        if (!printerRedis.getPageNums().equals(0)) {
+            printImageRespPrinterBaseResp.setType(1);
+            printImageRespPrinterBaseResp.setData(new PrintFileConfigResp(id, printerRedis.getNeedPrintPagesIndex(), printerRedis.getPageNums(), printerRedis.getName()));
             return printImageRespPrinterBaseResp;
         }
         printImageRespPrinterBaseResp.setType(0);

@@ -30,4 +30,9 @@ public class PrintDataFromPDFResp {
      */
     private String filePDFImageUrl;
 
+    /**
+     * 文件有多少页
+     */
+    private Integer pageNums;
+
 }
