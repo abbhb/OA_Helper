@@ -26,6 +26,7 @@ import java.io.InputStream;
 import java.net.URLEncoder;
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Slf4j
@@ -146,7 +147,7 @@ public class MinIoUtil {
     @SneakyThrows(Exception.class)
     public static String upload(String bucketName, MultipartFile file) {
         final InputStream is = file.getInputStream();
-        final String fileName = RandomName.getRandomName(file.getOriginalFilename());//改成随机name
+        final String fileName = RandomName.getRandomName(Objects.requireNonNull(file.getOriginalFilename()));//改成随机name
         minioClient.putObject(bucketName, fileName, is, new PutObjectOptions(is.available(), -1));
         is.close();
         return getFileUrl(bucketName, fileName);
@@ -226,6 +227,13 @@ public class MinIoUtil {
 
     private String getDownloadUrl(String bucket, String pathFile) {
         return minIoProperties.getUrl() + StrUtil.SLASH + bucket + pathFile;
+    }
+
+    public String getUrlWithHttpByNoHttpKey(String noHttpUrl) {
+        if (noHttpUrl.startsWith("http")) {
+            return noHttpUrl;
+        }
+        return minIoProperties.getUrl() + "/" + minIoProperties.getBucketName() + "/" + noHttpUrl;
     }
 
     /**

@@ -112,7 +112,7 @@ public class PrinterServiceImpl implements PrinterService {
             printerResult.setContentHash(printerItem1.getContentHash());
             printerResult.setCreateTime(printerItem1.getCreateTime());
             printerResult.setIsDuplex(printerItem1.getIsDuplex());
-            printerResult.setUrl(minIoProperties.getUrl()+"/"+minIoProperties.getBucketName()+"/"+printerItem1.getUrl());
+            printerResult.setUrl(minIoUtil.getUrlWithHttpByNoHttpKey(printerItem1.getUrl()));
             printerResult.setCopies(printerItem1.getCopies());
             printerResult.setNeedPrintPagesEndIndex(printerItem1.getNeedPrintPagesEndIndex());
             printerResult.setNeedPrintPagesIndex(printerItem1.getNeedPrintPagesIndex());
@@ -299,7 +299,8 @@ public class PrinterServiceImpl implements PrinterService {
         printerRedis.setSTU(1);
         printerRedis.setNeedPrintPagesIndex(1);//从第一页开始
         printerRedis.setPageNums(0);
-        OssResp preSignedObjectUrl = minIoUtil.getPreSignedObjectUrl(new OssReq("/temp-image", printer.getName(), printer.getId(), true));
+        //统一使用png
+        OssResp preSignedObjectUrl = minIoUtil.getPreSignedObjectUrl(new OssReq("temp-image", printer.getName() + ".png", printer.getId(), true));
         printerRedis.setImageUploadUrl(preSignedObjectUrl.getUploadUrl());
         printerRedis.setImageDownloadUrl(preSignedObjectUrl.getDownloadUrl());
         printerRedis.setIsCanGetImage(0);
