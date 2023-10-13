@@ -24,11 +24,14 @@ import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.mapper.UserMapper;
 import com.qc.printers.common.user.service.IUserService;
+import com.qc.printers.custom.print.domain.enums.PrintDataRespTypeEnum;
 import com.qc.printers.custom.print.domain.vo.PrinterResult;
 import com.qc.printers.custom.print.domain.vo.response.PrintFileConfigResp;
 import com.qc.printers.custom.print.domain.vo.response.PrintImageResp;
 import com.qc.printers.custom.print.domain.vo.response.PrinterBaseResp;
 import com.qc.printers.custom.print.service.PrinterService;
+import com.qc.printers.custom.print.service.strategy.AbstratePrintDataHandler;
+import com.qc.printers.custom.print.service.strategy.PrintDataHandlerFactory;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -285,6 +288,7 @@ public class PrinterServiceImpl implements PrinterService {
         Printer printer = new Printer();
         printer.setIsPrint(0);
         printer.setUrl(fileKey);
+        printer.setIsPrint(0);
         printer.setName(file.getOriginalFilename());
         boolean save = iPrinterService.save(printer);
         if (!save) {
@@ -298,7 +302,7 @@ public class PrinterServiceImpl implements PrinterService {
         OssResp preSignedObjectUrl = minIoUtil.getPreSignedObjectUrl(new OssReq("/temp-image", printer.getName(), printer.getId(), true));
         printerRedis.setImageUploadUrl(preSignedObjectUrl.getUploadUrl());
         printerRedis.setImageDownloadUrl(preSignedObjectUrl.getDownloadUrl());
-        printerRedis.setCanGetImage(false);
+        printerRedis.setIsCanGetImage(0);
         RedisUtils.set(MyString.print + printer.getId(), printerRedis);
         //如果不是pdf开始转换，修改为统一进入该事件，是不是pdf处理端区分
         applicationEventPublisher.publishEvent(new FileToPDFEvent(this, printer.getId()));
@@ -307,7 +311,7 @@ public class PrinterServiceImpl implements PrinterService {
     }
 
     @Override
-    public PrinterBaseResp thumbnailPolling(Long id) {
+    public PrinterBaseResp<PrintImageResp> thumbnailPolling(Long id) {
         if (!RedisUtils.hasKey(MyString.print + id)) {
             throw new CustomException("请刷新重试");
         }
@@ -315,33 +319,12 @@ public class PrinterServiceImpl implements PrinterService {
         if (printerRedis == null) {
             throw new CustomException("请刷新重试");
         }
-        PrinterBaseResp<PrintImageResp> printImageRespPrinterBaseResp = new PrinterBaseResp<>();
-        if (printerRedis.getSTU().equals(0)) {
-            //失败了，提示用户重试！
-            PrinterBaseResp<String> temp = new PrinterBaseResp<>();
-            temp.setType(2);
-            temp.setData(printerRedis.getMessage());
-            return temp;
-        }
-        if (printerRedis.getSTU() < 3) {
-            printImageRespPrinterBaseResp.setType(0);
-            return printImageRespPrinterBaseResp;
-        }
-        if (!printerRedis.isCanGetImage()) {
-            printImageRespPrinterBaseResp.setType(0);
-            return printImageRespPrinterBaseResp;
-        }
-        if (StringUtils.isNotEmpty(printerRedis.getImageDownloadUrl())) {
-            printImageRespPrinterBaseResp.setType(1);
-            printImageRespPrinterBaseResp.setData(new PrintImageResp(id, printerRedis.getImageDownloadUrl()));
-            return printImageRespPrinterBaseResp;
-        }
-        printImageRespPrinterBaseResp.setType(0);
-        return printImageRespPrinterBaseResp;
+        AbstratePrintDataHandler strategyNoNull = PrintDataHandlerFactory.getStrategyNoNull(PrintDataRespTypeEnum.FILECONFIG.getType());
+        return strategyNoNull.createR(printerRedis);
     }
 
     @Override
-    public PrinterBaseResp fileConfigurationPolling(Long id) {
+    public PrinterBaseResp<PrintFileConfigResp> fileConfigurationPolling(Long id) {
         if (!RedisUtils.hasKey(MyString.print + id)) {
             throw new CustomException("请刷新重试");
         }
@@ -349,19 +332,8 @@ public class PrinterServiceImpl implements PrinterService {
         if (printerRedis == null) {
             throw new CustomException("请刷新重试");
         }
-        PrinterBaseResp<PrintFileConfigResp> printImageRespPrinterBaseResp = new PrinterBaseResp<>();
-        if (printerRedis.getSTU() < 3) {
-            printImageRespPrinterBaseResp.setType(0);
-            return printImageRespPrinterBaseResp;
-        }
-
-        if (!printerRedis.getPageNums().equals(0)) {
-            printImageRespPrinterBaseResp.setType(1);
-            printImageRespPrinterBaseResp.setData(new PrintFileConfigResp(id, printerRedis.getNeedPrintPagesIndex(), printerRedis.getPageNums(), printerRedis.getName()));
-            return printImageRespPrinterBaseResp;
-        }
-        printImageRespPrinterBaseResp.setType(0);
-        return printImageRespPrinterBaseResp;
+        AbstratePrintDataHandler strategyNoNull = PrintDataHandlerFactory.getStrategyNoNull(PrintDataRespTypeEnum.FILECONFIG.getType());
+        return strategyNoNull.createR(printerRedis);
     }
 
 }

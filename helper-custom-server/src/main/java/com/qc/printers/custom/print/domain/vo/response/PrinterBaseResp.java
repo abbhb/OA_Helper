@@ -12,5 +12,8 @@ public class PrinterBaseResp<T> implements Serializable {
      * 2失败，data为message
      */
     Integer type;
+
+    String message;
+
     T data;
 }

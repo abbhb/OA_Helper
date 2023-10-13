@@ -24,12 +24,6 @@ public class PrintDataFromPDFResp {
      */
     private String filePDFUrl;
 
-
-    /**
-     * 预览图下载链接
-     */
-    private String filePDFImageUrl;
-
     /**
      * 文件有多少页
      */

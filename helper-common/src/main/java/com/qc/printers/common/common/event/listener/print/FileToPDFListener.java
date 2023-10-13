@@ -1,4 +1,4 @@
-package com.qc.printers.common.common.event.listener.chat;
+package com.qc.printers.common.common.event.listener.print;
 
 import com.qc.printers.common.common.MyString;
 import com.qc.printers.common.common.constant.MQConstant;
@@ -9,8 +9,6 @@ import com.qc.printers.common.common.utils.oss.domain.OssReq;
 import com.qc.printers.common.common.utils.oss.domain.OssResp;
 import com.qc.printers.common.print.domain.dto.PrinterRedis;
 import com.qc.printers.common.print.domain.entity.Printer;
-import com.qc.printers.common.print.domain.enums.PrintReqTypeEnum;
-import com.qc.printers.common.print.domain.vo.request.PrintBaseReq;
 import com.qc.printers.common.print.domain.vo.request.data.PrintDataFileToPDFReq;
 import com.qc.printers.common.print.service.IPrinterService;
 import com.qc.printers.transaction.service.MQProducer;
@@ -45,6 +43,6 @@ public class FileToPDFListener {
         PrinterRedis printerRedis = RedisUtils.get(MyString.print + printId, PrinterRedis.class);
         printerRedis.setSTU(2);
         RedisUtils.set(MyString.print + printId, printerRedis);
-        mqProducer.sendMessageWithTags(MQConstant.SEND_FILE_TOPDF_TOPIC, new PrintBaseReq<>(PrintReqTypeEnum.TOPDF.getType(), printDataFileToPDFReq), "req");
+        mqProducer.sendMessageWithTags(MQConstant.SEND_FILE_TOPDF_TOPIC, printDataFileToPDFReq, "req");
     }
 }

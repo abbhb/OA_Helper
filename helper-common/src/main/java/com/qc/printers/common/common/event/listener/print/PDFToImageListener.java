@@ -1,4 +1,4 @@
-package com.qc.printers.common.common.event.listener.chat;
+package com.qc.printers.common.common.event.listener.print;
 
 import com.qc.printers.common.common.MyString;
 import com.qc.printers.common.common.constant.MQConstant;

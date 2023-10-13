@@ -18,6 +18,16 @@ public class PrintDataImageFromPDFResp {
      */
     private String id;//打印存在数据库的id
 
+    /**
+     * 1为成功
+     * 0为失败
+     */
+    private Integer status;
+
+    /**
+     * 只有失败才有原因
+     */
+    private String message;
 
     /**
      * 预览图下载链接，提前生成好

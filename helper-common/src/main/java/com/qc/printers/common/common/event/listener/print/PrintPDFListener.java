@@ -1,4 +1,4 @@
-package com.qc.printers.common.common.event.listener.chat;
+package com.qc.printers.common.common.event.listener.print;
 
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.MyString;

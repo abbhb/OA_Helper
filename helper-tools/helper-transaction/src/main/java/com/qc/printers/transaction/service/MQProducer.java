@@ -38,13 +38,15 @@ public class MQProducer {
 
     /**
      * 发布且携带Tag
+     * 发送可靠消息，在事务提交后保证发送成功
      */
+    @SecureInvoke
     public void sendMessageWithTags(String topic, Object body, String tags) {
         // 创建消息
         Message<Object> rocketMQMessage = MessageBuilder.withPayload(body)
                 .setHeader("rocketmq_TAGS", tags) // 设置标签
                 .build();
         // 发送消息
-        rocketMQTemplate.send(topic, rocketMQMessage);
+        rocketMQTemplate.send(topic + ":" + tags, rocketMQMessage);
     }
 }
