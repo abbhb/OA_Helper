@@ -17,7 +17,13 @@ import java.io.Serializable;
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class PrinterRedis extends Printer implements Serializable {
-    private boolean isCanGetImage;
+
+    /**
+     * 0等待
+     * 1成功
+     * 2失败
+     */
+    private Integer isCanGetImage;
 
     @ApiModelProperty(value = "上传的临时url")
     private String imageUploadUrl;
