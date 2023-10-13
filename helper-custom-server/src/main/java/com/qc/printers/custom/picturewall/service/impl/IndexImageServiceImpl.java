@@ -1,7 +1,7 @@
 package com.qc.printers.custom.picturewall.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.qc.printers.common.config.MinIoProperties;
+import com.qc.printers.common.common.utils.MinIoUtil;
 import com.qc.printers.common.picturewall.domain.entity.IndexImage;
 import com.qc.printers.common.picturewall.service.IIndexImageService;
 import com.qc.printers.custom.picturewall.service.IndexImageService;
@@ -21,7 +21,7 @@ import java.util.Set;
 public class IndexImageServiceImpl implements IndexImageService {
 
     @Autowired
-    MinIoProperties minIoProperties;
+    MinIoUtil minIoUtil;
 
     @Autowired
     private IIndexImageService iIndexImageService;
@@ -55,7 +55,7 @@ public class IndexImageServiceImpl implements IndexImageService {
         lambdaQueryWrapper.orderByAsc(IndexImage::getSort);
         List<IndexImage> list = iIndexImageService.list(lambdaQueryWrapper);
         for (IndexImage indexImage : list) {
-            indexImage.setImage(minIoProperties.getUrl() + "/" + minIoProperties.getBucketName() + "/" + indexImage.getImage());
+            indexImage.setImage(minIoUtil.getUrlWithHttpByNoHttpKey(indexImage.getImage()));
         }
         return list;
     }

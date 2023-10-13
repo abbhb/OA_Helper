@@ -38,8 +38,10 @@ public class FileToPDFListener {
     public void fileToPDF(FileToPDFEvent event) {
         Long printId = event.getPrintId();
         Printer printer = iPrinterService.getById(printId);
-        OssResp preSignedObjectUrl = minIoUtil.getPreSignedObjectUrl(new OssReq("/", printer.getName(), printId, true));
-        PrintDataFileToPDFReq printDataFileToPDFReq = new PrintDataFileToPDFReq(String.valueOf(printer.getId()), printer.getUrl(), preSignedObjectUrl.getDownloadUrl(), preSignedObjectUrl.getUploadUrl());
+        OssResp preSignedObjectUrl = minIoUtil.getPreSignedObjectUrl(new OssReq("", printer.getName() + ".pdf", printId, true));
+
+
+        PrintDataFileToPDFReq printDataFileToPDFReq = new PrintDataFileToPDFReq(String.valueOf(printer.getId()), minIoUtil.getUrlWithHttpByNoHttpKey(printer.getUrl()), preSignedObjectUrl.getDownloadUrl(), preSignedObjectUrl.getUploadUrl());
         PrinterRedis printerRedis = RedisUtils.get(MyString.print + printId, PrinterRedis.class);
         printerRedis.setSTU(2);
         RedisUtils.set(MyString.print + printId, printerRedis);
