@@ -7,8 +7,11 @@ import org.springframework.context.ApplicationEvent;
 public class PrintErrorEvent extends ApplicationEvent {
     private Long id;
 
-    public PrintErrorEvent(Object source, Long id) {
+    private String message;
+
+    public PrintErrorEvent(Object source, Long id, String message) {
         super(source);
         this.id = id;
+        this.message = message;
     }
 }

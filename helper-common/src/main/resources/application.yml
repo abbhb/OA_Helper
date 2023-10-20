@@ -65,14 +65,14 @@ rocketmq:
     retry-times-when-send-failed: 3 # 同步发送消息时，失败重试次数。默认为 2 次。
     retry-times-when-send-async-failed: 3 # 异步发送消息时，失败重试次数。默认为 2 次。
     retry-next-server: false # 发送消息给 Broker 时，如果发送失败，是否重试另外一台 Broker 。默认为 false
-    #    access-key: java # Access Key ，可阅读 https://github.com/apache/rocketmq/blob/master/docs/cn/acl/user_guide.md 文档
-    #    secret-key: 123456 # Secret Key
+    #access-key: admin # Access Key ，可阅读 https://github.com/apache/rocketmq/blob/master/docs/cn/acl/user_guide.md 文档
+    #secret-key: aizhineng1404 # Secret Key
     enable-msg-trace: true # 是否开启消息轨迹功能。默认为 true 开启。可阅读 https://github.com/apache/rocketmq/blob/master/docs/cn/msg_trace/user_guide.md 文档
     customized-trace-topic: RMQ_SYS_TRACE_TOPIC # 自定义消息轨迹的 Topic 。默认为 RMQ_SYS_TRACE_TOPIC 。
   # Consumer 配置项
   consumer:
-    #    access-key: java # Access Key ，可阅读 https://github.com/apache/rocketmq/blob/master/docs/cn/acl/user_guide.md 文档
-    #    secret-key: 123456 # Secret Key
+    #access-key: admin # Access Key ，可阅读 https://github.com/apache/rocketmq/blob/master/docs/cn/acl/user_guide.md 文档
+    #secret-key: aizhineng1404 # Secret Key
     listeners: # 配置某个消费分组，是否监听指定 Topic 。结构为 Map<消费者分组, <Topic, Boolean>> 。默认情况下，不配置表示监听。
       erbadagang-consumer-group:
         topic1: false # 关闭 test-consumer-group 对 topic1 的监听消费
@@ -83,3 +83,6 @@ chatai:
     key: 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
   chatglm2:
     use: false
+my-consul:
+  ip: 192.168.12.12
+  port: 8500

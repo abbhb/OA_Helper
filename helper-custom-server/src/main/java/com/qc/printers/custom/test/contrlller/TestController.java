@@ -33,7 +33,7 @@ public class TestController {
         testJson.setName("21312");
         testJson.setUrl(url);
         testJson.setMessage(msg);
-        mqProducer.sendMessageWithTags("test", testJson, "test");
+        mqProducer.sendMessageWithTags("print_filetopdf_send_msg", testJson, "req");
         return R.success("test-Json成功");
     }
 }

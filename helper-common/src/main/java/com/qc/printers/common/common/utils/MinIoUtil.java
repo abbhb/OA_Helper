@@ -226,7 +226,7 @@ public class MinIoUtil {
     }
 
     private String getDownloadUrl(String bucket, String pathFile) {
-        return minIoProperties.getUrl() + StrUtil.SLASH + bucket + pathFile;
+        return minIoProperties.getUrl() + StrUtil.SLASH + bucket + "/" + pathFile;
     }
 
     public String getUrlWithHttpByNoHttpKey(String noHttpUrl) {

@@ -35,7 +35,7 @@ public class PrintPDFListener {
         }
         ;
         PrinterRedis printerRedis = RedisUtils.get(MyString.print + event.getPrintId(), PrinterRedis.class);
-        PrintDataPDFToPrintReq printDataPDFToImageReq = new PrintDataPDFToPrintReq(String.valueOf(printId), printerRedis.getCopies(), printerRedis.getIsDuplex(), printerRedis.getName(), printerRedis.getNeedPrintPagesIndex(), printerRedis.getNeedPrintPagesEndIndex(), printerRedis.getPdfUrl());
+        PrintDataPDFToPrintReq printDataPDFToImageReq = new PrintDataPDFToPrintReq(String.valueOf(printId), printerRedis.getCopies(), printerRedis.getIsDuplex(), printerRedis.getName(), printerRedis.getNeedPrintPagesIndex(), printerRedis.getNeedPrintPagesEndIndex(), printerRedis.getPdfUrl(), printerRedis.getPrintingDirection().equals(0) ? 1 : 0);
         mqProducer.sendMessageWithTags(MQConstant.SEND_PRINT_TOPIC, new PrintBaseReq<>(PrintReqTypeEnum.PDFTOPRINT.getType(), printDataPDFToImageReq), "req");
     }
 }
