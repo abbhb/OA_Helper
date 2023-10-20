@@ -7,8 +7,6 @@ import com.qc.printers.common.common.utils.MinIoUtil;
 import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.print.domain.dto.PrinterRedis;
 import com.qc.printers.common.print.domain.entity.Printer;
-import com.qc.printers.common.print.domain.enums.PrintReqTypeEnum;
-import com.qc.printers.common.print.domain.vo.request.PrintBaseReq;
 import com.qc.printers.common.print.domain.vo.request.data.PrintDataPDFToImageReq;
 import com.qc.printers.common.print.service.IPrinterService;
 import com.qc.printers.transaction.service.MQProducer;
@@ -40,6 +38,6 @@ public class PDFToImageListener {
         Printer printer = iPrinterService.getById(printId);
         PrinterRedis printerRedis = RedisUtils.get(MyString.print + printId, PrinterRedis.class);
         PrintDataPDFToImageReq printDataPDFToImageReq = new PrintDataPDFToImageReq(String.valueOf(printer.getId()), printerRedis.getPdfUrl(), printerRedis.getImageDownloadUrl(), printerRedis.getImageUploadUrl());
-        mqProducer.sendMessageWithTags(MQConstant.SEND_PDF_IMAGE_TOPIC, new PrintBaseReq<>(PrintReqTypeEnum.PDFGETIMAGE.getType(), printDataPDFToImageReq), "req");
+        mqProducer.sendMessageWithTags(MQConstant.SEND_PDF_IMAGE_TOPIC, printDataPDFToImageReq, "req");
     }
 }

@@ -2,13 +2,16 @@ package com.qc.printers.custom.print.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.ecwid.consul.v1.health.model.HealthService;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.MyString;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.common.domain.vo.ValueLabelResult;
 import com.qc.printers.common.common.event.print.FileToPDFEvent;
+import com.qc.printers.common.common.event.print.PrintPDFEvent;
 import com.qc.printers.common.common.service.CommonService;
+import com.qc.printers.common.common.service.ConsulService;
 import com.qc.printers.common.common.utils.MinIoUtil;
 import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
@@ -26,6 +29,8 @@ import com.qc.printers.common.user.mapper.UserMapper;
 import com.qc.printers.common.user.service.IUserService;
 import com.qc.printers.custom.print.domain.enums.PrintDataRespTypeEnum;
 import com.qc.printers.custom.print.domain.vo.PrinterResult;
+import com.qc.printers.custom.print.domain.vo.request.PrintFileReq;
+import com.qc.printers.custom.print.domain.vo.response.PrintDeviceResp;
 import com.qc.printers.custom.print.domain.vo.response.PrintFileConfigResp;
 import com.qc.printers.custom.print.domain.vo.response.PrintImageResp;
 import com.qc.printers.custom.print.domain.vo.response.PrinterBaseResp;
@@ -51,6 +56,9 @@ public class PrinterServiceImpl implements PrinterService {
 
     private final CommonService commonService;
     private final UserMapper userMapper;
+
+    @Autowired
+    private ConsulService consulService;
 
     @Autowired
     private IUserService iUserService;
@@ -335,6 +343,58 @@ public class PrinterServiceImpl implements PrinterService {
         }
         AbstratePrintDataHandler strategyNoNull = PrintDataHandlerFactory.getStrategyNoNull(PrintDataRespTypeEnum.FILECONFIG.getType());
         return strategyNoNull.createR(printerRedis);
+    }
+
+    @Override
+    public List<PrintDeviceResp> printDevicePolling() {
+        List<HealthService> registeredServices = consulService.getRegisteredServices();
+        List<PrintDeviceResp> printDeviceResps = new ArrayList<>();
+        for (HealthService registeredService : registeredServices) {
+            PrintDeviceResp printDeviceResp = new PrintDeviceResp();
+            printDeviceResp.setDescription(registeredService.getService().getMeta().get("ZName"));
+            printDeviceResp.setPort(registeredService.getService().getPort());
+            printDeviceResp.setIp(registeredService.getService().getAddress());
+            printDeviceResp.setName(printDeviceResp.getDescription());
+            printDeviceResp.setId(registeredService.getService().getId());
+            //筛选了只要状态正常的，所以这里全是正常的
+            printDeviceResp.setStatus(1);
+            printDeviceResps.add(printDeviceResp);
+        }
+        return printDeviceResps;
+    }
+
+    @Transactional
+    @Override
+    public String printFile(PrintFileReq printFileReq) {
+        if (printFileReq.getCopies() == null) {
+            printFileReq.setCopies(1);//不填份数就强制1份
+        }
+        if (StringUtils.isEmpty(printFileReq.getId())) {
+            throw new IllegalArgumentException("无法定位任务");
+        }
+        if (printFileReq.getIsDuplex() == null) {
+            throw new IllegalArgumentException("王子(公主)殿下，您是要横着还是竖着呢？");
+        }
+        if (printFileReq.getStartNum() == null) {
+            throw new IllegalArgumentException("王子(公主)殿下，您要从哪里打印到哪里呢？");
+        }
+        if (printFileReq.getEndNum() == null) {
+            throw new IllegalArgumentException("王子(公主)殿下，您要从哪里打印到哪里呢？");
+        }
+        PrinterRedis printerRedis = RedisUtils.get(MyString.print + printFileReq.getId(), PrinterRedis.class);
+        if (printerRedis == null) {
+            throw new CustomException("请重新创建任务");
+        }
+        printerRedis.setCopies(printFileReq.getCopies());
+        printerRedis.setIsDuplex(printFileReq.getIsDuplex());
+        printerRedis.setPrintingDirection(printFileReq.getLandscape());
+        printerRedis.setNeedPrintPagesIndex(printFileReq.getStartNum());
+        printerRedis.setNeedPrintPagesEndIndex(printFileReq.getEndNum());
+        printerRedis.setSTU(4);//开始打印了
+        //任务发送事务消息，保证成功
+        RedisUtils.set(MyString.print + printFileReq.getId(), printerRedis);
+        applicationEventPublisher.publishEvent(new PrintPDFEvent(this, Long.valueOf(printFileReq.getId())));
+        return "已添加任务到打印队列";
     }
 
 }

@@ -46,5 +46,8 @@ public class PrintDataPDFToPrintReq {
      */
     private String filePDFUrl;
 
+    //是否纵向
+    private Integer landscape = 0;//默认纵向
+
 
 }

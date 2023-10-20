@@ -18,10 +18,7 @@ public class PrintDataImageFromPDFResp {
      */
     private String id;//打印存在数据库的id
 
-    /**
-     * 1为成功
-     * 0为失败
-     */
+
     private Integer status;
 
     /**

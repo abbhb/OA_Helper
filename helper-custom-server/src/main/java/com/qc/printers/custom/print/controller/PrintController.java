@@ -10,6 +10,8 @@ import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.print.domain.entity.PrintDocumentTypeStatistic;
 import com.qc.printers.common.print.domain.vo.CountTop10VO;
 import com.qc.printers.custom.print.domain.vo.PrinterResult;
+import com.qc.printers.custom.print.domain.vo.request.PrintFileReq;
+import com.qc.printers.custom.print.domain.vo.response.PrintDeviceResp;
 import com.qc.printers.custom.print.domain.vo.response.PrintFileConfigResp;
 import com.qc.printers.custom.print.domain.vo.response.PrintImageResp;
 import com.qc.printers.custom.print.domain.vo.response.PrinterBaseResp;
@@ -136,13 +138,28 @@ public class PrintController {
     @ApiOperation("上传需要打印的文件")
     public R<String> uploadPrintFile(MultipartFile file) {
         return R.success(printerService.uploadPrintFile(file));
+    }
 
+    @CrossOrigin("*")
+    @NeedToken
+    @PostMapping("/print_file")
+    @ApiOperation("打印文件")
+    public R<String> printFile(@RequestBody PrintFileReq printFileReq) {
+        return R.success(printerService.printFile(printFileReq));
+    }
+
+    @CrossOrigin("*")
+    @NeedToken
+    @GetMapping("/print_device polling")
+    @ApiOperation("设备轮询接口，获取哪些打印机注册了服务，且正常")
+    public R<List<PrintDeviceResp>> printDevicePolling() {
+        return R.success(printerService.printDevicePolling());
     }
 
     @CrossOrigin("*")
     @NeedToken
     @GetMapping("/thumbnail polling")
-    @ApiOperation("轮询接口，查询缩略图状态，有就返回，没告诉前端")
+    @ApiOperation("缩略图轮询接口，查询缩略图状态，有就返回，没告诉前端")
     public R<PrinterBaseResp<PrintImageResp>> thumbnailPolling(Long id) {
         return R.success(printerService.thumbnailPolling(id));
     }

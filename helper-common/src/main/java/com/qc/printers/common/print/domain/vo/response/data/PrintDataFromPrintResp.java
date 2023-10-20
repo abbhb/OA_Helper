@@ -23,4 +23,9 @@ public class PrintDataFromPrintResp {
      * 0为不成功打印
      */
     private Integer isSuccess;
+
+    /**
+     * 不成功就返回message
+     */
+    private String message;
 }
