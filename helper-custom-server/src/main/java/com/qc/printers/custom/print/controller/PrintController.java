@@ -137,7 +137,7 @@ public class PrintController {
     @PostMapping("/uploadPrintFile")
     @ApiOperation("上传需要打印的文件")
     public R<String> uploadPrintFile(MultipartFile file) {
-        return R.success(printerService.uploadPrintFile(file));
+        return R.successOnlyObject(printerService.uploadPrintFile(file));
     }
 
     @CrossOrigin("*")
