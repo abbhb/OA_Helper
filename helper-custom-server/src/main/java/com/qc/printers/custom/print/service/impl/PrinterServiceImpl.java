@@ -315,7 +315,7 @@ public class PrinterServiceImpl implements PrinterService {
         RedisUtils.set(MyString.print + printer.getId(), printerRedis);
         //如果不是pdf开始转换，修改为统一进入该事件，是不是pdf处理端区分
         applicationEventPublisher.publishEvent(new FileToPDFEvent(this, printer.getId()));
-        return "上传成功，请等待转换!";
+        return String.valueOf(printer.getId());
 
     }
 
