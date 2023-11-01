@@ -6,10 +6,7 @@ import com.qc.printers.common.common.domain.vo.ValueLabelResult;
 import com.qc.printers.common.print.domain.vo.CountTop10VO;
 import com.qc.printers.custom.print.domain.vo.PrinterResult;
 import com.qc.printers.custom.print.domain.vo.request.PrintFileReq;
-import com.qc.printers.custom.print.domain.vo.response.PrintDeviceResp;
-import com.qc.printers.custom.print.domain.vo.response.PrintFileConfigResp;
-import com.qc.printers.custom.print.domain.vo.response.PrintImageResp;
-import com.qc.printers.custom.print.domain.vo.response.PrinterBaseResp;
+import com.qc.printers.custom.print.domain.vo.response.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -41,4 +38,6 @@ public interface PrinterService {
     List<PrintDeviceResp> printDevicePolling();
 
     String printFile(PrintFileReq printFileReq);
+
+    PrintDeviceInfoResp printDeviceInfoPolling(String id);
 }

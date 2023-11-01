@@ -8,7 +8,7 @@ public class ImageTypeHandlerFactory {
         try {
             Class<? extends ImageTypeRStrategy> strategyClass = PrintImageStuEnum.of(printImageTypeDto.getSTU()).getDataClass();
             if (strategyClass != null) {
-                return strategyClass.getConstructor(String[].class).newInstance((Object) strategyClass);
+                return strategyClass.getConstructor().newInstance();
             }
         } catch (Exception e) {
             e.printStackTrace();

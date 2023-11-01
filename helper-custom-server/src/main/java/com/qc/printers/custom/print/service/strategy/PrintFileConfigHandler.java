@@ -6,10 +6,12 @@ import com.qc.printers.custom.print.domain.enums.PrintDataRespTypeEnum;
 import com.qc.printers.custom.print.domain.vo.response.PrinterBaseResp;
 import com.qc.printers.custom.print.service.strategy.fileconfig.FileConfigTypeHandlerFactory;
 import com.qc.printers.custom.print.service.strategy.fileconfig.FileConfigTypeRStrategy;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Component;
 
 @Component
+@Slf4j
 public class PrintFileConfigHandler extends AbstratePrintDataHandler {
     @Override
     PrintDataRespTypeEnum getDataTypeEnum() {

@@ -18,6 +18,7 @@ import com.qc.printers.common.common.utils.ThreadLocalUtil;
 import com.qc.printers.common.common.utils.oss.domain.OssReq;
 import com.qc.printers.common.common.utils.oss.domain.OssResp;
 import com.qc.printers.common.config.MinIoProperties;
+import com.qc.printers.common.print.domain.dto.PrintDeviceDto;
 import com.qc.printers.common.print.domain.dto.PrinterRedis;
 import com.qc.printers.common.print.domain.entity.Printer;
 import com.qc.printers.common.print.domain.vo.CountTop10VO;
@@ -30,10 +31,7 @@ import com.qc.printers.common.user.service.IUserService;
 import com.qc.printers.custom.print.domain.enums.PrintDataRespTypeEnum;
 import com.qc.printers.custom.print.domain.vo.PrinterResult;
 import com.qc.printers.custom.print.domain.vo.request.PrintFileReq;
-import com.qc.printers.custom.print.domain.vo.response.PrintDeviceResp;
-import com.qc.printers.custom.print.domain.vo.response.PrintFileConfigResp;
-import com.qc.printers.custom.print.domain.vo.response.PrintImageResp;
-import com.qc.printers.custom.print.domain.vo.response.PrinterBaseResp;
+import com.qc.printers.custom.print.domain.vo.response.*;
 import com.qc.printers.custom.print.service.PrinterService;
 import com.qc.printers.custom.print.service.strategy.AbstratePrintDataHandler;
 import com.qc.printers.custom.print.service.strategy.PrintDataHandlerFactory;
@@ -328,7 +326,7 @@ public class PrinterServiceImpl implements PrinterService {
         if (printerRedis == null) {
             throw new CustomException("请刷新重试");
         }
-        AbstratePrintDataHandler strategyNoNull = PrintDataHandlerFactory.getStrategyNoNull(PrintDataRespTypeEnum.FILECONFIG.getType());
+        AbstratePrintDataHandler strategyNoNull = PrintDataHandlerFactory.getStrategyNoNull(PrintDataRespTypeEnum.IMAGE.getType());
         return strategyNoNull.createR(printerRedis);
     }
 
@@ -352,12 +350,11 @@ public class PrinterServiceImpl implements PrinterService {
         for (HealthService registeredService : registeredServices) {
             PrintDeviceResp printDeviceResp = new PrintDeviceResp();
             printDeviceResp.setDescription(registeredService.getService().getMeta().get("ZName"));
-            printDeviceResp.setPort(registeredService.getService().getPort());
-            printDeviceResp.setIp(registeredService.getService().getAddress());
+
             printDeviceResp.setName(printDeviceResp.getDescription());
-            printDeviceResp.setId(registeredService.getService().getId());
             //筛选了只要状态正常的，所以这里全是正常的
             printDeviceResp.setStatus(1);
+            printDeviceResp.setId(registeredService.getService().getId());
             printDeviceResps.add(printDeviceResp);
         }
         return printDeviceResps;
@@ -391,10 +388,36 @@ public class PrinterServiceImpl implements PrinterService {
         printerRedis.setNeedPrintPagesIndex(printFileReq.getStartNum());
         printerRedis.setNeedPrintPagesEndIndex(printFileReq.getEndNum());
         printerRedis.setSTU(4);//开始打印了
+        printerRedis.setDeviceId(printFileReq.getDeviceId());
         //任务发送事务消息，保证成功
         RedisUtils.set(MyString.print + printFileReq.getId(), printerRedis);
         applicationEventPublisher.publishEvent(new PrintPDFEvent(this, Long.valueOf(printFileReq.getId())));
         return "已添加任务到打印队列";
+    }
+
+    @Override
+    public PrintDeviceInfoResp printDeviceInfoPolling(String id) {
+        if (StringUtils.isEmpty(id)) {
+            throw new IllegalArgumentException("参数异常");
+        }
+        PrintDeviceInfoResp printDeviceInfoResp = new PrintDeviceInfoResp();
+        PrintDeviceDto printDeviceDto = iPrinterService.pollingPrintDevice(id);
+        if (printDeviceDto == null) {
+            // 查不到详情
+            printDeviceInfoResp.setStatusType(0);
+            printDeviceInfoResp.setStatusTypeMessage("未知");
+            printDeviceInfoResp.setId(id);
+            return printDeviceInfoResp;
+        }
+        // 有详情拼接参数
+        printDeviceInfoResp.setPrintJobs(printDeviceDto.getPrintJobs());
+        printDeviceInfoResp.setPrintName(printDeviceDto.getPrintName());
+        printDeviceInfoResp.setPrintDescription(printDeviceDto.getPrintDescription());
+        printDeviceInfoResp.setStatusType(printDeviceDto.getStatusType());
+        printDeviceInfoResp.setListNums(printDeviceDto.getListNums());
+        printDeviceInfoResp.setStatusTypeMessage(printDeviceDto.getStatusTypeMessage());
+        printDeviceInfoResp.setId(printDeviceDto.getId());
+        return printDeviceInfoResp;
     }
 
 }

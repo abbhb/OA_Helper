@@ -31,4 +31,6 @@ public class PrintFileReq implements Serializable {
 
     //是否纵向
     private Integer landscape = 0;//默认纵向
+
+    private String deviceId;
 }

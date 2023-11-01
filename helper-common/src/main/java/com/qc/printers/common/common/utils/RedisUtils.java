@@ -429,7 +429,8 @@ public class RedisUtils {
      */
     public static Boolean hset(String key, String item, Object value, long time) {
         try {
-            stringRedisTemplate.opsForHash().put(key, item, value);
+
+            stringRedisTemplate.opsForHash().put(key, item, objToStr(value));
             if (time > 0) {
                 expire(key, time);
             }

@@ -9,7 +9,7 @@ public class PrinterBaseResp<T> implements Serializable {
     /**
      * 1为完成，取data
      * 0未完成，data为空
-     * 2失败，data为message
+     * 2失败
      */
     Integer type;
 

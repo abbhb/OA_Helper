@@ -15,7 +15,7 @@ spring:
   datasource:
     druid:
       driver-class-name: com.mysql.cj.jdbc.Driver
-      url: jdbc:mysql://${helper.mysql.ip}:${helper.mysql.port}/print?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
+      url: jdbc:mysql://${helper.mysql.ip}:${helper.mysql.port}/easy_oa?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true
       username: ${helper.mysql.username}
       password: ${helper.mysql.password}
     type: com.alibaba.druid.pool.DruidDataSource

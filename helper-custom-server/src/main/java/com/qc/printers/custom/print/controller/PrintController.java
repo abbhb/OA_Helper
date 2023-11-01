@@ -11,10 +11,7 @@ import com.qc.printers.common.print.domain.entity.PrintDocumentTypeStatistic;
 import com.qc.printers.common.print.domain.vo.CountTop10VO;
 import com.qc.printers.custom.print.domain.vo.PrinterResult;
 import com.qc.printers.custom.print.domain.vo.request.PrintFileReq;
-import com.qc.printers.custom.print.domain.vo.response.PrintDeviceResp;
-import com.qc.printers.custom.print.domain.vo.response.PrintFileConfigResp;
-import com.qc.printers.custom.print.domain.vo.response.PrintImageResp;
-import com.qc.printers.custom.print.domain.vo.response.PrinterBaseResp;
+import com.qc.printers.custom.print.domain.vo.response.*;
 import com.qc.printers.custom.print.service.PrinterService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -145,7 +142,7 @@ public class PrintController {
     @PostMapping("/print_file")
     @ApiOperation("打印文件")
     public R<String> printFile(@RequestBody PrintFileReq printFileReq) {
-        return R.success(printerService.printFile(printFileReq));
+        return R.successOnlyObject(printerService.printFile(printFileReq));
     }
 
     @CrossOrigin("*")
@@ -158,17 +155,26 @@ public class PrintController {
 
     @CrossOrigin("*")
     @NeedToken
+    @GetMapping("/print_device_info polling/{id}")
+    @ApiOperation("设备轮询接口，获取哪些打印机注册了服务，且正常")
+    public R<PrintDeviceInfoResp> printDeviceInfoPolling(@PathVariable("id") String id) {
+        return R.success(printerService.printDeviceInfoPolling(id));
+    }
+
+
+    @CrossOrigin("*")
+    @NeedToken
     @GetMapping("/thumbnail polling")
     @ApiOperation("缩略图轮询接口，查询缩略图状态，有就返回，没告诉前端")
-    public R<PrinterBaseResp<PrintImageResp>> thumbnailPolling(Long id) {
+    public R<PrinterBaseResp<PrintImageResp>> thumbnailPolling(@RequestParam(name = "id") Long id) {
         return R.success(printerService.thumbnailPolling(id));
     }
 
     @CrossOrigin("*")
     @NeedToken
     @GetMapping("/file_configuration_polling")
-    @ApiOperation("文件配置轮询接口，查询缩略图状态，有就返回，没告诉前端")
-    public R<PrinterBaseResp<PrintFileConfigResp>> fileConfigurationPolling(Long id) {
+    @ApiOperation("文件配置轮询接口，有就返回，没告诉前端")
+    public R<PrinterBaseResp<PrintFileConfigResp>> fileConfigurationPolling(@RequestParam(name = "id") Long id) {
         return R.success(printerService.fileConfigurationPolling(id));
     }
 
