@@ -4,6 +4,7 @@ import com.qc.printers.common.common.event.UserOfflineEvent;
 import com.qc.printers.common.common.utils.DateUtils;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.entity.User;
+import com.qc.printers.common.user.domain.enums.ChatActiveStatusEnum;
 import com.qc.printers.common.user.service.WebSocketService;
 import com.qc.printers.common.user.service.adapter.WSAdapter;
 import com.qc.printers.common.user.service.cache.UserCache;
@@ -46,7 +47,7 @@ public class UserOfflineListener {
         User update = new User();
         update.setId(user.getId());
         update.setLoginDate(user.getLoginDate());
-//        update.setActiveStatus(ChatActiveStatusEnum.OFFLINE.getStatus());
+        update.setActiveStatus(ChatActiveStatusEnum.OFFLINE.getStatus());
         userDao.updateById(update);
     }
 
