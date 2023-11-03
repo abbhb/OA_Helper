@@ -2,9 +2,9 @@ package com.qc.printers.common.user.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
-import cn.hutool.json.JSONUtil;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.qc.printers.common.common.JacksonObjectMapper;
 import com.qc.printers.common.common.constant.RedisKey;
 import com.qc.printers.common.common.event.UserOfflineEvent;
 import com.qc.printers.common.common.event.UserOnlineEvent;
@@ -237,7 +237,14 @@ public class WebSocketServiceImpl implements WebSocketService {
      * @param wsBaseResp
      */
     private void sendMsg(Channel channel, WSBaseResp<?> wsBaseResp) {
-        channel.writeAndFlush(new TextWebSocketFrame(JSONUtil.toJsonStr(wsBaseResp)));
+        //需要一个jackson的对象映射器，就是一个类，使用它可以将对象直接转换成json字符串
+        JacksonObjectMapper mapper = new JacksonObjectMapper();
+        //将java对象转换为json字符串
+        try {
+            channel.writeAndFlush(new TextWebSocketFrame(mapper.writeValueAsString(wsBaseResp)));
+        } catch (Exception exception) {
+            log.error(exception.getMessage());
+        }
     }
 
 }

@@ -4,6 +4,7 @@ import com.qc.printers.common.common.event.UserOnlineEvent;
 import com.qc.printers.common.common.utils.DateUtils;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.entity.User;
+import com.qc.printers.common.user.domain.enums.ChatActiveStatusEnum;
 import com.qc.printers.common.user.service.IpService;
 import com.qc.printers.common.user.service.WebSocketService;
 import com.qc.printers.common.user.service.adapter.WSAdapter;
@@ -53,7 +54,7 @@ public class UserOnlineListener {
         update.setId(user.getId());
         update.setLoginDate(user.getLoginDate());
         update.setLoginIp(user.getLoginIp());
-//        update.setActiveStatus(ChatActiveStatusEnum.ONLINE.getStatus());
+        update.setActiveStatus(ChatActiveStatusEnum.ONLINE.getStatus());
         userDao.updateById(update);
         //更新用户ip详情
         ipService.refreshIpDetailAsync(user.getId());
