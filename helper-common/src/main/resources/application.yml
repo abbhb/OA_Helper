@@ -80,7 +80,7 @@ chatai:
   chatgpt:
     use: true
     AIUserId: 10010
-    key: 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
+    key: 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
   chatglm2:
     use: false
 my-consul:

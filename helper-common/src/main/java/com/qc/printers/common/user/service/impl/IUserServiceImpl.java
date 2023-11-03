@@ -7,14 +7,17 @@ import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.*;
 import com.qc.printers.common.user.service.*;
 import com.qc.printers.common.user.service.cache.UserCache;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 @Transactional
 @Service
@@ -35,6 +38,9 @@ public class IUserServiceImpl implements IUserService {
     private ISysUserRoleService iSysUserRoleService;
 
     @Autowired
+    private ISysDeptService iSysDeptService;
+
+    @Autowired
     private ISysMenuService iSysMenuService;
 
     @Autowired
@@ -51,14 +57,25 @@ public class IUserServiceImpl implements IUserService {
             throw new CustomException("请重试！");
         }
         BeanUtils.copyProperties(user, userInfo);
-        LambdaQueryWrapper<SysRoleDept> roleDeptLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        roleDeptLambdaQueryWrapper.eq(SysRoleDept::getDeptId, user.getDeptId());
-        List<SysRoleDept> sysRoleDeptList = iSysRoleDeptService.list(roleDeptLambdaQueryWrapper);
+        // 部门角色为继承制，下级部门继承上级
+        SysDept myDept = iSysDeptService.getById(user.getDeptId());
+        if (myDept == null) {
+            throw new CustomException("部门信息错误，请联系运维解决！");
+        }
+        Set<Long> collect;
+        if (StringUtils.isNotEmpty(myDept.getAncestors()) && !myDept.getParentId().equals(0L)) {
+            collect = Arrays.stream(myDept.getAncestors().split(",")).map(Long::valueOf).collect(Collectors.toSet());
+        } else {
+            collect = new HashSet<>();
+        }
+        collect.add(user.getDeptId());
         //该用户所拥有的不重复的roleId
         Set<Long> userRoleIdList = new HashSet<>();
-        for (SysRoleDept s :
-                sysRoleDeptList) {
-            userRoleIdList.add(s.getRoleId());
+        for (Long itemDeptId : collect) {
+            LambdaQueryWrapper<SysRoleDept> roleDeptLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            roleDeptLambdaQueryWrapper.eq(SysRoleDept::getDeptId, itemDeptId);
+            Set<Long> roleLongIdItem = iSysRoleDeptService.list(roleDeptLambdaQueryWrapper).stream().map(SysRoleDept::getRoleId).collect(Collectors.toSet());
+            userRoleIdList.addAll(roleLongIdItem);
         }
         LambdaQueryWrapper<SysUserRole> sysUserRoleLambdaQueryWrapper = new LambdaQueryWrapper<>();
         sysUserRoleLambdaQueryWrapper.eq(SysUserRole::getUserId, user.getId());
