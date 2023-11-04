@@ -366,21 +366,25 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public PageData<UserResult> getUserList(Integer pageNum, Integer pageSize, String name, Long deptId) {
+    public PageData<UserResult> getUserList(Integer pageNum, Integer pageSize, String name, Integer cascade, Long deptId) {
         if (pageNum == null) {
             throw new IllegalArgumentException("传参错误");
         }
         if (pageSize == null) {
             throw new IllegalArgumentException("传参错误");
         }
+        if (cascade == null) {
+            cascade = 0;// 0为不级联，1为级联
+        }
         Page<User> pageInfo = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         //添加过滤条件
         lambdaQueryWrapper.like(StringUtils.isNotEmpty(name), User::getName, name);
-
-        if (deptId != null) {
-            List<DeptManger> deptListOnlyTree = deptService.getDeptListOnlyTree();
-            List<DeptManger> deptMangers = deptListOnlyTree;
+        AssertUtil.notEqual(deptId, null, "请指定查询");
+        if (!cascade.equals(1)) {
+            lambdaQueryWrapper.eq(User::getDeptId, deptId);
+        } else {
+            List<DeptManger> deptMangers = deptService.getDeptListOnlyTree();
             Set<DeptManger> childTemp = new HashSet<>();
             Set<Long> childId = new HashSet<>();
             int isDeptIdOrChild = 0;
@@ -416,7 +420,6 @@ public class UserServiceImpl implements UserService {
                 log.info("childId={}", childId);
                 lambdaQueryWrapper.in(User::getDeptId, childId);
             }
-
         }
         //添加排序条件
         lambdaQueryWrapper.orderByAsc(User::getCreateTime);//按照创建时间排序
@@ -553,10 +556,15 @@ public class UserServiceImpl implements UserService {
         if (one.getPassword() == null || one.getSalt() == null) {
             return R.error("此用户未设置密码,请使用oauth2登录");
         }
-        String password = PWDMD5.getMD5Encryption(RSAUtil.decryptDataOnJava(user.getPassword()), one.getSalt());
-        if (!one.getPassword().equals(password)) {
-            return R.error("用户名或密码错误");
+        try {
+            String password = PWDMD5.getMD5Encryption(RSAUtil.decryptDataOnJava(user.getPassword()), one.getSalt());
+            if (!one.getPassword().equals(password)) {
+                return R.error("用户名或密码错误");
+            }
+        } catch (Exception e) {
+            throw new CustomException("刷新再试试");
         }
+
         if (one.getStatus().equals(0)) {
             return R.error("账号已被禁用");
         }
@@ -666,6 +674,7 @@ public class UserServiceImpl implements UserService {
         return update;
     }
 
+
     @Transactional
     @Override
     public boolean updateByAdmin(UserResult user) {
@@ -734,9 +743,8 @@ public class UserServiceImpl implements UserService {
             }
 
         }
-
-
         boolean update = userDao.update(lambdaUpdateWrapper);
+
         return update;
 
     }

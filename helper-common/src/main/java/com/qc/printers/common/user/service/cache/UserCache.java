@@ -8,7 +8,7 @@ import com.qc.printers.common.common.domain.vo.response.CursorPageBaseResp;
 import com.qc.printers.common.common.utils.CursorUtils;
 import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.user.domain.dto.UserInfo;
-import com.qc.printers.common.user.service.IUserService;
+import com.qc.printers.common.user.service.UserInfoService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -27,7 +27,7 @@ import java.util.stream.Collectors;
 public class UserCache {
 
     @Autowired
-    private IUserService userInfoService;
+    private UserInfoService userInfoService;
 
 
     public Long getOnlineNum() {

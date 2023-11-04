@@ -11,7 +11,7 @@ import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.common.utils.RequestHolder;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
 import com.qc.printers.common.user.domain.dto.UserInfo;
-import com.qc.printers.common.user.service.IUserService;
+import com.qc.printers.common.user.service.UserInfoService;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -30,7 +30,7 @@ import java.lang.reflect.Method;
 @Api("此拦截器用于获取用户基本信息存在threadlocal内,并且校验是否登录")
 public class LoginInterceptor implements HandlerInterceptor {
     @Autowired
-    private IUserService iUserService;
+    private UserInfoService userInfoService;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
@@ -67,7 +67,7 @@ public class LoginInterceptor implements HandlerInterceptor {
         if (StringUtils.isEmpty(userId)) {
             throw new CustomException("认证失败", Code.DEL_TOKEN);
         }
-        UserInfo userInfo = iUserService.getUserInfo(Long.valueOf(userId));
+        UserInfo userInfo = userInfoService.getUserInfo(Long.valueOf(userId));
         ThreadLocalUtil.addCurrentUser(userInfo);
         RequestInfo info = new RequestInfo();
         info.setUid(userInfo.getId());

@@ -11,6 +11,7 @@ import com.qc.printers.common.common.utils.JWTUtil;
 import com.qc.printers.common.user.domain.dto.SummeryInfoDTO;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.domain.vo.request.user.SummeryInfoReq;
+import com.qc.printers.common.user.service.annotation.UserPermissionGradeCheck;
 import com.qc.printers.custom.user.domain.dto.LoginDTO;
 import com.qc.printers.custom.user.domain.vo.request.PasswordR;
 import com.qc.printers.custom.user.domain.vo.response.LoginRes;
@@ -109,6 +110,7 @@ public class UserController {
     @NeedToken
     @PermissionCheck(role = {"superadmin"}, permission = "sys:user:update")
     @PutMapping("/updateByAdmin")
+    @UserPermissionGradeCheck(checkUserId = "#user.id")
     @ApiOperation(value = "管理员更新用户信息", notes = "管理员更新接口")
     public R<String> updateByAdmin(@RequestBody UserResult user) {
         log.info("user:{}", user);
@@ -120,14 +122,16 @@ public class UserController {
     }
 
     @NeedToken
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:user:update")
+    @UserPermissionGradeCheck(checkUserId = "#id")
     @GetMapping("/updateStatus")
     @ApiOperation(value = "更新用户的状态", notes = "成功或者失败告诉前端")
     public R<String> updateStatus(String id, String status) {
         boolean isTrue = userService.updateUserStatus(id, status);
         if (isTrue) {
-            return R.success("修改成功");
+            return R.successOnlyObject("修改成功");
         }
-        return R.error("修改失败");
+        return R.successOnlyObject("修改失败");
     }
 
     @NeedToken
@@ -184,9 +188,9 @@ public class UserController {
     @NeedToken
     @PermissionCheck(role = {"superadmin"}, permission = "sys:user:list")
     @ApiOperation(value = "用户管理获取所有用户", notes = "")
-    public R<PageData<UserResult>> userManger(Integer pageNum, Integer pageSize, @RequestParam(required = false, name = "name") String name, @RequestParam(required = false, name = "deptId") Long deptId) {
+    public R<PageData<UserResult>> userManger(Integer pageNum, Integer pageSize, @RequestParam(required = false, name = "name") String name, @RequestParam(required = false, name = "cascade", defaultValue = "0") Integer cascade, @RequestParam(required = false, name = "deptId") Long deptId) {
         log.info("用户管理获取所有用户");
-        return R.success(userService.getUserList(pageNum, pageSize, name, deptId));
+        return R.success(userService.getUserList(pageNum, pageSize, name, cascade, deptId));
     }
 
 
