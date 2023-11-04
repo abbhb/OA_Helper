@@ -7,6 +7,7 @@ import com.qc.printers.common.user.domain.enums.WSReqTypeEnum;
 import com.qc.printers.common.user.domain.vo.request.ws.WSAuthorize;
 import com.qc.printers.common.user.domain.vo.request.ws.WSBaseReq;
 import com.qc.printers.common.user.service.WebSocketService;
+import com.qc.printers.utils.JsonUtils;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.handler.codec.http.websocketx.TextWebSocketFrame;
@@ -101,7 +102,8 @@ public class NettyWebSocketServerHandler extends SimpleChannelInboundHandler<Tex
                 break;
             case AUTHORIZE:
                 log.info("主动认证{}", wsBaseReq.getData());
-                this.webSocketService.authorize(ctx.channel(), new WSAuthorize(wsBaseReq.getData()));
+                WSAuthorize wsAuthorize = JsonUtils.toObj(wsBaseReq.getData(), WSAuthorize.class);
+                this.webSocketService.authorize(ctx.channel(), wsAuthorize);
             case HEARTBEAT:
                 break;
             default:
