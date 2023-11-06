@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Service;
 
 import java.util.Arrays;
@@ -45,6 +46,7 @@ public class UserInfoServiceImpl implements UserInfoService {
     private ISysRoleService iSysRoleService;
     @Autowired
     private IUserService iUserService;
+
 
     @Override
     public UserInfo getUserInfo(Long userId) {
@@ -90,6 +92,7 @@ public class UserInfoServiceImpl implements UserInfoService {
         return userInfo;
     }
 
+    @Cacheable(cacheNames = "roleList", key = "'roleList'+#userId")
     public Set<SysRole> getUserAllRole(Long userId) {
         User user = userDao.getById(userId);
         if (user == null) {
