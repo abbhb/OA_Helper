@@ -20,6 +20,7 @@ import com.qc.printers.common.user.service.WebSocketService;
 import com.qc.printers.common.user.service.adapter.WSAdapter;
 import com.qc.printers.common.user.service.cache.UserCache;
 import com.qc.printers.common.user.service.impl.PushService;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,9 +34,11 @@ import java.util.Objects;
 
 /**
  * Description: 发送消息更新房间收信箱，并同步给房间成员信箱
+ * 这块如果开发环境和线上环境不同会导致消息可能被其他服务消费了而导致开发时发的消息消失
  * Author: <a href="https://github.com/zongzibinbin">abin</a>
  * Date: 2023-08-12
  */
+@Slf4j
 @RocketMQMessageListener(consumerGroup = MQConstant.SEND_MSG_GROUP, topic = MQConstant.SEND_MSG_TOPIC)
 @Component
 public class MsgSendConsumer implements RocketMQListener<MsgSendMessageDTO> {
@@ -78,6 +81,7 @@ public class MsgSendConsumer implements RocketMQListener<MsgSendMessageDTO> {
             //更新热门群聊时间-redis
             hotRoomCache.refreshActiveTime(room.getId(), message.getCreateTime());
             //推送所有人
+            log.info("推送给所有人的消息:{}", WSAdapter.buildMsgSend(msgResp));
             pushService.sendPushMsg(WSAdapter.buildMsgSend(msgResp));
         } else {
             List<Long> memberUidList = new ArrayList<>();
