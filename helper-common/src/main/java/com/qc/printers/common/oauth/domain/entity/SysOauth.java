@@ -51,14 +51,14 @@ public class SysOauth implements Serializable {
     private String domainName;
 
     @JsonProperty("no_sert_redirect")
-    private String noSertRedirect;
+    private Integer noSertRedirect;
 
 
     /**
-     * 授权类型：grant_type ，1为authorization_code（授权码模式）
+     * 授权类型：grant_type ，code为authorization_code（授权码模式）
      */
     @JsonProperty("grant_type")
-    private Integer grantType;
+    private String grantType;
 
 
     /**

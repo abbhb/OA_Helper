@@ -1,22 +1,22 @@
 package com.qc.printers.common.oauth.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.oauth.dao.SysOauthDao;
-import com.qc.printers.common.oauth.dao.SysOauthPermissionBindDao;
-import com.qc.printers.common.oauth.dao.SysOauthPermissionDao;
-import com.qc.printers.common.oauth.domain.dto.SysOauthInfoDto;
+import com.qc.printers.common.oauth.dao.SysOauthUserDao;
 import com.qc.printers.common.oauth.domain.entity.SysOauth;
-import com.qc.printers.common.oauth.domain.entity.SysOauthPermission;
-import com.qc.printers.common.oauth.domain.entity.SysOauthPermissionBind;
-import com.qc.printers.common.oauth.domain.enums.OauthErrorEnum;
-import com.qc.printers.common.oauth.exception.OauthException;
+import com.qc.printers.common.oauth.domain.entity.SysOauthUser;
 import com.qc.printers.common.oauth.service.OauthMangerService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
+@Transactional
 @Service
 @Slf4j
 public class OauthMangerServiceImpl implements OauthMangerService {
@@ -24,88 +24,102 @@ public class OauthMangerServiceImpl implements OauthMangerService {
     private SysOauthDao sysOauthDao;
 
     @Autowired
-    private SysOauthPermissionDao sysOauthPermissionDao;
-
-    @Autowired
-    private SysOauthPermissionBindDao sysOauthPermissionBindDao;
+    private SysOauthUserDao sysOauthUserDao;
 
     @Override
-    public String addOauthPermission(SysOauthPermission sysOauthPermission) {
-        if (sysOauthPermission.getIntro() == null) {
-            throw new OauthException(OauthErrorEnum.OAUTH_ERROR, "intro不能为空");
+    public String addOauth(SysOauth sysOauth) {
+        if (StringUtils.isEmpty(sysOauth.getClientId())) {
+            throw new CustomException("clientId不能为空");
         }
-        if (StringUtils.isEmpty(sysOauthPermission.getKey())) {
-            throw new OauthException(OauthErrorEnum.OAUTH_ERROR, "key不能为空");
+        if (StringUtils.isEmpty(sysOauth.getClientName())) {
+            throw new CustomException("clientName不能为空");
         }
-        if (sysOauthPermission.getIsMust() == null) {
-            throw new OauthException(OauthErrorEnum.OAUTH_ERROR, "是否为必选不能为空");
+        if (StringUtils.isEmpty(sysOauth.getClientSecret())) {
+            throw new CustomException("clientSecret不能为空");
         }
-        sysOauthPermission.setId(null);
-        sysOauthPermissionDao.save(sysOauthPermission);
+        if (StringUtils.isEmpty(sysOauth.getDomainName())) {
+            throw new CustomException("DomainName不能为空");
+        }
+        if (sysOauth.getNoSertRedirect() == null) {
+            throw new CustomException("NoSertRedirect不能为空");
+        }
+        if (sysOauth.getGrantType() == null) {
+            throw new CustomException("GrantType不能为空");
+        }
+        if (sysOauth.getStatus() == null) {
+            throw new CustomException("Status不能为空");
+        }
+        sysOauthDao.save(sysOauth);
+
         return "添加成功";
     }
 
     @Override
-    public String updateOauthPermission(SysOauthPermission sysOauthPermission) {
-        if (sysOauthPermission.getId() == null) {
-            throw new OauthException(OauthErrorEnum.OAUTH_ERROR, "id不能为空");
+    public String deleteOauth(Long id) {
+        if (id == null) {
+            throw new CustomException("Id不能为空");
         }
-        if (sysOauthPermission.getIntro() == null) {
-            throw new OauthException(OauthErrorEnum.OAUTH_ERROR, "intro不能为空");
+        LambdaQueryWrapper<SysOauthUser> sysOauthUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysOauthUserLambdaQueryWrapper.eq(SysOauthUser::getOauthId, id);
+        sysOauthUserDao.remove(sysOauthUserLambdaQueryWrapper);
+        sysOauthDao.removeById(id);
+        return "删除成功";
+    }
+
+    @Override
+    public String updateOauth(SysOauth sysOauth) {
+        if (sysOauth.getId() == null) {
+            throw new CustomException("Id不能为空");
         }
-        if (StringUtils.isEmpty(sysOauthPermission.getKey())) {
-            throw new OauthException(OauthErrorEnum.OAUTH_ERROR, "key不能为空");
+        if (StringUtils.isEmpty(sysOauth.getClientId())) {
+            throw new CustomException("clientId不能为空");
         }
-        if (sysOauthPermission.getIsMust() == null) {
-            throw new OauthException(OauthErrorEnum.OAUTH_ERROR, "是否为必选不能为空");
+        if (StringUtils.isEmpty(sysOauth.getClientName())) {
+            throw new CustomException("clientName不能为空");
         }
-        sysOauthPermissionDao.updateById(sysOauthPermission);
+        if (StringUtils.isEmpty(sysOauth.getClientSecret())) {
+            throw new CustomException("clientSecret不能为空");
+        }
+        if (StringUtils.isEmpty(sysOauth.getDomainName())) {
+            throw new CustomException("DomainName不能为空");
+        }
+        if (sysOauth.getNoSertRedirect() == null) {
+            throw new CustomException("NoSertRedirect不能为空");
+        }
+        if (sysOauth.getGrantType() == null) {
+            throw new CustomException("GrantType不能为空");
+        }
+        if (sysOauth.getStatus() == null) {
+            throw new CustomException("Status不能为空");
+        }
+        sysOauthDao.updateById(sysOauth);
         return "更新成功";
     }
 
-    @Override
-    public String deleteOauthPermission(Long id) {
-
-        return null;
-    }
-
-    @Override
-    public SysOauthPermission getOauthPermission(Long id) {
-        return null;
-    }
-
-    @Override
-    public List<SysOauthPermission> listOauthPermission() {
-        return null;
-    }
-
-    @Override
-    public String addOauth(SysOauth sysOauth, List<SysOauthPermissionBind> sysOauthPermissionBinds) {
-        return null;
-    }
-
-    @Override
-    public String deleteOauth(Long id) {
-        return null;
-    }
-
-    @Override
-    public String updateOauth(SysOauth sysOauth, List<SysOauthPermissionBind> sysOauthPermissionBinds) {
-        return null;
-    }
 
     @Override
     public String changeOauthStatus(SysOauth sysOauth) {
-        return null;
+        if (sysOauth.getId() == null) {
+            throw new CustomException("Id不能为空");
+        }
+        if (sysOauth.getStatus() == null) {
+            throw new CustomException("Status不能为空");
+        }
+        LambdaUpdateWrapper<SysOauth> sysOauthLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        sysOauthLambdaUpdateWrapper.set(SysOauth::getStatus, sysOauth.getStatus());
+        sysOauthLambdaUpdateWrapper.eq(SysOauth::getId, sysOauth.getId());
+        sysOauthDao.update(sysOauthLambdaUpdateWrapper);
+        return "更改成功";
     }
 
     @Override
-    public List<SysOauthInfoDto> listOauth() {
-        return null;
+    public List<SysOauth> listOauth() {
+        return sysOauthDao.list();
     }
 
     @Override
-    public SysOauthInfoDto queryOauth() {
-        return null;
+    public SysOauth queryOauth(Long oauthId) {
+        return sysOauthDao.getById(oauthId);
     }
+
 }

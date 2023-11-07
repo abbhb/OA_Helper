@@ -11,4 +11,5 @@ public class OauthConfig {
     private boolean use;
 
 
+    private String frontAddress;
 }

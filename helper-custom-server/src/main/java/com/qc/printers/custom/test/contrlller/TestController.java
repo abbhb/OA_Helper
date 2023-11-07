@@ -1,7 +1,7 @@
 package com.qc.printers.custom.test.contrlller;
 
 import com.qc.printers.common.common.R;
-import com.qc.printers.custom.test.entity.TestJson;
+import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.transaction.service.MQProducer;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
@@ -20,20 +20,31 @@ public class TestController {
     @Autowired
     private MQProducer mqProducer;
 
+    @Autowired
+    private UserDao userDao;
+
     @GetMapping("/test01")
     public R<String> test01(String msg) {
-        mqProducer.sendMessageWithTags("test", "测试:" + msg, "test");
+//        mqProducer.sendMessageWithTags("test", "测试:" + msg, "test");
         return R.success("test成功");
     }
 
     @GetMapping("/test02")
     public R<String> test02(String msg, String url) {
-        TestJson testJson = new TestJson();
-        testJson.setId(1L);
-        testJson.setName("21312");
-        testJson.setUrl(url);
-        testJson.setMessage(msg);
-        mqProducer.sendMessageWithTags("print_filetopdf_send_msg", testJson, "req");
-        return R.success("test-Json成功");
+//        TestJson testJson = new TestJson();
+//        testJson.setId(1L);
+//        testJson.setName("21312");
+//        testJson.setUrl(url);
+//        testJson.setMessage(msg);
+//        mqProducer.sendMessageWithTags("print_filetopdf_send_msg", testJson, "req");
+//        return R.success("test-Json成功");
+//        List<User> list = userDao.list();
+//        for (User user : list) {
+//            if (StringUtils.isEmpty(user.getOpenId())){
+//                user.setOpenId(UUID.randomUUID().toString());
+//                userDao.updateById(user);
+//            }
+//        }
+        return R.success("");
     }
 }
