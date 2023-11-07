@@ -55,7 +55,7 @@ study:
   maxFirstTime: 10
 
 rocketmq:
-  name-server: 192.168.12.12:9876
+  name-server: ${helper.rocketmq.ip}:${helper.rocketmq.port}
   # 默认的消息组
   producer:
     group: chatGroup
