@@ -84,8 +84,8 @@ chatai:
   chatglm2:
     use: false
 my-consul:
-  ip: 192.168.12.12
-  port: 8500
+  ip: ${helper.consul.ip}
+  port: ${helper.consul.port}
 # oauth的配置
 oauth:
   use: true
