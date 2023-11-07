@@ -10,6 +10,10 @@ public class MyString {
     public final static String cache = pre + "CACHE::";
 
     public final static String print = pre + "PRINT::";
+    public final static String oauth_code = pre + "OAUTH::code::";
+    //注意反序列化对象
+    public final static String oauth_access_token = pre + "OAUTH::access::";
+    public final static String oauth_refresh_token = pre + "OAUTH::refresh::";
     public final static String printDevice = pre + "PRINT::devices";
     public final static String pre_api_count = pre + "today:" + "apiCount";
     public final static String pre_api_count_latday = pre + "lastday:" + "apiCount";

@@ -89,3 +89,4 @@ my-consul:
 # oauth的配置
 oauth:
   use: true
+  frontAddress: http://localhost:5173

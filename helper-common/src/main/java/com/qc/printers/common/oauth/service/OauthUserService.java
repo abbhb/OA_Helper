@@ -1,13 +1,12 @@
 package com.qc.printers.common.oauth.service;
 
-import com.qc.printers.common.oauth.domain.dto.SysOauthUserInfoDto;
+import com.qc.printers.common.oauth.domain.entity.SysOauth;
 import com.qc.printers.common.oauth.domain.entity.SysOauthUser;
-import com.qc.printers.common.oauth.domain.entity.SysOauthUserPermissionBind;
 
 import java.util.List;
 
 public interface OauthUserService {
-    List<SysOauthUserInfoDto> listMyOauth();
+    List<SysOauth> listMyOauth();
 
     /**
      * 取消授权
@@ -24,7 +23,7 @@ public interface OauthUserService {
      * @param sysOauthUser
      * @return
      */
-    String agreeOauthAuthorization(SysOauthUser sysOauthUser, List<SysOauthUserPermissionBind> permissions);
+    String agreeOauthAuthorization(SysOauthUser sysOauthUser, List<SysOauthUser> permissions);
 
     /**
      * 有新的必选没选也不算通过，不通过直接抛出oauth专用异常，跳转到授权页面
