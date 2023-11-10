@@ -16,8 +16,10 @@ import com.qc.printers.common.user.service.annotation.UserPermissionGradeCheck;
 import com.qc.printers.common.vailcode.annotations.CheckVailCode;
 import com.qc.printers.common.vailcode.domain.enums.VailType;
 import com.qc.printers.custom.user.domain.dto.LoginDTO;
+import com.qc.printers.custom.user.domain.vo.request.ForgetPasswordEmailRes;
 import com.qc.printers.custom.user.domain.vo.request.PasswordR;
 import com.qc.printers.custom.user.domain.vo.request.RegisterEmailRes;
+import com.qc.printers.custom.user.domain.vo.response.ForgetPasswordResp;
 import com.qc.printers.custom.user.domain.vo.response.LoginRes;
 import com.qc.printers.custom.user.domain.vo.response.RegisterResp;
 import com.qc.printers.custom.user.domain.vo.response.UserResult;
@@ -100,6 +102,17 @@ public class UserController {
          * 直接注册就行，校验邮箱验证码通过验证码通用注解
          */
         return R.success(userService.emailRegister(registerEmailRes.getEmail(), registerEmailRes.getPassword()));
+    }
+
+    //todo:注意注册邮箱的唯一性
+    @PostMapping("/forget_password_email")
+    @CheckVailCode(key = "#forgetPasswordEmailRes.email", value = "#forgetPasswordEmailRes.emailCode", type = VailType.EMAIL)
+    @ApiOperation(value = "找回密码", notes = "")
+    public R<ForgetPasswordResp> forgetPasswordByEmail(@RequestBody ForgetPasswordEmailRes forgetPasswordEmailRes) {
+        /**
+         * 直接注册就行，校验邮箱验证码通过验证码通用注解
+         */
+        return R.success(userService.forgetPasswordByEmail(forgetPasswordEmailRes.getEmail(), forgetPasswordEmailRes.getPassword()));
     }
 
     /**
