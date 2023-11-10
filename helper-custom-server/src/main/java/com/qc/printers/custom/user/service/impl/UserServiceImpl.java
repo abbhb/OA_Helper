@@ -27,10 +27,7 @@ import com.qc.printers.common.user.service.IUserService;
 import com.qc.printers.common.user.service.cache.UserCache;
 import com.qc.printers.custom.user.domain.dto.LoginDTO;
 import com.qc.printers.custom.user.domain.vo.request.PasswordR;
-import com.qc.printers.custom.user.domain.vo.response.LoginRes;
-import com.qc.printers.custom.user.domain.vo.response.RegisterResp;
-import com.qc.printers.custom.user.domain.vo.response.RoleResp;
-import com.qc.printers.custom.user.domain.vo.response.UserResult;
+import com.qc.printers.custom.user.domain.vo.response.*;
 import com.qc.printers.custom.user.domain.vo.response.dept.DeptManger;
 import com.qc.printers.custom.user.service.DeptService;
 import com.qc.printers.custom.user.service.UserService;
@@ -784,6 +781,7 @@ public class UserServiceImpl implements UserService {
     }
 
 
+    @Transactional
     @Override
     public RegisterResp emailRegister(String email, String password) {
         if (StringUtils.isEmpty(email)) {
@@ -835,6 +833,51 @@ public class UserServiceImpl implements UserService {
         RedisUtils.set(token, String.valueOf(user.getId()), 12 * 3600L, TimeUnit.SECONDS);
         registerResp.setToken(token);
         return registerResp;
+    }
+
+    @Transactional
+    @Override
+    public ForgetPasswordResp forgetPasswordByEmail(String email, String password) {
+        if (StringUtils.isEmpty(email)) {
+            throw new CustomException("邮箱不能为空");
+        }
+        if (StringUtils.isEmpty(password)) {
+            throw new CustomException("密码不能为空");
+        }
+        if (!email.contains("@")) {
+            throw new CustomException("邮箱格式不正确");
+        }
+        if (password.length() < 6) {
+            throw new CustomException("密码长度不能小于6");
+        }
+        if (password.length() > 30) {
+            throw new CustomException("密码长度不能大于30");
+        }
+        String regex = "(?=.*[a-zA-Z])(?=.*[0-9]).{6,30}";
+        // 要验证的字符串
+        // 创建Pattern对象
+        Pattern pattern = Pattern.compile(regex);
+        // 创建Matcher对象
+        Matcher matcher = pattern.matcher(password);
+
+        // 进行匹配
+        if (!matcher.matches()) {
+            throw new CustomException("密码需要包含字母数字，且6位以上");
+        }
+        User user = userDao.getOne(new LambdaQueryWrapper<User>().eq(User::getEmail, email));
+        if (user == null) {
+            throw new CustomException("用户不存在");
+        }
+        String salt = PWDMD5.getSalt();
+        String md5Encryption = PWDMD5.getMD5Encryption(password, salt);
+        user.setPassword(md5Encryption);
+        user.setSalt(salt);
+        userDao.updateById(user);
+        ForgetPasswordResp forgetPasswordResp = new ForgetPasswordResp();
+        String token = JWTUtil.getToken(String.valueOf(user.getId()));
+        RedisUtils.set(token, String.valueOf(user.getId()), 12 * 3600L, TimeUnit.SECONDS);
+        forgetPasswordResp.setToken(token);
+        return forgetPasswordResp;
     }
 
 
