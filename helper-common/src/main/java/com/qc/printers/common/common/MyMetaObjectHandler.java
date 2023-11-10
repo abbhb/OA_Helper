@@ -37,6 +37,7 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
                     throw new RuntimeException("取参异常:My-1");
                 }
                 metaObject.setValue("createUser", currentUser.getId());
+
             }
         }
         if (metaObject.hasSetter("updateUser")) {

@@ -24,6 +24,23 @@ spring:
     port: ${helper.redis.port}
     timeout: 1800000
     host: ${helper.redis.ip}
+  mail:
+    #smtp服务主机  127.0.0.1 本机服务
+    host: ${helper.email.smtp.host}
+    #服务协议
+    protocol: smtp
+    #发送邮件的账户
+    username: ${helper.email.username}
+    #授权码
+    password: ${helper.email.password}
+    test-connection: false
+    properties:
+      mail:
+        smtp:
+          auth: true
+          starttls:
+            enable: true
+            required: true
 mybatis-plus:
   configuration:
     #在映射实体或者属性时，将数据库中表名和字段名中的下划线去掉，按照驼峰命名法映射
@@ -90,3 +107,6 @@ my-consul:
 oauth:
   use: true
   frontAddress: http://localhost:5173
+# 滑块验证码
+vail-code:
+  isUse: true

@@ -10,6 +10,8 @@ public class MyString {
     public final static String cache = pre + "CACHE::";
 
     public final static String print = pre + "PRINT::";
+
+    public final static String email_code = pre + "Code::Email::";
     public final static String oauth_code = pre + "OAUTH::code::";
     //注意反序列化对象
     public final static String oauth_access_token = pre + "OAUTH::access::";
@@ -25,4 +27,6 @@ public class MyString {
     public final static String print_document_type_statistic = cache + "PrintDocumentTypeStatistic";
 
     public final static String pre_common_config = cache + "common_config";
+    public static final String CAPTCHA_KEY = pre + "Code::CAPTCHA::";
+    public static final String CAPTCHA_Success = pre + "Code::CAPTCHA_SUCCESS::";
 }

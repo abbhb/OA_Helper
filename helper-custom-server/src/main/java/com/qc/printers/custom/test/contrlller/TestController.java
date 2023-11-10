@@ -11,6 +11,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.Arrays;
+import java.util.List;
+
 @RestController//@ResponseBody+@Controller
 @RequestMapping("/test")
 @Api("TestURL")
@@ -24,9 +30,20 @@ public class TestController {
     private UserDao userDao;
 
     @GetMapping("/test01")
-    public R<String> test01(String msg) {
+    public R<String> test01(String msg) throws IOException {
 //        mqProducer.sendMessageWithTags("test", "测试:" + msg, "test");
-        return R.success("test成功");
+
+        InputStream io = getClass().getClassLoader().getResourceAsStream("templates/verificationEmail.html");
+        String fileContent = new String(io.readAllBytes(), StandardCharsets.UTF_8);
+        io.close();
+        List<String> list = Arrays.asList("123456".split(""));
+        String replacedContent = fileContent.replace("[[${code1}]]", list.get(0));
+        replacedContent = replacedContent.replace("[[${code2}]]", list.get(1));
+        replacedContent = replacedContent.replace("[[${code3}]]", list.get(2));
+        replacedContent = replacedContent.replace("[[${code4}]]", list.get(3));
+        replacedContent = replacedContent.replace("[[${code5}]]", list.get(4));
+        replacedContent = replacedContent.replace("[[${code6}]]", list.get(5));
+        return R.success(replacedContent);
     }
 
     @GetMapping("/test02")
