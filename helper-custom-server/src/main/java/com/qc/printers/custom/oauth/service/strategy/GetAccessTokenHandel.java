@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 /**
  * 获取access_token处理类
  */
-//todo:可能出问题
+
 @Service
 @Slf4j
 public abstract class GetAccessTokenHandel {

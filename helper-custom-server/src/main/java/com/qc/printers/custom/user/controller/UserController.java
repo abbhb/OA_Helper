@@ -8,13 +8,18 @@ import com.qc.printers.common.common.annotation.PermissionCheck;
 import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.common.utils.CASOauthUtil;
 import com.qc.printers.common.common.utils.JWTUtil;
+import com.qc.printers.common.email.service.EmailService;
 import com.qc.printers.common.user.domain.dto.SummeryInfoDTO;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.domain.vo.request.user.SummeryInfoReq;
 import com.qc.printers.common.user.service.annotation.UserPermissionGradeCheck;
+import com.qc.printers.common.vailcode.annotations.CheckVailCode;
+import com.qc.printers.common.vailcode.domain.enums.VailType;
 import com.qc.printers.custom.user.domain.dto.LoginDTO;
 import com.qc.printers.custom.user.domain.vo.request.PasswordR;
+import com.qc.printers.custom.user.domain.vo.request.RegisterEmailRes;
 import com.qc.printers.custom.user.domain.vo.response.LoginRes;
+import com.qc.printers.custom.user.domain.vo.response.RegisterResp;
 import com.qc.printers.custom.user.domain.vo.response.UserResult;
 import com.qc.printers.custom.user.service.RoleService;
 import com.qc.printers.custom.user.service.TrLoginService;
@@ -39,11 +44,15 @@ import java.util.Map;
 public class UserController {
     private final UserService userService;
 
+
     @Autowired
     private RoleService roleService;
 
     private final TrLoginService trLoginService;
     private final CASOauthUtil casOauthUtil;
+
+    @Autowired
+    private EmailService emailService;
 
 
     public UserController(UserService userService, TrLoginService trLoginService, CASOauthUtil casOauthUtil) {
@@ -67,6 +76,30 @@ public class UserController {
             return R.error("密码不能为空");
         }
         return userService.login(user);
+    }
+
+
+    /**
+     * @param email
+     * @param vailCode 用于验证码注解验证,如果没开启验证码为空
+     * @return 提示信息
+     */
+    @GetMapping("/get_email_code")
+    @ApiOperation(value = "获取邮箱验证码", notes = "")
+    @CheckVailCode(key = "#vailCode")
+    public R<String> getEmailCode(@RequestParam(name = "email") String email, @RequestParam(name = "vail_code", required = false) String vailCode) {
+        return R.successOnlyObject(emailService.getEmailCode(email));
+    }
+
+
+    @PostMapping("/register_email")
+    @CheckVailCode(key = "#registerEmailRes.email", value = "#registerEmailRes.emailCode", type = VailType.EMAIL)
+    @ApiOperation(value = "Email注册", notes = "")
+    public R<RegisterResp> registerByEmail(@RequestBody RegisterEmailRes registerEmailRes) {
+        /**
+         * 直接注册就行，校验邮箱验证码通过验证码通用注解
+         */
+        return R.success(userService.emailRegister(registerEmailRes.getEmail(), registerEmailRes.getPassword()));
     }
 
     /**

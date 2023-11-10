@@ -74,7 +74,6 @@ public class User implements Serializable {
     @ApiModelProperty(value = "盐")
     public String salt;
 
-    @TableField(fill = FieldFill.INSERT)
     @ApiModelProperty(value = "创建用户")
     public Long createUser;
 
