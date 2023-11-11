@@ -7,10 +7,7 @@ import com.qc.printers.custom.oauth.domain.dto.Authorize;
 import com.qc.printers.custom.oauth.domain.vo.CanAuthorize;
 import com.qc.printers.custom.oauth.domain.vo.req.AgreeLoginReq;
 import com.qc.printers.custom.oauth.domain.vo.req.AgreeReq;
-import com.qc.printers.custom.oauth.domain.vo.resp.AgreeLoginResp;
-import com.qc.printers.custom.oauth.domain.vo.resp.AgreeResp;
-import com.qc.printers.custom.oauth.domain.vo.resp.MeResp;
-import com.qc.printers.custom.oauth.domain.vo.resp.TokenResp;
+import com.qc.printers.custom.oauth.domain.vo.resp.*;
 import com.qc.printers.custom.oauth.service.OauthService;
 import com.qc.printers.custom.oauth.service.strategy.GetAccessTokenHandel;
 import com.qc.printers.custom.oauth.service.strategy.GetAccessTokenHandelFactory;
@@ -116,4 +113,21 @@ public class OauthController {
     public R<String> getClientName(@RequestParam(name = "client_id") String clientId) {
         return R.successOnlyObject(oauthService.getClientName(clientId));
     }
+
+
+    /**
+     * get_user_info
+     * oauth提供获取用户信息的接口，需要用户授权
+     *
+     * @param accessToken
+     * @param openid
+     * @param cilentId
+     * @return
+     */
+    @GetMapping("/get_user_info")
+    public OauthUserInfoResp getUserInfo(@RequestParam(name = "access_token") String accessToken, @RequestParam(name = "openid") String openid, @RequestParam(name = "oauth_consumer_key") String cilentId) {
+        return oauthService.getUserInfo(accessToken, openid, cilentId);
+    }
+
+
 }

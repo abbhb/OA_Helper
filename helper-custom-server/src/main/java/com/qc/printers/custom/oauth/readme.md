@@ -135,6 +135,25 @@ openid是此网站上唯一对应用户身份的标识，网站可将此ID进行
 
 ## 4.API详细文档
 
+1. 以[get_user_info](https://wiki.connect.qq.com/get_user_info)接口为例：
+   （请将access_token，appid等参数值替换为你自己的）
+
+https://graph.qq.com/user/get_user_info?access_token=YOUR_ACCESS_TOKEN&oauth_consumer_key=YOUR_APP_ID&openid=YOUR_OPENID
+
+2. 成功返回后，即可获取到用户数据：
+
+```
+{
+   "code":0,
+   "msg":"",
+   "nickname":"YOUR_NICK_NAME",
+   "sex":"性别",
+   "avatar":"头像",
+   "e"
+  ...
+}
+```
+
 ## 5.公共错误码
 
 ##### **错误码说明**：
