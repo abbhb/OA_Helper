@@ -810,6 +810,12 @@ public class UserServiceImpl implements UserService {
         if (!matcher.matches()) {
             throw new CustomException("密码需要包含字母数字，且6位以上");
         }
+        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper.eq(User::getEmail, email);
+
+        if (userDao.count(userLambdaQueryWrapper) > 0) {
+            throw new CustomException("该邮箱已经注册，若密码忘记可尝试找回密码!");
+        }
         User user = new User();
         user.setOpenId(UUID.randomUUID().toString());
         user.setDeptId(1L);

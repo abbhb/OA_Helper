@@ -39,9 +39,9 @@ public class VerifyEmailCodeTypeHandel extends VailCodeVerifyHandel {
         if (StringUtils.isEmpty(zhenvalue)) {
             throw new CustomException("邮箱验证码过期了或者错误，请重新获取");
         }
+        RedisUtils.del(MyString.email_code + email);
         if (!zhenvalue.equals(code)) {
             throw new CustomException("邮箱验证码错误，请重新获取");
         }
-        RedisUtils.del(MyString.email_code + email);
     }
 }

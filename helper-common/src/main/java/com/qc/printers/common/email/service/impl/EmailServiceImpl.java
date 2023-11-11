@@ -66,7 +66,7 @@ public class EmailServiceImpl implements EmailService {
             // 设置收件人、主题等
             helper.setTo(email);
             helper.setFrom("3482238110@qq.com");
-            helper.setSubject("您本次的验证码是");
+            helper.setSubject("来自Easy_OA,您本次的验证码是");
             helper.setText(emailContent, true);
             RedisUtils.set(MyString.email_code + email, verCode, 5 * 60, TimeUnit.SECONDS);
             mailSender.send(mimeMessage);
