@@ -556,6 +556,8 @@ public class UserServiceImpl implements UserService {
         if (user.getUsername().contains("@")) {
             LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
             userLambdaQueryWrapper.eq(User::getEmail, user.getUsername());
+            int count = userDao.count(userLambdaQueryWrapper);
+            log.info("count{}", count);
             one = userDao.getOne(userLambdaQueryWrapper);
             if (one == null) {
                 // 用户名登录
@@ -832,14 +834,16 @@ public class UserServiceImpl implements UserService {
         if (userDao.count(userLambdaQueryWrapper) > 0) {
             throw new CustomException("该邮箱已经注册，若密码忘记可尝试找回密码!");
         }
+        // 用户名也得全局唯一，默认为uuid吧，后期用户有需求再改
         User user = new User();
         user.setOpenId(UUID.randomUUID().toString());
         user.setDeptId(1L);
         // 自己创建
         user.setCreateUser(1L);
         user.setAvatar("");
-        user.setEmail(email);
-        user.setUsername(email);
+        user.setEmail(email.toLowerCase());
+        String uuid = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 15);
+        user.setUsername(uuid);
         user.setName("亲爱的用户，请改名");
         String salt = PWDMD5.getSalt();
         String md5Encryption = PWDMD5.getMD5Encryption(password, salt);

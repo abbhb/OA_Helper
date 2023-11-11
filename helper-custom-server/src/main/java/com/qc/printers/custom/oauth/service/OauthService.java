@@ -6,6 +6,7 @@ import com.qc.printers.custom.oauth.domain.vo.req.AgreeReq;
 import com.qc.printers.custom.oauth.domain.vo.resp.AgreeLoginResp;
 import com.qc.printers.custom.oauth.domain.vo.resp.AgreeResp;
 import com.qc.printers.custom.oauth.domain.vo.resp.MeResp;
+import com.qc.printers.custom.oauth.domain.vo.resp.OauthUserInfoResp;
 
 public interface OauthService {
     CanAuthorize isCanAuthorize(String responseType, String clientId, String redirectUri, String state, String scope);
@@ -18,4 +19,6 @@ public interface OauthService {
     MeResp me(String accessToken);
 
     String getClientName(String clientId);
+
+    OauthUserInfoResp getUserInfo(String accessToken, String openid, String cilentId);
 }

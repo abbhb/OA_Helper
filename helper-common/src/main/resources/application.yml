@@ -9,7 +9,7 @@ spring:
       max-file-size: -1
       max-request-size: -1
   profiles:
-    active: dev
+    active: prod
   application:
     name: printes
   datasource:
@@ -56,7 +56,7 @@ mybatis-plus:
 
 # ====================== ↓↓↓↓↓↓ MinIO文件服务器 ↓↓↓↓↓↓ ======================
 minio:
-  url: http://10.15.247.254:9090
+  url: http://easyoa.fun:9090
   accessKey: N2T6ZfARSupeUYbn
   secretKey: nqcG5pG9Qc104lHrWgVZCYrc2JZSyS0v
   bucketName: aistudio
@@ -106,7 +106,7 @@ my-consul:
 # oauth的配置
 oauth:
   use: true
-  frontAddress: http://localhost:5173
+  frontAddress: http://easyoa.fun:8081
 # 滑块验证码
 vail-code:
   isUse: true

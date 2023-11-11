@@ -24,6 +24,7 @@ import com.qc.printers.custom.oauth.domain.vo.req.AgreeReq;
 import com.qc.printers.custom.oauth.domain.vo.resp.AgreeLoginResp;
 import com.qc.printers.custom.oauth.domain.vo.resp.AgreeResp;
 import com.qc.printers.custom.oauth.domain.vo.resp.MeResp;
+import com.qc.printers.custom.oauth.domain.vo.resp.OauthUserInfoResp;
 import com.qc.printers.custom.oauth.service.OauthService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -192,6 +193,7 @@ public class OauthServiceImpl implements OauthService {
             }
             meResp.setClientId(accessToken1.getClientId());
             meResp.setOpenId(one.getOpenId());
+            meResp.setCode(0);
             return meResp;
         }
         meResp.setCode(100055);
@@ -205,6 +207,54 @@ public class OauthServiceImpl implements OauthService {
         sysOauthLambdaQueryWrapper.eq(SysOauth::getClientId, clientId);
         SysOauth one = sysOauthDao.getOne(sysOauthLambdaQueryWrapper);
         return one.getClientName();
+    }
+
+    @Override
+    public OauthUserInfoResp getUserInfo(String accessToken, String openid, String cilentId) {
+        OauthUserInfoResp oauthUserInfoResp = new OauthUserInfoResp();
+        try {
+            if (StringUtils.isEmpty(accessToken) || StringUtils.isEmpty(openid) || StringUtils.isEmpty(cilentId)) {
+
+                oauthUserInfoResp.setCode(100055);
+                oauthUserInfoResp.setMsg("参数异常");
+                return oauthUserInfoResp;
+            }
+            if (RedisUtils.get(MyString.oauth_access_token + accessToken, AccessToken.class) == null) {
+                oauthUserInfoResp.setCode(100055);
+                oauthUserInfoResp.setMsg("token失效");
+                return oauthUserInfoResp;
+            }
+            if (RedisUtils.get(MyString.oauth_access_token + accessToken, AccessToken.class).getClientId().equals(cilentId)) {
+                LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                userLambdaQueryWrapper.eq(User::getOpenId, openid);
+                User one = userDao.getOne(userLambdaQueryWrapper);
+                if (one == null) {
+                    oauthUserInfoResp.setCode(100055);
+                    oauthUserInfoResp.setMsg("查询用户信息失败");
+                    return oauthUserInfoResp;
+                }
+                if (!one.getOpenId().equals(openid)) {
+                    oauthUserInfoResp.setCode(100055);
+                    oauthUserInfoResp.setMsg("身份异常");
+                    return oauthUserInfoResp;
+                }
+                oauthUserInfoResp.setSex(one.getSex());
+                oauthUserInfoResp.setEmail(one.getEmail());
+                oauthUserInfoResp.setAvatar(one.getAvatar());
+                oauthUserInfoResp.setNickname(one.getName());
+                oauthUserInfoResp.setUsername(one.getUsername());
+                oauthUserInfoResp.setCode(0);
+                return oauthUserInfoResp;
+
+            }
+        } catch (Exception e) {
+            oauthUserInfoResp.setCode(100055);
+            oauthUserInfoResp.setMsg("业务异常");
+            return oauthUserInfoResp;
+        }
+        oauthUserInfoResp.setCode(100055);
+        oauthUserInfoResp.setMsg("业务异常");
+        return oauthUserInfoResp;
     }
 
 }
