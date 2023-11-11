@@ -17,7 +17,6 @@ import org.thymeleaf.context.Context;
 
 import javax.mail.MessagingException;
 import javax.mail.internet.MimeMessage;
-import java.util.Arrays;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -56,7 +55,8 @@ public class EmailServiceImpl implements EmailService {
         String verCode = VerCodeGenerateUtil.generateVerCode();
         //创建邮件正文
         Context context = new Context();
-        context.setVariable("verifyCode", Arrays.asList(verCode.split("")));
+        context.setVariable("verificationCode", verCode);
+        context.setVariable("email", email);
         //将模块引擎内容解析成html字符串
         String emailContent = templateEngine.process("verificationEmail", context);
         MimeMessage mimeMessage = mailSender.createMimeMessage();
