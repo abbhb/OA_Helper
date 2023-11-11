@@ -121,46 +121,206 @@
     </style>
 </head>
 <body>
-<table>
+<table border="0" cellpadding="0" cellspacing="0" class="m-shell" width="775">
     <tbody>
     <tr>
-        <td>
-            <div id="top">
-                <table>
-                    <tbody>
-                    <tr>
-                        <td></td>
-                    </tr>
-                    </tbody>
-                </table>
-            </div>
-            <div id="content">
-                <div id="content_top">
-                    <strong>尊敬的用户：您好！</strong>
-                    <strong>
-                        您正在进行<span>注册账号</span>操作，请在验证码中输入以下验证码完成操作：
-                    </strong>
-                    <div id="verificationCode">
+        <td class="td"
+            style="width:775px; min-width:775px; font-size:0pt; line-height:0pt; padding:0; margin:0; font-weight:normal;">
+            <table border="0" cellpadding="0" cellspacing="0" width="100%">
 
-                        <div id="verificationCode_span">[[${verifyCode}]]</div>
-                        <!--                        <button class="button" th:each="a:${verifyCode}">[[${a}]]</button>-->
-                    </div>
-                </div>
-                <div id="content_bottom">
-                    <small>
-                        注意：此操作可能会修改您的密码、登录邮箱或绑定手机。如非本人操作，请及时登录并修改密码以保证帐户安全
-                        <br>（工作人员不会向你索取此验证码，请勿泄漏！)
-                    </small>
-                </div>
-            </div>
-            <div id="bottom">
-                <div>
-                    <p>此为系统邮件，请勿回复<br>
-                        请保管好您的邮箱，避免账号被他人盗用
-                    </p>
-                    <p id="sign">——EasyOA 系统</p>
-                </div>
-            </div>
+                <tbody>
+                <tr>
+                    <td bgcolor="#212429" class="p-80 mpy-35 mpx-15" style="padding: 80px;">
+                        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+
+
+                            <tbody>
+
+                            <tr>
+                                <td>
+
+                                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                        <tbody>
+                                        <tr>
+                                            <td class="title-36 pb-30 c-grey6 fw-b"
+                                                style="font-size:36px; line-height:42px; font-family:Arial, sans-serif, 'Motiva Sans'; text-align:left; padding-bottom: 30px; color:#bfbfbf; font-weight:bold;">
+                                                <span style="color: #77b9ee;">[[${email}]]，</span></td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                        <tbody>
+                                        <tr>
+                                            <td class="text-18 c-grey4 pb-30"
+                                                style="font-size:18px; line-height:25px; font-family:Arial, sans-serif, 'Motiva Sans'; text-align:left; color:#dbdbdb; padding-bottom: 30px;">
+                                                看起来您需要邮件验证码来验证您的身份。此处是您访问帐户所需的 Easy_OA
+                                                令牌验证码：
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                        <tbody>
+                                        <tr>
+                                            <td class="pb-70 mpb-50" style="padding-bottom: 70px;">
+                                                <table bgcolor="#17191c" border="0" cellpadding="0" cellspacing="0"
+                                                       width="100%">
+                                                    <tbody>
+                                                    <tr>
+                                                        <td class="py-30 px-56"
+                                                            style="padding-top: 30px; padding-bottom: 30px; padding-left: 56px; padding-right: 56px;">
+                                                            <table border="0" cellpadding="0" cellspacing="0"
+                                                                   width="100%">
+                                                                <tbody>
+                                                                <!--                                                                <tr>-->
+                                                                <!--                                                                    <td style="font-size:18px; line-height:25px; font-family:Arial, sans-serif, 'Motiva Sans'; color:#8f98a0; text-align:center;">-->
+                                                                <!--                                                                        请求来自												</td>-->
+                                                                <!--                                                                </tr>-->
+                                                                <!--                                                                <tr>-->
+                                                                <!--                                                                    <td style="font-size:25px; line-height:30px; font-family:Arial, sans-serif, 'Motiva Sans'; color:#f1f1f1; text-align:center;letter-spacing:1px">-->
+                                                                <!--                                                                        中国												</td>-->
+                                                                <!--                                                                </tr>-->
+                                                                <tr>
+                                                                    <td style="padding-bottom: 16px"></td>
+                                                                </tr>
+                                                                <tr>
+                                                                    <td class="title-48 c-blue1 fw-b a-center"
+                                                                        style="font-size:48px; line-height:52px; font-family:Arial, sans-serif, 'Motiva Sans'; color:#3a9aed; font-weight:bold; text-align:center;">
+                                                                        [[${verificationCode}]]
+                                                                    </td>
+                                                                </tr>
+                                                                </tbody>
+                                                            </table>
+                                                        </td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                        <tbody>
+                                        <tr>
+                                            <td class="pb-30" style="padding-bottom: 30px;">
+                                                <table border="0" cellpadding="0" cellspacing="0" width="210">
+                                                    <tbody>
+                                                    <tr>
+                                                        <td><br>&nbsp;</td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                        <tbody>
+                                        <tr>
+                                            <td class="title-36 pb-30 c-grey6 fw-b"
+                                                style="font-size:30px; line-height:34px; font-family:Arial, sans-serif, 'Motiva Sans'; text-align:left; padding-bottom: 20px; color:#bfbfbf; font-weight:bold;">
+                                                不是您？
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                        <tbody>
+                                        <tr>
+                                            <td class="text-18 c-grey4 pb-30"
+                                                style="font-size:18px; line-height:25px; font-family:Arial, sans-serif, 'Motiva Sans'; text-align:left; color:#dbdbdb; padding-bottom: 30px;">
+                                                您会收到这封电子邮件，是由于有人试图登录您的 Easy_OA 帐户，且提供了<span
+                                                    style="color: #ffffff; font-weight: bold;">正确的帐户名称与密码</span>。<br><br>
+                                                如果这不是您尝试登录，建议您<a
+                                                    href="http://easyoa.fun:8081/#/forgot-password" rel="noopener"
+                                                    target="_blank">重置自己的 Easy_OA 密码</a>。<br><br>
+                                                此电子邮件包含一个登录代码，您需要用它访问您的帐户。切勿与任何人分享此代码。
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+                                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                        <tbody>
+                                        <tr>
+                                            <td class="pb-30" style="padding-bottom: 30px;">
+                                                <table border="0" cellpadding="0" cellspacing="0" width="210">
+                                                    <tbody>
+                                                    <tr>
+                                                        <td><br>&nbsp;</td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+
+
+                                    <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                        <tbody>
+                                        <tr>
+                                            <td class="pt-30" style="padding-top: 30px;">
+                                                <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                                                    <tbody>
+                                                    <tr>
+                                                        <td bgcolor="#3a9aed" class="img" style="font-size:0pt; line-height:0pt; text-align:left;"
+                                                            width="3"></td>
+                                                        <td class="img" style="font-size:0pt; line-height:0pt; text-align:left;"
+                                                            width="37"></td>
+                                                        <td>
+                                                            <table border="0" cellpadding="0" cellspacing="0"
+                                                                   width="100%">
+                                                                <tbody>
+                                                                <tr>
+                                                                    <td class="text-16 py-20 c-grey4 fallback-font"
+                                                                        style="font-size:16px; line-height:22px; font-family:Arial, sans-serif, 'Motiva Sans'; text-align:left; padding-top: 20px; padding-bottom: 20px; color:#f1f1f1;">
+                                                                        祝您愉快，<br>
+                                                                        Easy_OA团队
+                                                                    </td>
+                                                                </tr>
+                                                                </tbody>
+                                                            </table>
+                                                        </td>
+                                                    </tr>
+                                                    </tbody>
+                                                </table>
+                                            </td>
+                                        </tr>
+                                        </tbody>
+                                    </table>
+
+
+                                </td>
+                            </tr>
+
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+
+
+                <tr>
+                    <td class="py-60 px-90 mpy-40 mpx-15"
+                        style="padding-top: 60px; padding-bottom: 60px; padding-left: 90px; padding-right: 90px;">
+                        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+
+                            <tbody>
+                            <tr>
+                                <td class="text-18 pb-60 mpb-40 fallback-font"
+                                    style="font-size:18px; line-height:25px; color:#000001; font-family:Arial, sans-serif, 'Motiva Sans'; text-align:left; padding-bottom: 60px;">
+                                    此通知已发送至与您的 Easy_OA 帐户关联的电子邮件地址。 <br><br>
+                                    这封电子邮件由系统自动生成，请勿回复。如果您需要额外帮助，请访问 Easy_OA 客服。
+                                </td>
+                            </tr>
+
+
+                            </tbody>
+                        </table>
+                    </td>
+                </tr>
+
+                </tbody>
+            </table>
         </td>
     </tr>
     </tbody>

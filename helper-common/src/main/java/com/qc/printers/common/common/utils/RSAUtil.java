@@ -1,5 +1,6 @@
 package com.qc.printers.common.common.utils;
 
+import com.qc.printers.common.common.CustomException;
 import org.apache.tomcat.util.codec.binary.Base64;
 
 import javax.crypto.Cipher;
@@ -86,6 +87,7 @@ public class RSAUtil {
 
         } catch (Exception e) {
             e.printStackTrace();
+            throw new CustomException("请刷新重试，安全加密码已更新!");
         }
         return temp;
     }

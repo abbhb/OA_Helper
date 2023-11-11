@@ -551,9 +551,25 @@ public class UserServiceImpl implements UserService {
         if (StringUtils.isEmpty(user.getUsername()) || StringUtils.isEmpty(user.getPassword())) {
             return R.error("参数异常");
         }
-        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        userLambdaQueryWrapper.eq(User::getUsername, user.getUsername());
-        User one = userDao.getOne(userLambdaQueryWrapper);
+        User one = null;
+        // 先判断电子邮箱
+        if (user.getUsername().contains("@")) {
+            LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            userLambdaQueryWrapper.eq(User::getEmail, user.getUsername());
+            one = userDao.getOne(userLambdaQueryWrapper);
+            if (one == null) {
+                // 用户名登录
+                LambdaQueryWrapper<User> userLambdaQueryWrapper1 = new LambdaQueryWrapper<>();
+                userLambdaQueryWrapper1.eq(User::getUsername, user.getUsername());
+                one = userDao.getOne(userLambdaQueryWrapper1);
+            }
+        } else {
+            // 用户名登录
+            LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            userLambdaQueryWrapper.eq(User::getUsername, user.getUsername());
+            one = userDao.getOne(userLambdaQueryWrapper);
+        }
+
         if (one == null) {
             return R.error("用户名或密码错误");
         }
@@ -876,9 +892,11 @@ public class UserServiceImpl implements UserService {
         }
         String salt = PWDMD5.getSalt();
         String md5Encryption = PWDMD5.getMD5Encryption(password, salt);
-        user.setPassword(md5Encryption);
-        user.setSalt(salt);
-        userDao.updateById(user);
+        LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        lambdaUpdateWrapper.eq(User::getId, user.getId());
+        lambdaUpdateWrapper.set(User::getPassword, md5Encryption);
+        lambdaUpdateWrapper.set(User::getSalt, salt);
+        userDao.update(lambdaUpdateWrapper);
         ForgetPasswordResp forgetPasswordResp = new ForgetPasswordResp();
         String token = JWTUtil.getToken(String.valueOf(user.getId()));
         RedisUtils.set(token, String.valueOf(user.getId()), 12 * 3600L, TimeUnit.SECONDS);

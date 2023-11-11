@@ -3,6 +3,7 @@ package com.qc.printers.custom.user.controller;
 import com.qc.printers.common.common.Code;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.R;
+import com.qc.printers.common.common.annotation.FrequencyControl;
 import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.annotation.PermissionCheck;
 import com.qc.printers.common.common.domain.entity.PageData;
@@ -89,6 +90,9 @@ public class UserController {
     @GetMapping("/get_email_code")
     @ApiOperation(value = "获取邮箱验证码", notes = "")
     @CheckVailCode(key = "#vailCode")
+    @FrequencyControl(time = 10, count = 5, target = FrequencyControl.Target.EL, spEl = "#email")
+    @FrequencyControl(time = 30, count = 10, target = FrequencyControl.Target.EL, spEl = "#email")
+    @FrequencyControl(time = 60, count = 15, target = FrequencyControl.Target.EL, spEl = "#email")
     public R<String> getEmailCode(@RequestParam(name = "email") String email, @RequestParam(name = "vail_code", required = false) String vailCode) {
         return R.successOnlyObject(emailService.getEmailCode(email));
     }
