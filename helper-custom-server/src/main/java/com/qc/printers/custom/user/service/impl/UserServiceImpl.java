@@ -546,50 +546,13 @@ public class UserServiceImpl implements UserService {
         }
     }
 
+
     @Override
     public R<LoginRes> login(LoginDTO user) {
         if (StringUtils.isEmpty(user.getUsername()) || StringUtils.isEmpty(user.getPassword())) {
             return R.error("参数异常");
         }
-        User one = null;
-        // 先判断电子邮箱
-        if (user.getUsername().contains("@")) {
-            LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            userLambdaQueryWrapper.eq(User::getEmail, user.getUsername());
-            int count = userDao.count(userLambdaQueryWrapper);
-            log.info("count{}", count);
-            one = userDao.getOne(userLambdaQueryWrapper);
-            if (one == null) {
-                // 用户名登录
-                LambdaQueryWrapper<User> userLambdaQueryWrapper1 = new LambdaQueryWrapper<>();
-                userLambdaQueryWrapper1.eq(User::getUsername, user.getUsername());
-                one = userDao.getOne(userLambdaQueryWrapper1);
-            }
-        } else {
-            // 用户名登录
-            LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            userLambdaQueryWrapper.eq(User::getUsername, user.getUsername());
-            one = userDao.getOne(userLambdaQueryWrapper);
-        }
-
-        if (one == null) {
-            return R.error("用户名或密码错误");
-        }
-        if (one.getPassword() == null || one.getSalt() == null) {
-            return R.error("此用户未设置密码,请使用oauth2登录");
-        }
-        try {
-            String password = PWDMD5.getMD5Encryption(RSAUtil.decryptDataOnJava(user.getPassword()), one.getSalt());
-            if (!one.getPassword().equals(password)) {
-                return R.error("用户名或密码错误");
-            }
-        } catch (Exception e) {
-            throw new CustomException("刷新再试试");
-        }
-
-        if (one.getStatus().equals(0)) {
-            return R.error("账号已被禁用");
-        }
+        User one = this.loginPublic(user.getUsername(), user.getPassword());
         String token = JWTUtil.getToken(String.valueOf(one.getId()));
         if (user.getWeek()) {
             RedisUtils.set(token, String.valueOf(one.getId()), 7 * 24 * 3600L, TimeUnit.SECONDS);
@@ -906,6 +869,51 @@ public class UserServiceImpl implements UserService {
         RedisUtils.set(token, String.valueOf(user.getId()), 12 * 3600L, TimeUnit.SECONDS);
         forgetPasswordResp.setToken(token);
         return forgetPasswordResp;
+    }
+
+    @Override
+    public User loginPublic(String username, String password) {
+        User one = null;
+        // 先判断电子邮箱
+        if (username.contains("@")) {
+            LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            userLambdaQueryWrapper.eq(User::getEmail, username);
+            int count = userDao.count(userLambdaQueryWrapper);
+            log.info("count{}", count);
+            one = userDao.getOne(userLambdaQueryWrapper);
+            if (one == null) {
+                // 用户名登录
+                LambdaQueryWrapper<User> userLambdaQueryWrapper1 = new LambdaQueryWrapper<>();
+                userLambdaQueryWrapper1.eq(User::getUsername, username);
+                one = userDao.getOne(userLambdaQueryWrapper1);
+            }
+        } else {
+            // 用户名登录
+            LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            userLambdaQueryWrapper.eq(User::getUsername, username);
+            one = userDao.getOne(userLambdaQueryWrapper);
+        }
+
+        if (one == null) {
+            throw new CustomException("用户名或密码错误");
+        }
+        if (one.getPassword() == null || one.getSalt() == null) {
+            throw new CustomException("此用户未设置密码,请使用oauth2登录");
+        }
+        try {
+            String Spassword = PWDMD5.getMD5Encryption(password, one.getSalt());
+            if (!one.getPassword().equals(Spassword)) {
+                throw new CustomException("用户名或密码错误");
+            }
+        } catch (Exception e) {
+            throw new CustomException("刷新再试试");
+        }
+
+        if (one.getStatus().equals(0)) {
+            throw new CustomException("账号已被禁用");
+        }
+
+        return one;
     }
 
 

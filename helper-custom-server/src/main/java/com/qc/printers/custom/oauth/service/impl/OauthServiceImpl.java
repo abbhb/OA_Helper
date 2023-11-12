@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.MyString;
 import com.qc.printers.common.common.utils.JWTUtil;
-import com.qc.printers.common.common.utils.PWDMD5;
 import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
 import com.qc.printers.common.oauth.dao.SysOauthDao;
@@ -26,6 +25,7 @@ import com.qc.printers.custom.oauth.domain.vo.resp.AgreeResp;
 import com.qc.printers.custom.oauth.domain.vo.resp.MeResp;
 import com.qc.printers.custom.oauth.domain.vo.resp.OauthUserInfoResp;
 import com.qc.printers.custom.oauth.service.OauthService;
+import com.qc.printers.custom.user.service.UserService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -46,6 +46,9 @@ public class OauthServiceImpl implements OauthService {
 
     @Autowired
     private UserDao userDao;
+
+    @Autowired
+    private UserService userService;
 
     private static URI getIP(URI uri) {
         URI effectiveURI = null;
@@ -138,52 +141,11 @@ public class OauthServiceImpl implements OauthService {
         }
 
 
-        User one = null;
-
-        // 先判断电子邮箱
-        if (agreeReq.getUsername().contains("@")) {
-            LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            userLambdaQueryWrapper.eq(User::getEmail, agreeReq.getUsername());
-            int count = userDao.count(userLambdaQueryWrapper);
-            log.info("count{}", count);
-            one = userDao.getOne(userLambdaQueryWrapper);
-            if (one == null) {
-                // 用户名登录
-                LambdaQueryWrapper<User> userLambdaQueryWrapper1 = new LambdaQueryWrapper<>();
-                userLambdaQueryWrapper1.eq(User::getUsername, agreeReq.getUsername());
-                one = userDao.getOne(userLambdaQueryWrapper1);
-            }
-        } else {
-            // 用户名登录
-            LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            userLambdaQueryWrapper.eq(User::getUsername, agreeReq.getUsername());
-            one = userDao.getOne(userLambdaQueryWrapper);
-        }
-
-        if (one == null) {
-            throw new CustomException("用户名密码错误");
-        }
-        if (one.getPassword() == null || one.getSalt() == null) {
-            throw new CustomException("此用户未设置密码，请联系管理员");
-        }
-        try {
-            String password = PWDMD5.getMD5Encryption(agreeReq.getPassword(), one.getSalt());
-            if (!one.getPassword().equals(password)) {
-                throw new CustomException("用户名密码错误");
-            }
-        } catch (Exception e) {
-            throw new CustomException("刷新再试试");
-        }
-        if (one.getStatus().equals(0)) {
-            throw new CustomException("账号已被禁用");
-        }
+        User one = userService.loginPublic(agreeReq.getUsername(), agreeReq.getPassword());
         //同时返回token和code，顺便给网站一个token
         String token = JWTUtil.getToken(String.valueOf(one.getId()));
 
-
         RedisUtils.set(token, String.valueOf(one.getId()), 12 * 3600L, TimeUnit.SECONDS);
-
-
         String code = OauthUtil.genCode();
         //20秒过期的code
         OauthCodeDto oauthCodeDto = new OauthCodeDto();
