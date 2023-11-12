@@ -14,6 +14,7 @@
               FROM printer,
                    user
               WHERE printer.create_user = user.id
+                AND printer.is_print = 1
               GROUP BY printer.create_user
               ORDER BY total DESC) tables LIMIT 10
     </select>
@@ -27,6 +28,7 @@
               FROM printer,
                    user
               WHERE printer.create_user = user.id
+                AND printer.is_print = 1
                 AND (printer.create_time BETWEEN CONCAT(CURDATE(), ' 00:00:00') AND CONCAT(CURDATE(), '
         23:59:59'))
 
@@ -35,7 +37,10 @@
     </select>
     <!--    public Integer getPrintCount();-->
     <select id="getPrintCount" resultType="java.lang.Integer">
-        SELECT count(*) FROM printer where printer.create_time BETWEEN CONCAT(CURDATE(),' 00:00:00') AND
-        CONCAT(CURDATE(),' 23:59:59')
+        SELECT count(*)
+        FROM printer
+        where printer.create_time BETWEEN CONCAT(CURDATE(), ' 00:00:00') AND
+            CONCAT(CURDATE(), ' 23:59:59')
+          AND printer.is_print = 1
     </select>
 </mapper>
