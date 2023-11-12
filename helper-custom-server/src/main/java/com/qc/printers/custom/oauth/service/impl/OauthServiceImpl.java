@@ -137,9 +137,29 @@ public class OauthServiceImpl implements OauthService {
             }
         }
 
-        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        userLambdaQueryWrapper.eq(User::getUsername, agreeReq.getUsername());
-        User one = userDao.getOne(userLambdaQueryWrapper);
+
+        User one = null;
+
+        // 先判断电子邮箱
+        if (agreeReq.getUsername().contains("@")) {
+            LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            userLambdaQueryWrapper.eq(User::getEmail, agreeReq.getUsername());
+            int count = userDao.count(userLambdaQueryWrapper);
+            log.info("count{}", count);
+            one = userDao.getOne(userLambdaQueryWrapper);
+            if (one == null) {
+                // 用户名登录
+                LambdaQueryWrapper<User> userLambdaQueryWrapper1 = new LambdaQueryWrapper<>();
+                userLambdaQueryWrapper1.eq(User::getUsername, agreeReq.getUsername());
+                one = userDao.getOne(userLambdaQueryWrapper1);
+            }
+        } else {
+            // 用户名登录
+            LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            userLambdaQueryWrapper.eq(User::getUsername, agreeReq.getUsername());
+            one = userDao.getOne(userLambdaQueryWrapper);
+        }
+
         if (one == null) {
             throw new CustomException("用户名密码错误");
         }
@@ -214,7 +234,7 @@ public class OauthServiceImpl implements OauthService {
         OauthUserInfoResp oauthUserInfoResp = new OauthUserInfoResp();
         try {
             if (StringUtils.isEmpty(accessToken) || StringUtils.isEmpty(openid) || StringUtils.isEmpty(cilentId)) {
-
+                log.info("getUserInfo参数{},{},{}", accessToken, openid, cilentId);
                 oauthUserInfoResp.setCode(100055);
                 oauthUserInfoResp.setMsg("参数异常");
                 return oauthUserInfoResp;
