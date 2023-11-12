@@ -63,4 +63,6 @@ public interface UserService {
 
 
     ForgetPasswordResp forgetPasswordByEmail(String email, String password);
+
+    User loginPublic(String username, String password);
 }

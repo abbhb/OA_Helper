@@ -75,37 +75,34 @@ public class CaptchaUtils {
                 File file = new File(imgPath);
                 return ImageIO.read(file);
             }*/
-            BufferedImage image = new BufferedImage(1080, 720, BufferedImage.TYPE_INT_BGR);
-            Graphics2D graphics = image.createGraphics();
-            graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-            //设置字体
-            Font font = new Font("黑体", Font.PLAIN, 60);
-            graphics.setFont(font);
-            //设置颜色
-            graphics.setColor(Color.WHITE);
-            //向画板上写字
-            graphics.drawString(RandomChinese.getRandomChineseLen(17), 35, 100);
-            graphics.drawString(RandomChinese.getRandomChineseLen(17), 35, 200);
-            graphics.drawString(RandomChinese.getRandomChineseLen(17), 35, 300);
-            graphics.drawString(RandomChinese.getRandomChineseLen(17), 35, 400);
-            graphics.drawString(RandomChinese.getRandomChineseLen(17), 35, 500);
-            graphics.drawString(RandomChinese.getRandomChineseLen(17), 35, 600);
-            graphics.drawString(RandomChinese.getRandomChineseLen(17), 35, 700);
-            //释放资源
-            graphics.dispose();
+            // todo:fix network error
+//            BufferedImage image = new BufferedImage(1080, 720, BufferedImage.TYPE_INT_BGR);
+//            Graphics2D graphics = image.createGraphics();
+//            graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+//            //设置字体
+//            Font font = new Font("黑体", Font.PLAIN, 60);
+//            graphics.setFont(font);
+//            //设置颜色
+//            graphics.setColor(Color.WHITE);
+//            //向画板上写字
+//            graphics.drawString(RandomChinese.getRandomChineseLen(17), 35, 100);
+//            graphics.drawString(RandomChinese.getRandomChineseLen(17), 35, 200);
+//            graphics.drawString(RandomChinese.getRandomChineseLen(17), 35, 300);
+//            graphics.drawString(RandomChinese.getRandomChineseLen(17), 35, 400);
+//            graphics.drawString(RandomChinese.getRandomChineseLen(17), 35, 500);
+//            graphics.drawString(RandomChinese.getRandomChineseLen(17), 35, 600);
+//            graphics.drawString(RandomChinese.getRandomChineseLen(17), 35, 700);
+//            //释放资源
+//            graphics.dispose();
             // 判断网络
-            try {
-                int nonce = getNonceByRange(0, 1000);
-                //获取网络资源图片
-                if (0 == place) {
-                    String imgUrl = String.format(IMG_URL, nonce);
-                    URL url = new URL(imgUrl);
-                    return ImageIO.read(url.openStream());
-                }
-            } catch (Exception e) {
-                e.printStackTrace();
+            int nonce = getNonceByRange(0, 1000);
+            //获取网络资源图片
+            if (0 == place) {
+                String imgUrl = String.format(IMG_URL, nonce);
+                URL url = new URL(imgUrl);
+                return ImageIO.read(url.openStream());
             }
-            return image;
+            return null;
         } catch (Exception e) {
             System.out.println("获取拼图资源失败");
             //异常处理
