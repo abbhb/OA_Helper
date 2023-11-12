@@ -102,8 +102,9 @@ public class PrinterServiceImpl implements PrinterService {
         Page pageInfo = new Page(pageNum,pageSize);
         LambdaQueryWrapper<Printer> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.orderByDesc(Printer::getCreateTime);
-        lambdaQueryWrapper.eq(Printer::getCreateUser,currentUser.getId());
-        lambdaQueryWrapper.like(!StringUtils.isEmpty(name),Printer::getName,name);
+        lambdaQueryWrapper.eq(Printer::getCreateUser, currentUser.getId());
+        lambdaQueryWrapper.eq(Printer::getIsPrint, 1);
+        lambdaQueryWrapper.like(!StringUtils.isEmpty(name), Printer::getName, name);
         //暂时不支持通过日期模糊查询
         Page page = iPrinterService.page(pageInfo, lambdaQueryWrapper);
         if (page==null){
@@ -153,7 +154,8 @@ public class PrinterServiceImpl implements PrinterService {
         Page pageInfo = new Page(pageNum,pageSize);
         LambdaQueryWrapper<Printer> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.orderByDesc(Printer::getCreateTime);
-        lambdaQueryWrapper.like(!StringUtils.isEmpty(name),Printer::getName,name);
+        lambdaQueryWrapper.eq(Printer::getIsPrint, 1);
+        lambdaQueryWrapper.like(!StringUtils.isEmpty(name), Printer::getName, name);
         lambdaQueryWrapper.eq(!StringUtils.isEmpty(user),Printer::getCreateUser,user);
 
         //暂时不支持通过日期模糊查询
@@ -165,7 +167,6 @@ public class PrinterServiceImpl implements PrinterService {
         List<PrinterResult> results = new ArrayList<>();
         for (Object printerItem : pageInfo.getRecords()) {
             Printer printerItem1 = (Printer) printerItem;
-
             PrinterResult printerResult = new PrinterResult();
             printerResult.setName(printerItem1.getName());
             printerResult.setContentHash(printerItem1.getContentHash());
