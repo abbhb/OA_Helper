@@ -37,6 +37,7 @@ public class OauthController {
     @Autowired
     private GetAccessTokenHandelFactory getAccessTokenHandelFactory;
 
+    //todo:注册的默认用户名
     @GetMapping("/authorize")
     public void authorize(HttpServletResponse response, @RequestParam("response_type") String responseType, @RequestParam("client_id") String clientId, @RequestParam("redirect_uri") String redirectUri, @RequestParam("state") String state, String scope) throws IOException {
         // 没有scope就只剩原始的me接口，只能拿到openid
