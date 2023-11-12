@@ -793,20 +793,26 @@ public class UserServiceImpl implements UserService {
         }
         LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
         userLambdaQueryWrapper.eq(User::getEmail, email);
-
+        // 此处会自动排除逻辑删除的数据
         if (userDao.count(userLambdaQueryWrapper) > 0) {
             throw new CustomException("该邮箱已经注册，若密码忘记可尝试找回密码!");
         }
-        // 用户名也得全局唯一，默认为uuid吧，后期用户有需求再改
+        // 用户名也得全局唯一，默认为邮箱，要是重复了就用uuid
         User user = new User();
+        LambdaQueryWrapper<User> userLambdaQueryWrapper1 = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper1.eq(User::getUsername, email);
+        user.setUsername(email);
+        if (userDao.count(userLambdaQueryWrapper1) > 0) {
+            String uuid = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 15);
+            user.setUsername(uuid);
+        }
         user.setOpenId(UUID.randomUUID().toString());
         user.setDeptId(1L);
         // 自己创建
         user.setCreateUser(1L);
         user.setAvatar("");
         user.setEmail(email.toLowerCase());
-        String uuid = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 15);
-        user.setUsername(uuid);
+
         user.setName("亲爱的用户，请改名");
         String salt = PWDMD5.getSalt();
         String md5Encryption = PWDMD5.getMD5Encryption(password, salt);
