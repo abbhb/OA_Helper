@@ -47,6 +47,7 @@ import org.springframework.web.multipart.MultipartFile;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.TimeUnit;
 
 @Service
 @Slf4j
@@ -310,7 +311,8 @@ public class PrinterServiceImpl implements PrinterService {
         printerRedis.setImageUploadUrl(preSignedObjectUrl.getUploadUrl());
         printerRedis.setImageDownloadUrl(preSignedObjectUrl.getDownloadUrl());
         printerRedis.setIsCanGetImage(0);
-        RedisUtils.set(MyString.print + printer.getId(), printerRedis);
+        //40分钟后过期
+        RedisUtils.set(MyString.print + printer.getId(), printerRedis, 2400L, TimeUnit.SECONDS);
         //如果不是pdf开始转换，修改为统一进入该事件，是不是pdf处理端区分
         applicationEventPublisher.publishEvent(new FileToPDFEvent(this, printer.getId()));
         return String.valueOf(printer.getId());
