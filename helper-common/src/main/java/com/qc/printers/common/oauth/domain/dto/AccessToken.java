@@ -1,4 +1,4 @@
-package com.qc.printers.custom.oauth.domain.dto;
+package com.qc.printers.common.oauth.domain.dto;
 
 import lombok.Data;
 

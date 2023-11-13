@@ -2,7 +2,7 @@ package com.qc.printers.custom.oauth.service.strategy;
 
 import com.qc.printers.common.common.MyString;
 import com.qc.printers.common.common.utils.RedisUtils;
-import com.qc.printers.custom.oauth.domain.dto.AccessToken;
+import com.qc.printers.common.oauth.domain.dto.AccessToken;
 import com.qc.printers.custom.oauth.domain.dto.Authorize;
 import com.qc.printers.custom.oauth.domain.dto.RefreshToken;
 import com.qc.printers.custom.oauth.domain.enums.AccessTokenEnum;
