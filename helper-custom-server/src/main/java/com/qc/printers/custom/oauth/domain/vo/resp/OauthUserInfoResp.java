@@ -1,12 +1,17 @@
 package com.qc.printers.custom.oauth.domain.vo.resp;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
+import com.qc.printers.common.oauth.domain.dto.OauthBase;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.ToString;
 
 import java.io.Serializable;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
-public class OauthUserInfoResp implements Serializable {
+@ToString
+public class OauthUserInfoResp extends OauthBase implements Serializable {
     @JsonProperty("nickname")
     private String nickname;
 
@@ -22,11 +27,4 @@ public class OauthUserInfoResp implements Serializable {
     @JsonProperty("email")
     private String email;
 
-
-    /**
-     * 当异常时才会返回以下字段
-     */
-    private Integer code;
-
-    private String msg;
 }

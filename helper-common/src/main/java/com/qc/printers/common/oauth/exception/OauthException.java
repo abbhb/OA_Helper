@@ -2,7 +2,9 @@ package com.qc.printers.common.oauth.exception;
 
 import com.qc.printers.common.oauth.domain.enums.OauthErrorEnum;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 
+@EqualsAndHashCode(callSuper = true)
 @Data
 public class OauthException extends RuntimeException {
     private static final long serialVersionUID = 1L;

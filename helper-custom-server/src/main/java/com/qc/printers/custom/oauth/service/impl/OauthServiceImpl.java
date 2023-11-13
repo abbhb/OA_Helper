@@ -1,21 +1,20 @@
 package com.qc.printers.custom.oauth.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.qc.printers.common.common.Code;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.MyString;
 import com.qc.printers.common.common.utils.JWTUtil;
 import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
 import com.qc.printers.common.oauth.dao.SysOauthDao;
+import com.qc.printers.common.oauth.domain.dto.AccessToken;
 import com.qc.printers.common.oauth.domain.entity.SysOauth;
-import com.qc.printers.common.oauth.domain.enums.OauthErrorEnum;
-import com.qc.printers.common.oauth.exception.OauthException;
 import com.qc.printers.common.oauth.service.OauthMangerService;
 import com.qc.printers.common.oauth.utils.OauthUtil;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.User;
-import com.qc.printers.custom.oauth.domain.dto.AccessToken;
 import com.qc.printers.custom.oauth.domain.dto.OauthCodeDto;
 import com.qc.printers.custom.oauth.domain.vo.CanAuthorize;
 import com.qc.printers.custom.oauth.domain.vo.req.AgreeLoginReq;
@@ -90,7 +89,7 @@ public class OauthServiceImpl implements OauthService {
     public AgreeResp agree(AgreeReq agreeReq) {
         UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
         if (currentUser == null) {
-            throw new OauthException(OauthErrorEnum.OAUTH_NEED_AUTHORIZATION);
+            throw new CustomException("请先登录", Code.DEL_TOKEN);
         }
         String code = OauthUtil.genCode();
         //20秒过期的code
@@ -98,14 +97,14 @@ public class OauthServiceImpl implements OauthService {
         sysOauthLambdaQueryWrapper.eq(SysOauth::getClientId, agreeReq.getClientId());
         SysOauth sysOauth = sysOauthDao.getOne(sysOauthLambdaQueryWrapper);
         if (sysOauth == null) {
-            throw new OauthException(OauthErrorEnum.OAUTH_ERROR, "TheCallbackAddressIsNotSecure");
+            throw new CustomException("业务异常");
         }
         if (sysOauth.getNoSertRedirect().equals(1)) {
             //判断回调地址是否合法
             String host1 = getIP(URI.create(agreeReq.getRedirectUri())).getHost();
             String host = getIP(URI.create(sysOauth.getDomainName())).getHost();
             if (!host.equals(host1)) {
-                throw new OauthException(OauthErrorEnum.OAUTH_ERROR, "TheCallbackAddressIsNotSecure");
+                throw new CustomException("业务异常");
             }
         }
         OauthCodeDto oauthCodeDto = new OauthCodeDto();
@@ -130,14 +129,14 @@ public class OauthServiceImpl implements OauthService {
         sysOauthLambdaQueryWrapper.eq(SysOauth::getClientId, agreeReq.getClientId());
         SysOauth sysOauth = sysOauthDao.getOne(sysOauthLambdaQueryWrapper);
         if (sysOauth == null) {
-            throw new OauthException(OauthErrorEnum.OAUTH_ERROR, "TheCallbackAddressIsNotSecure");
+            throw new CustomException("业务异常");
         }
         if (sysOauth.getNoSertRedirect().equals(1)) {
             //判断回调地址是否合法
             String host1 = getIP(URI.create(agreeReq.getRedirectUri())).getHost();
             String host = getIP(URI.create(sysOauth.getDomainName())).getHost();
             if (!host.equals(host1)) {
-                throw new OauthException(OauthErrorEnum.OAUTH_ERROR, "不安全的授权");
+                throw new CustomException("不安全的授权");
             }
         }
 
