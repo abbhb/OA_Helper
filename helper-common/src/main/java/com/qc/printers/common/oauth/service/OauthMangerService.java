@@ -40,5 +40,7 @@ public interface OauthMangerService {
 
     SysOauth queryOauth(Long oauthId);
 
+    void userAgree(Long oauthId, Long userId, String scope);
+
 
 }
