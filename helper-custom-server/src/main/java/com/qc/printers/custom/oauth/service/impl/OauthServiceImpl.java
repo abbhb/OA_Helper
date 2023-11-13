@@ -116,6 +116,7 @@ public class OauthServiceImpl implements OauthService {
         agreeResp.setCode(code);
         agreeResp.setState(agreeReq.getState());
         agreeResp.setRedirectUri(agreeReq.getRedirectUri());
+        oauthMangerService.userAgree(sysOauth.getId(), currentUser.getId(), agreeReq.getScope());
         return agreeResp;
     }
 
@@ -157,6 +158,8 @@ public class OauthServiceImpl implements OauthService {
         agreeLoginResp.setState(agreeReq.getState());
         agreeLoginResp.setToken(token);
         agreeLoginResp.setRedirectUri(agreeReq.getRedirectUri());
+        //授权
+        oauthMangerService.userAgree(sysOauth.getId(), one.getId(), agreeReq.getScope());
         return agreeLoginResp;
     }
 

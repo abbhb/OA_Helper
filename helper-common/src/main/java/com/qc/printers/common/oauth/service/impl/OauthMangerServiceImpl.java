@@ -14,7 +14,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Transactional
 @Service
@@ -120,6 +123,36 @@ public class OauthMangerServiceImpl implements OauthMangerService {
     @Override
     public SysOauth queryOauth(Long oauthId) {
         return sysOauthDao.getById(oauthId);
+    }
+
+    //此方法只负责授权，取消授权单独的
+    @Override
+    public void userAgree(Long oauthId, Long userId, String scope) {
+
+        if (oauthId == null) {
+            throw new CustomException("oauthId不能为空");
+        }
+        Set<String> myScoped = new HashSet<>();
+        Set<String> newScoped = new HashSet<>();
+        LambdaQueryWrapper<SysOauthUser> sysOauthUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysOauthUserLambdaQueryWrapper.eq(SysOauthUser::getOauthId, oauthId);
+        sysOauthUserLambdaQueryWrapper.eq(SysOauthUser::getUserId, userId);
+        SysOauthUser sysOauthUserDaoOne = sysOauthUserDao.getOne(sysOauthUserLambdaQueryWrapper);
+        if (sysOauthUserDaoOne != null && StringUtils.isNotEmpty(sysOauthUserDaoOne.getScope())) {
+            myScoped.addAll(Arrays.asList(sysOauthUserDaoOne.getScope().split(",")));
+        }
+        String newScope = "";
+        if (StringUtils.isNotEmpty(scope)) {
+            newScoped.addAll(Arrays.asList(scope.split(",")));
+            newScoped.removeAll(myScoped);
+            newScope = StringUtils.join(newScoped, ",");
+        }
+        SysOauthUser sysOauthUser = new SysOauthUser();
+        sysOauthUser.setOauthId(oauthId);
+        sysOauthUser.setUserId(userId);
+        sysOauthUser.setScope(newScope);//可为空
+        sysOauthUserDao.saveOrUpdate(sysOauthUser);
+        log.info("用户同意授权");
     }
 
 }
