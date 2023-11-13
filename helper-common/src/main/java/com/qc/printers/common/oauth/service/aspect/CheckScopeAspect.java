@@ -78,7 +78,7 @@ public class CheckScopeAspect {
         }
         boolean b = Arrays.asList(scope.split(",")).contains(needScope);
         if (!b) {
-            throw new OauthException("当前未授权");
+            throw new OauthException("当前未授权,无法获取信息");
         }
         //无异常继续执行
         return joinPoint.proceed();

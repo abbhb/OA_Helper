@@ -147,11 +147,21 @@ public class OauthMangerServiceImpl implements OauthMangerService {
             newScoped.removeAll(myScoped);
             newScope = StringUtils.join(newScoped, ",");
         }
-        SysOauthUser sysOauthUser = new SysOauthUser();
-        sysOauthUser.setOauthId(oauthId);
-        sysOauthUser.setUserId(userId);
-        sysOauthUser.setScope(newScope);//可为空
-        sysOauthUserDao.saveOrUpdate(sysOauthUser);
+        if (sysOauthUserDaoOne == null) {
+            SysOauthUser sysOauthUser = new SysOauthUser();
+            sysOauthUser.setOauthId(oauthId);
+            sysOauthUser.setUserId(userId);
+            sysOauthUser.setScope(newScope);//可为空
+            sysOauthUserDao.save(sysOauthUser);
+        } else {
+            SysOauthUser sysOauthUser = new SysOauthUser();
+            sysOauthUser.setId(sysOauthUserDaoOne.getId());
+            sysOauthUser.setOauthId(oauthId);
+            sysOauthUser.setUserId(userId);
+            sysOauthUser.setScope(newScope);//可为空
+            sysOauthUserDao.updateById(sysOauthUser);
+        }
+
         log.info("用户同意授权");
     }
 

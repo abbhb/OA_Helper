@@ -3,6 +3,7 @@ package com.qc.printers.custom.oauth.controller;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.config.OauthConfig;
+import com.qc.printers.common.oauth.annotation.CheckScope;
 import com.qc.printers.custom.oauth.domain.dto.Authorize;
 import com.qc.printers.custom.oauth.domain.vo.CanAuthorize;
 import com.qc.printers.custom.oauth.domain.vo.req.AgreeLoginReq;
@@ -119,12 +120,14 @@ public class OauthController {
     /**
      * get_user_info
      * oauth提供获取用户信息的接口，需要用户授权
+     * 用户没给get_user_info授权就无法获取这些信息
      *
      * @param accessToken
      * @param openid
      * @param cilentId
      * @return
      */
+    @CheckScope(token = "#accessToken", cliendId = "#cilentId", needScope = "get_user_info")
     @GetMapping("/get_user_info")
     public OauthUserInfoResp getUserInfo(@RequestParam(name = "access_token") String accessToken, @RequestParam(name = "openid") String openid, @RequestParam(name = "oauth_consumer_key") String cilentId) {
         return oauthService.getUserInfo(accessToken, openid, cilentId);
