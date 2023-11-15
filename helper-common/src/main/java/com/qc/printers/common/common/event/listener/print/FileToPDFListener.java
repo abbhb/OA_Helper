@@ -18,6 +18,8 @@ import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * 文件转pdf监听器
  */
@@ -42,7 +44,8 @@ public class FileToPDFListener {
         PrintDataFileToPDFReq printDataFileToPDFReq = new PrintDataFileToPDFReq(String.valueOf(printer.getId()), minIoUtil.getUrlWithHttpByNoHttpKey(printer.getUrl()), preSignedObjectUrl.getDownloadUrl(), preSignedObjectUrl.getUploadUrl());
         PrinterRedis printerRedis = RedisUtils.get(MyString.print + printId, PrinterRedis.class);
         printerRedis.setSTU(2);
-        RedisUtils.set(MyString.print + printId, printerRedis);
+
+        RedisUtils.set(MyString.print + printId, printerRedis, RedisUtils.getExpire(MyString.print + printId), TimeUnit.SECONDS);
         mqProducer.sendMessageWithTags(MQConstant.SEND_FILE_TOPDF_TOPIC, printDataFileToPDFReq, "req");
     }
 }

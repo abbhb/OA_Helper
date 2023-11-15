@@ -284,6 +284,19 @@ public class PrinterServiceImpl implements PrinterService {
     @Transactional
     @Override
     public String uploadPrintFile(MultipartFile file) {
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename.contains("\\?") || originalFilename.contains("？")) {
+            throw new CustomException("文件名里不允许包含？请修改后在打印");
+        }
+        String supportFileExt = "pdf,doc,docx,xls,xlsx,ppt,pptx,txt,jpg,jpeg,png,bmp";
+        // 判断文件拓展名是否再支持的列表里
+        if (!supportFileExt.contains(originalFilename.substring(originalFilename.lastIndexOf(".") + 1))) {
+            throw new CustomException(file.getOriginalFilename() + ",不支持该文件，请先转成pdf!");
+        }
+
+        if (file.isEmpty()) {
+            throw new CustomException("文件为空");
+        }
         //先将文件上传到minio，这一步失败直接返回错误
         String fileUrl = MinIoUtil.upload(minIoProperties.getBucketName(), file);
         if (StringUtils.isEmpty(fileUrl)) {
