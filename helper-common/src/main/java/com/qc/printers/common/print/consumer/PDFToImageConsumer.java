@@ -10,6 +10,8 @@ import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.TimeUnit;
+
 
 /**
  * Description: pdf生成缩略图的自监听，回复的消息给tag，只监听处理完成的tag
@@ -37,7 +39,7 @@ public class PDFToImageConsumer implements RocketMQListener<PrintDataImageFromPD
             }
             printerRedis.setIsCanGetImage(1);
             printerRedis.setImageDownloadUrl(printDataImageFromPDFResp.getFilePDFImageUrl());
-            RedisUtils.set(MyString.print + printDataImageFromPDFResp.getId(), printerRedis);
+            RedisUtils.set(MyString.print + printDataImageFromPDFResp.getId(), printerRedis, RedisUtils.getExpire(MyString.print + printDataImageFromPDFResp.getId()), TimeUnit.SECONDS);
         } else {
             // 失败
             printerRedis.setIsCanGetImage(2);

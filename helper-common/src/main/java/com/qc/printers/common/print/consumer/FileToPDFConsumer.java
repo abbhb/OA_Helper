@@ -14,6 +14,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
+import java.util.concurrent.TimeUnit;
+
 /**
  * Description: file转pdf的自监听，回复的消息给tag，只监听处理完成的tag
  * req为生产者发送的tag，需要处理
@@ -38,7 +40,7 @@ public class FileToPDFConsumer implements RocketMQListener<PrintDataFromPDFResp>
             printerRedis.setPageNums(printDataFromPDFResp.getPageNums());
             printerRedis.setSTU(3);
             printerRedis.setPdfUrl(printDataFromPDFResp.getFilePDFUrl());
-            RedisUtils.set(MyString.print + printDataFromPDFResp.getId(), printerRedis);
+            RedisUtils.set(MyString.print + printDataFromPDFResp.getId(), printerRedis, RedisUtils.getExpire(MyString.print + printDataFromPDFResp.getId()), TimeUnit.SECONDS);
             //这里成功了再获取缩略图
             applicationEventPublisher.publishEvent(new PDFToImageEvent(this, Long.valueOf(printDataFromPDFResp.getId())));
         } else {
