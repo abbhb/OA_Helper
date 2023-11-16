@@ -29,8 +29,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.net.URI;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 @Service
@@ -239,6 +241,45 @@ public class OauthServiceImpl implements OauthService {
         oauthUserInfoResp.setCode(100055);
         oauthUserInfoResp.setMsg("业务异常");
         return oauthUserInfoResp;
+    }
+
+    @Override
+    public List<SysOauth> list() {
+        return oauthMangerService.listOauth();
+    }
+
+    @Transactional
+    @Override
+    public String delete(Long id) {
+        if (id == null) {
+            throw new CustomException("id不能为空");
+        }
+        return oauthMangerService.deleteOauth(id);
+    }
+
+    @Transactional
+    @Override
+    public String update(SysOauth sysOauth) {
+        if (sysOauth.getId() == null) {
+            throw new CustomException("id不能为空");
+        }
+        if (StringUtils.isEmpty(sysOauth.getClientId())) {
+            throw new CustomException("clientId不能为空");
+        }
+        if (StringUtils.isEmpty(sysOauth.getClientSecret())) {
+            throw new CustomException("clientSecret不能为空");
+        }
+        if (StringUtils.isEmpty(sysOauth.getClientName())) {
+            throw new CustomException("clientName不能为空");
+        }
+        return oauthMangerService.updateOauth(sysOauth);
+    }
+
+    @Transactional
+    @Override
+    public String add(SysOauth sysOauth) {
+        sysOauth.setId(null);
+        return oauthMangerService.addOauth(sysOauth);
     }
 
 }

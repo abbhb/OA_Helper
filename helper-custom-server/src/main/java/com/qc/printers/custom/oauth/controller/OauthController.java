@@ -2,8 +2,10 @@ package com.qc.printers.custom.oauth.controller;
 
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
+import com.qc.printers.common.common.annotation.PermissionCheck;
 import com.qc.printers.common.config.OauthConfig;
 import com.qc.printers.common.oauth.annotation.CheckScope;
+import com.qc.printers.common.oauth.domain.entity.SysOauth;
 import com.qc.printers.custom.oauth.domain.dto.Authorize;
 import com.qc.printers.custom.oauth.domain.vo.CanAuthorize;
 import com.qc.printers.custom.oauth.domain.vo.req.AgreeLoginReq;
@@ -21,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.List;
 
 @RestController//@ResponseBody+@Controller
 @RequestMapping("/oauth2.0")
@@ -133,5 +136,32 @@ public class OauthController {
         return oauthService.getUserInfo(accessToken, openid, cilentId);
     }
 
+    @NeedToken
+    @PermissionCheck(role = "superadmin", permission = "sys:oauth:list")
+    @GetMapping("list")
+    public R<List<SysOauth>> list() {
+        return R.success(oauthService.list());
+    }
+
+    @NeedToken
+    @PermissionCheck(role = "superadmin", permission = "sys:oauth:delete")
+    @DeleteMapping("delete")
+    public R<String> delete(@RequestParam(name = "id") Long id) {
+        return R.successOnlyObject(oauthService.delete(id));
+    }
+
+    @NeedToken
+    @PermissionCheck(role = "superadmin", permission = "sys:oauth:update")
+    @PutMapping("update")
+    public R<String> update(@RequestBody SysOauth sysOauth) {
+        return R.successOnlyObject(oauthService.update(sysOauth));
+    }
+
+    @NeedToken
+    @PermissionCheck(role = "superadmin", permission = "sys:oauth:add")
+    @PostMapping("add")
+    public R<String> add(@RequestBody SysOauth sysOauth) {
+        return R.successOnlyObject(oauthService.add(sysOauth));
+    }
 
 }
