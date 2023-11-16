@@ -233,7 +233,6 @@ public class UserController {
         return R.success(roleService.getroleNameByKey(key));
     }
 
-    // todo: 需要加个配置，可选不级联部门查询，这样有的情况方便点
     @GetMapping("/user_manger")
     @NeedToken
     @PermissionCheck(role = {"superadmin"}, permission = "sys:user:list")

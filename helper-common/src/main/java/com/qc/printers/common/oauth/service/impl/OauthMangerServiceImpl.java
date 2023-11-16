@@ -14,10 +14,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
 
 @Transactional
 @Service
@@ -31,14 +28,8 @@ public class OauthMangerServiceImpl implements OauthMangerService {
 
     @Override
     public String addOauth(SysOauth sysOauth) {
-        if (StringUtils.isEmpty(sysOauth.getClientId())) {
-            throw new CustomException("clientId不能为空");
-        }
         if (StringUtils.isEmpty(sysOauth.getClientName())) {
             throw new CustomException("clientName不能为空");
-        }
-        if (StringUtils.isEmpty(sysOauth.getClientSecret())) {
-            throw new CustomException("clientSecret不能为空");
         }
         if (StringUtils.isEmpty(sysOauth.getDomainName())) {
             throw new CustomException("DomainName不能为空");
@@ -52,6 +43,8 @@ public class OauthMangerServiceImpl implements OauthMangerService {
         if (sysOauth.getStatus() == null) {
             throw new CustomException("Status不能为空");
         }
+        sysOauth.setClientId(UUID.randomUUID().toString().replace("-", ""));
+        sysOauth.setClientSecret(UUID.randomUUID().toString().replace("-", ""));
         sysOauthDao.save(sysOauth);
 
         return "添加成功";
