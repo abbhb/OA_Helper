@@ -103,7 +103,6 @@ public class PrinterServiceImpl implements PrinterService {
         LambdaQueryWrapper<Printer> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.orderByDesc(Printer::getCreateTime);
         lambdaQueryWrapper.eq(Printer::getCreateUser, currentUser.getId());
-        lambdaQueryWrapper.eq(Printer::getIsPrint, 1);
         lambdaQueryWrapper.like(!StringUtils.isEmpty(name), Printer::getName, name);
         //暂时不支持通过日期模糊查询
         Page page = iPrinterService.page(pageInfo, lambdaQueryWrapper);
@@ -154,7 +153,6 @@ public class PrinterServiceImpl implements PrinterService {
         Page pageInfo = new Page(pageNum,pageSize);
         LambdaQueryWrapper<Printer> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.orderByDesc(Printer::getCreateTime);
-        lambdaQueryWrapper.eq(Printer::getIsPrint, 1);
         lambdaQueryWrapper.like(!StringUtils.isEmpty(name), Printer::getName, name);
         lambdaQueryWrapper.eq(!StringUtils.isEmpty(user),Printer::getCreateUser,user);
 
