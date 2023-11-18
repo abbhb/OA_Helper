@@ -9,6 +9,7 @@ import com.qc.printers.custom.print.domain.vo.request.PrintFileReq;
 import com.qc.printers.custom.print.domain.vo.response.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 /**
@@ -16,9 +17,9 @@ import java.util.List;
  */
 public interface PrinterService {
 
-    R<PageData<PrinterResult>> listPrinter(Integer pageNum, Integer pageSize, String name, String date);
+    R<PageData<PrinterResult>> listPrinter(Integer pageNum, Integer pageSize, String name, String date, Integer onlyPrinted);
 
-    R<PageData<PrinterResult>> listAllPrinter(Integer pageNum, Integer pageSize, String name, String user);
+    R<PageData<PrinterResult>> listAllPrinter(Integer pageNum, Integer pageSize, String name, String user, Integer onlyPrinted, LocalDateTime startDate, LocalDateTime endDate);
 
     R<List<ValueLabelResult>> getAllUserPrinter();
 

@@ -88,21 +88,22 @@ public class PrinterServiceImpl implements PrinterService {
 
 
     @Override
-    public R<PageData<PrinterResult>> listPrinter(Integer pageNum, Integer pageSize, String name, String date) {
-        if (pageNum==null){
+    public R<PageData<PrinterResult>> listPrinter(Integer pageNum, Integer pageSize, String name, String date, Integer onlyPrinted) {
+        if (pageNum == null) {
             return R.error("传参错误");
         }
-        if (pageSize==null){
+        if (pageSize == null) {
             return R.error("传参错误");
         }
         User currentUser = ThreadLocalUtil.getCurrentUser();
-        if (currentUser==null){
+        if (currentUser == null) {
             return R.error("系统异常");
         }
         Page pageInfo = new Page(pageNum,pageSize);
         LambdaQueryWrapper<Printer> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.orderByDesc(Printer::getCreateTime);
         lambdaQueryWrapper.eq(Printer::getCreateUser, currentUser.getId());
+        lambdaQueryWrapper.eq(onlyPrinted.equals(1), Printer::getIsPrint, onlyPrinted);
         lambdaQueryWrapper.like(!StringUtils.isEmpty(name), Printer::getName, name);
         //暂时不支持通过日期模糊查询
         Page page = iPrinterService.page(pageInfo, lambdaQueryWrapper);
@@ -142,23 +143,27 @@ public class PrinterServiceImpl implements PrinterService {
     }
 
     @Override
-    public R<PageData<PrinterResult>> listAllPrinter(Integer pageNum, Integer pageSize, String name, String user) {
-        if (pageNum==null){
+    public R<PageData<PrinterResult>> listAllPrinter(Integer pageNum, Integer pageSize, String name, String user, Integer onlyPrinted, LocalDateTime startDate, LocalDateTime endDate) {
+        if (pageNum == null) {
             return R.error("传参错误");
         }
-        if (pageSize==null){
+        if (pageSize == null) {
             return R.error("传参错误");
         }
 
-        Page pageInfo = new Page(pageNum,pageSize);
+        Page pageInfo = new Page(pageNum, pageSize);
         LambdaQueryWrapper<Printer> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.orderByDesc(Printer::getCreateTime);
         lambdaQueryWrapper.like(!StringUtils.isEmpty(name), Printer::getName, name);
-        lambdaQueryWrapper.eq(!StringUtils.isEmpty(user),Printer::getCreateUser,user);
+        lambdaQueryWrapper.eq(!StringUtils.isEmpty(user), Printer::getCreateUser, user);
+        lambdaQueryWrapper.eq(onlyPrinted.equals(1), Printer::getIsPrint, onlyPrinted);
+        //创建时间大于startTime
+        lambdaQueryWrapper.ge(startDate != null, Printer::getCreateTime, startDate);
+        lambdaQueryWrapper.le(endDate != null, Printer::getCreateTime, endDate);
 
         //暂时不支持通过日期模糊查询
         Page page = iPrinterService.page(pageInfo, lambdaQueryWrapper);
-        if (page==null){
+        if (page == null) {
             return R.error("啥也没有");
         }
         PageData<PrinterResult> pageData = new PageData<>();

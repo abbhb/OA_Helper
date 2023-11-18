@@ -12,8 +12,8 @@
 - minio 最新版即可
 
 
-- [AI服务平台主后端](https://github.com/abbhb/Springboot-PrinterSharing)
-- [AI服务平台前端(本项目也是其中一部分的后端)](https://github.com/abbhb/Vue-PrinterSharing)
+- [Easy_OA服务平台主后端](https://github.com/abbhb/OA_Helper)
+- [Easy_OA前端](https://github.com/abbhb/OA_Helper-Vue)
 - [AI服务平台打印节点服务](https://github.com/abbhb/PrintNode)
 
 ## 运行
@@ -57,15 +57,3 @@ update 修改权限
 创建一个用户名为admin的用户，为该用户绑定1L的角色
 升级为直接执行docs文件夹里的start.sql即可!
 
-## 项目结构
-
-```text
-├── src
-│   ├── main
-│   │   ├── java
-│   │   │   ├── com
-│   │   │   │   ├── abbh
-│   │   │   │   │   ├── base
-│   │   │   │   │   │   ├── BaseMapper.java
-│   │   │   │   │   │   ├── BaseServiceImpl.java
-│   │   │   │   │   │   ├── BaseServiceImplTest.java
