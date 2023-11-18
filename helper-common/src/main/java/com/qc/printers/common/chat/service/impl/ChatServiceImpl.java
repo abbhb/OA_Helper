@@ -49,6 +49,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Nullable;
+import java.time.ZoneId;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -293,7 +294,7 @@ public class ChatServiceImpl implements ChatService {
         }
         boolean self = Objects.equals(uid, message.getFromUid());
         AssertUtil.isTrue(self, "抱歉,您没有权限");
-        long between = DateUtil.between(message.getCreateTime(), new Date(), DateUnit.MINUTE);
+        long between = DateUtil.between(Date.from(message.getCreateTime().atZone(ZoneId.systemDefault()).toInstant()), new Date(), DateUnit.MINUTE);
         AssertUtil.isTrue(between < 2, "覆水难收，超过2分钟的消息不能撤回哦~~");
     }
 

@@ -27,10 +27,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.time.ZoneId;
+import java.util.*;
 
 /**
  * Description: 发送消息更新房间收信箱，并同步给房间成员信箱
@@ -75,11 +73,11 @@ public class MsgSendConsumer implements RocketMQListener<MsgSendMessageDTO> {
         Room room = roomCache.get(message.getRoomId());
         ChatMessageResp msgResp = chatService.getMsgResp(message, null);
         //所有房间更新房间最新消息
-        roomDao.refreshActiveTime(room.getId(), message.getId(), message.getCreateTime());
+        roomDao.refreshActiveTime(room.getId(), message.getId(), Date.from(message.getCreateTime().atZone(ZoneId.systemDefault()).toInstant()));
         roomCache.delete(room.getId());
         if (room.isHotRoom()) {//热门群聊推送所有在线的人
             //更新热门群聊时间-redis
-            hotRoomCache.refreshActiveTime(room.getId(), message.getCreateTime());
+            hotRoomCache.refreshActiveTime(room.getId(), Date.from(message.getCreateTime().atZone(ZoneId.systemDefault()).toInstant()));
             //推送所有人
             log.info("推送给所有人的消息:{}", WSAdapter.buildMsgSend(msgResp));
             pushService.sendPushMsg(WSAdapter.buildMsgSend(msgResp));
@@ -93,7 +91,7 @@ public class MsgSendConsumer implements RocketMQListener<MsgSendMessageDTO> {
                 memberUidList = Arrays.asList(roomFriend.getUid1(), roomFriend.getUid2());
             }
             //更新所有群成员的会话时间
-            contactDao.refreshOrCreateActiveTime(room.getId(), memberUidList, message.getId(), message.getCreateTime());
+            contactDao.refreshOrCreateActiveTime(room.getId(), memberUidList, message.getId(), Date.from(message.getCreateTime().atZone(ZoneId.systemDefault()).toInstant()));
             //推送房间成员
             pushService.sendPushMsg(WSAdapter.buildMsgSend(msgResp), memberUidList);
         }

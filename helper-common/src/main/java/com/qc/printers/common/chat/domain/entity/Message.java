@@ -1,15 +1,12 @@
 package com.qc.printers.common.chat.domain.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.qc.printers.common.chat.domain.entity.msg.MessageExtra;
 import lombok.*;
 
 import java.io.Serializable;
-import java.util.Date;
+import java.time.LocalDateTime;
 
 /**
  * <p>
@@ -90,14 +87,14 @@ public class Message implements Serializable {
     /**
      * 创建时间
      */
-    @TableField("create_time")
-    private Date createTime;
+    @TableField(fill = FieldFill.INSERT)//这些注解都是调用basemapper才有用,自己写的sql不会生效，插入和更新时都填充
+    private LocalDateTime createTime;
 
     /**
      * 修改时间
      */
-    @TableField("update_time")
-    private Date updateTime;
+    @TableField(value = "update_time", fill = FieldFill.INSERT_UPDATE)//这些注解都是调用basemapper才有用,自己写的sql不会生效，插入和更新时都填充
+    private LocalDateTime updateTime;
 
 
 }
