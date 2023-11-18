@@ -5,15 +5,16 @@
 ### Version：1.8.0
 
 ## 环境准备
-- rabbitmq 最新版 加上延迟队列插件 推荐docker安装 单体文件太多
-- redis 最新版即可
+- rabbitmq v5 加上延迟队列插件 推荐docker安装 单体文件太多
+- redis v8
+- consul v1.15.4
 - mysql8.0.20
 - minio 最新版即可
 
 
 - [AI服务平台主后端](https://github.com/abbhb/Springboot-PrinterSharing)
 - [AI服务平台前端(本项目也是其中一部分的后端)](https://github.com/abbhb/Vue-PrinterSharing)
-- [AI服务平台DOC后端](https://github.com/abbhb/Printer-Doc)
+- [AI服务平台打印节点服务](https://github.com/abbhb/PrintNode)
 
 ## 运行
 
@@ -43,8 +44,28 @@ update 修改权限
 + minio 报连接错误可能是时区问题，minio需要美国1时区
 + token 存在cookies 方便管理
 + 避坑：mysql8 key value不能作为字段名
++ 打印如需要接入，需要结合打印节点服务这个项目，或者根据打印的文档来手动实现打印的rocketmq端和打印机状态api注册等等
+
+## 项目说明
+
+- 项目采用springboot2.2.6 + mybatis-plus + vue + mysql8.0.20 + redis8.0.20 + rabbitmq5.7.16 + minio最新版
+- 项目采用前后端分离架构，后端采用springboot2.2.6 + mybatis-plus + spring-security-oauth2 + vue + mysql8.0.20 + redis8.0
 
 ## 初始化项目：【必须】
 
 创建superadmin角色,id必须为1L
 创建一个用户名为admin的用户，为该用户绑定1L的角色
+升级为直接执行docs文件夹里的start.sql即可!
+
+## 项目结构
+
+```text
+├── src
+│   ├── main
+│   │   ├── java
+│   │   │   ├── com
+│   │   │   │   ├── abbh
+│   │   │   │   │   ├── base
+│   │   │   │   │   │   ├── BaseMapper.java
+│   │   │   │   │   │   ├── BaseServiceImpl.java
+│   │   │   │   │   │   ├── BaseServiceImplTest.java
