@@ -19,6 +19,9 @@ import java.time.LocalDateTime;
 public class User implements Serializable {
     public static final long serialVersionUID = 1L;
 
+    /**
+     * 指定系统（chatgpt）用户的UID
+     */
     public static final long UID_SYSTEM = 1659939726386827265L;
 
     //value属性用于指定主键的字段
