@@ -110,7 +110,7 @@ public class PrintController {
     @GetMapping("/getMyHistoryPrints")
     @ApiOperation(value = "获取本人历史打印记录", notes = "因为没有token过不了needtoken，所以没必要再次校验token")
     @NeedToken
-    public R<PageData<PrinterResult>> getMyHistoryPrints(@RequestParam("page_num") Integer pageNum, @RequestParam("page_size") Integer pageSize, Integer onlyPrinted, String name, String date) {
+    public R<PageData<PrinterResult>> getMyHistoryPrints(@RequestParam("page_num") Integer pageNum, @RequestParam("page_size") Integer pageSize, @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime startDate, @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endDate, Integer onlyPrinted, String name, String date) {
         if (pageNum == null) {
             return R.error("传参错误");
         }
@@ -120,7 +120,7 @@ public class PrintController {
         if (pageSize > 100) {
             return R.error("传参错误");
         }
-        return printerService.listPrinter(pageNum, pageSize, name, date, onlyPrinted == null ? 1 : onlyPrinted);
+        return printerService.listPrinter(pageNum, pageSize, name, onlyPrinted == null ? 1 : onlyPrinted, startDate, endDate);
     }
 
     //获取当日打印数

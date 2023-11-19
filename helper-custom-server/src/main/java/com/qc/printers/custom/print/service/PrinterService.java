@@ -17,7 +17,7 @@ import java.util.List;
  */
 public interface PrinterService {
 
-    R<PageData<PrinterResult>> listPrinter(Integer pageNum, Integer pageSize, String name, String date, Integer onlyPrinted);
+    R<PageData<PrinterResult>> listPrinter(Integer pageNum, Integer pageSize, String name, Integer onlyPrinted, LocalDateTime startDate, LocalDateTime endDate);
 
     R<PageData<PrinterResult>> listAllPrinter(Integer pageNum, Integer pageSize, String name, String user, Integer onlyPrinted, LocalDateTime startDate, LocalDateTime endDate);
 
