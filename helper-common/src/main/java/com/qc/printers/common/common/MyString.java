@@ -10,6 +10,7 @@ public class MyString {
     public final static String cache = pre + "CACHE::";
 
     public final static String print = pre + "PRINT::";
+    public final static String user_front_key = pre + "USER_FRONT_CONFIG::";
 
     public final static String email_code = pre + "Code::Email::";
     public final static String oauth_code = pre + "OAUTH::code::";
