@@ -56,7 +56,7 @@ public class MyMetaObjectHandler implements MetaObjectHandler {
         }
 
         if (metaObject.hasSetter("version")) {
-            metaObject.setValue("version", 0);
+            metaObject.setValue("version", 1);
         }
 
     }
