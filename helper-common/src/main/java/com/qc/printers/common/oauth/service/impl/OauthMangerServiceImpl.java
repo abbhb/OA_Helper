@@ -137,8 +137,9 @@ public class OauthMangerServiceImpl implements OauthMangerService {
         String newScope = "";
         if (StringUtils.isNotEmpty(scope)) {
             newScoped.addAll(Arrays.asList(scope.split(",")));
-            newScoped.removeAll(myScoped);
+            newScoped.addAll(myScoped);
             newScope = StringUtils.join(newScoped, ",");
+
         }
         if (sysOauthUserDaoOne == null) {
             SysOauthUser sysOauthUser = new SysOauthUser();

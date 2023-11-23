@@ -8,6 +8,7 @@ import com.qc.printers.custom.notice.domain.vo.req.NoticeAddReq;
 import com.qc.printers.custom.notice.domain.vo.req.NoticeUpdateReq;
 import com.qc.printers.custom.notice.domain.vo.resp.NoticeAddResp;
 import com.qc.printers.custom.notice.service.NoticeService;
+import com.qc.printers.custom.notice.service.strategy.NoticeUpdateHandelFactory;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,9 @@ public class NoticeController {
     @Autowired
     private NoticeService noticeService;
 
+    @Autowired
+    private NoticeUpdateHandelFactory noticeUpdateHandelFactory;
+
     /**
      * 添加通知
      */
@@ -35,30 +39,49 @@ public class NoticeController {
         return R.success(noticeService.addNotice(noticeAddReq));
     }
 
-    /**
-     * 发布并保存通知
-     * 调用完更新的服务再调用发布的服务即可
-     */
-    @PermissionCheck(role = {"superadmin"}, permission = "sys:notice:publish")
-    @NeedToken
-    @ApiOperation(value = "更新通知", notes = "")
-    @PostMapping("/publish")
-    public R<String> publishNotice(@RequestBody NoticeUpdateReq noticeUpdateReq) {
-        if (noticeUpdateReq.getNotice().getId() == null) {
-            throw new CustomException("ID为空发布个g啊");
-        }
-        noticeService.updateNotice(noticeUpdateReq);
-        noticeService.publishNotice(noticeUpdateReq.getNotice().getId());
-        return R.successOnlyObject("发布成功");
-    }
-
-    /**
-     * 定时发布并保存通知，勾选了定时发布，携带定时的信息
-     */
+//    /**
+//     * 发布并保存通知
+//     * 调用完更新的服务再调用发布的服务即可
+//     */
+//    @PermissionCheck(role = {"superadmin"}, permission = "sys:notice:publish")
+//    @NeedToken
+//    @ApiOperation(value = "更新通知", notes = "")
+//    @PostMapping("/publish")
+//    public R<String> publishNotice(@RequestBody NoticeUpdateReq noticeUpdateReq) {
+//        if (noticeUpdateReq.getNotice().getId() == null) {
+//            throw new CustomException("ID为空发布个g啊");
+//        }
+//        noticeService.updateNotice(noticeUpdateReq);
+//        noticeService.publishNotice(noticeUpdateReq.getNotice().getId());
+//        return R.successOnlyObject("发布成功");
+//    }
+//
+//    /**
+//     * 定时发布并保存通知，勾选了定时发布，携带定时的信息
+//     */
+//    @PermissionCheck(role = {"superadmin"}, permission = "sys:notice:publish")
+//    @NeedToken
+//    @ApiOperation(value = "更新通知", notes = "")
+//    @PostMapping("/publish_timeout")
+//    public R<String> publishNoticeBySetTime(@RequestBody NoticeUpdateReq noticeUpdateReq) {
+//        if (noticeUpdateReq.getNotice().getId() == null) {
+//            throw new CustomException("ID为空发布个g啊");
+//        }
+//        noticeService.updateNotice(noticeUpdateReq);
+//        noticeService.publishNoticeBySetTime(noticeUpdateReq.getNotice());
+//        return R.successOnlyObject("定时发布成功");
+//    }
 
     /**
      * 禁止查看按钮接口
      */
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:notice:publish")
+    @NeedToken
+    @ApiOperation(value = "更新通知", notes = "")
+    @PostMapping("/publish_list")
+    public R<String> publishNoticeList(@RequestBody NoticeUpdateReq noticeUpdateReq) {
+        return R.successOnlyObject(noticeService.publishNoticeList(noticeUpdateReq));
+    }
 
     /**
      * 基本信息变更接口，就刚创建时哪些信息，比如可见性等等
@@ -70,10 +93,14 @@ public class NoticeController {
      */
     @PermissionCheck(role = {"superadmin"}, permission = "sys:notice:update")
     @NeedToken
-    @ApiOperation(value = "更新通知", notes = "")
+    @ApiOperation(value = "更新通知", notes = "无论是发布还是内容更新，都共用这一个接口")
     @PutMapping("/update")
     public R<String> updateNotice(@RequestBody NoticeUpdateReq noticeUpdateReq) {
-        return R.successOnlyObject(noticeService.updateNotice(noticeUpdateReq));
+        if (noticeUpdateReq.getNotice().getStatus() == null) {
+            throw new CustomException("最少包含一种状态");
+        }
+        String s = noticeUpdateHandelFactory.getInstance(noticeUpdateReq.getNotice().getStatus()).updateNotice(noticeUpdateReq);
+        return R.successOnlyObject(s);
     }
 
     /**
