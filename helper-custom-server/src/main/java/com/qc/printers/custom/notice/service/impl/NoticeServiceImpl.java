@@ -2,20 +2,17 @@ package com.qc.printers.custom.notice.service.impl;
 
 import com.qc.printers.common.common.Code;
 import com.qc.printers.common.common.CustomException;
-import com.qc.printers.common.common.utils.AssertUtil;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
 import com.qc.printers.common.notice.dao.NoticeAnnexDao;
 import com.qc.printers.common.notice.dao.NoticeDao;
 import com.qc.printers.common.notice.dao.NoticeDeptDao;
 import com.qc.printers.common.notice.dao.NoticeUserReadDao;
 import com.qc.printers.common.notice.domain.entity.Notice;
-import com.qc.printers.common.notice.domain.entity.NoticeAnnex;
 import com.qc.printers.common.notice.domain.entity.NoticeDept;
 import com.qc.printers.common.notice.service.INoticeAnnexService;
 import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.service.ISysDeptService;
 import com.qc.printers.custom.notice.domain.vo.req.NoticeAddReq;
-import com.qc.printers.custom.notice.domain.vo.req.NoticeUpdateReq;
 import com.qc.printers.custom.notice.domain.vo.resp.NoticeAddResp;
 import com.qc.printers.custom.notice.service.NoticeService;
 import lombok.extern.slf4j.Slf4j;
@@ -24,7 +21,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -49,6 +45,7 @@ public class NoticeServiceImpl implements NoticeService {
 
     @Autowired
     private NoticeUserReadDao noticeUserReadDao;
+
 
     @Transactional
     @Override
@@ -114,74 +111,5 @@ public class NoticeServiceImpl implements NoticeService {
         return noticeAddResp;
     }
 
-    /**
-     * 此方法不更新通知的基本信息
-     *
-     * @param noticeUpdateReq
-     * @return
-     */
-    @Transactional
-    @Override
-    public String updateNotice(NoticeUpdateReq noticeUpdateReq) {
-        if (noticeUpdateReq == null) {
-            throw new RuntimeException("通知信息不能为空");
-        }
-        if (noticeUpdateReq.getNotice() == null) {
-            throw new RuntimeException("通知内容不能为空");
-        }
-        if (noticeUpdateReq.getNotice().getId() == null) {
-            throw new RuntimeException("通知id不能为空");
-        }
-        Notice noticeDaoById = noticeDao.getById(noticeUpdateReq.getNotice().getId());
-        AssertUtil.notEqual(noticeDaoById, null, "通知不存在");
-        noticeDaoById.setContent(noticeUpdateReq.getNotice().getContent());
-        if (noticeUpdateReq.getAnnexes() != null) {
-            if (noticeUpdateReq.getAnnexes().size() > 0) {
-                noticeDaoById.setIsAnnex(1);
-                //删掉老附件，再添加新的附件信息
-                iNoticeAnnexService.deleteByNoticeId(noticeUpdateReq.getNotice().getId());
-                for (NoticeAnnex annex : noticeUpdateReq.getAnnexes()) {
-                    NoticeAnnex noticeAnnex = new NoticeAnnex();
-                    noticeAnnex.setNoticeId(noticeUpdateReq.getNotice().getId());
-                    noticeAnnex.setFileUrl(annex.getFileUrl());
-                    noticeAnnex.setDownloadCount(0);
-                    noticeAnnex.setSortNum(annex.getSortNum());
-                    noticeAnnexDao.save(noticeAnnex);
-                }
-            }
-        }
-        noticeDao.updateById(noticeDaoById);
-        return "更新内容成功";
-    }
 
-    /**
-     * 发布通知
-     *
-     * @param id
-     */
-
-    @Transactional
-    @Override
-    public void publishNotice(Long id) {
-        if (id == null) {
-            throw new RuntimeException("通知id不能为空");
-        }
-        Notice byId = noticeDao.getById(id);
-        if (byId == null) {
-            throw new RuntimeException("通知不存在");
-        }
-        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
-        if (currentUser == null) {
-            throw new CustomException("登录信息错误", Code.DEL_TOKEN);
-        }
-        LocalDateTime now = LocalDateTime.now();
-        //此处无脑设置发布状态即可
-        byId.setStatus(2);
-        byId.setReleaseDept(currentUser.getDeptId());
-        byId.setReleaseDeptName(iSysDeptService.getById(currentUser.getDeptId()).getDeptName());
-        byId.setReleaseTime(now);
-        byId.setReleaseUser(currentUser.getId());
-        byId.setReleaseUserName(currentUser.getName());
-        noticeDao.updateById(byId);
-    }
 }

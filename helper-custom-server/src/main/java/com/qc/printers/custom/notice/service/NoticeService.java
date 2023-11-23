@@ -1,5 +1,6 @@
 package com.qc.printers.custom.notice.service;
 
+import com.qc.printers.common.notice.domain.entity.Notice;
 import com.qc.printers.custom.notice.domain.vo.req.NoticeAddReq;
 import com.qc.printers.custom.notice.domain.vo.req.NoticeUpdateReq;
 import com.qc.printers.custom.notice.domain.vo.resp.NoticeAddResp;
@@ -10,4 +11,6 @@ public interface NoticeService {
     String updateNotice(NoticeUpdateReq noticeUpdateReq);
 
     void publishNotice(Long id);
+
+    void publishNoticeBySetTime(Notice notice);
 }
