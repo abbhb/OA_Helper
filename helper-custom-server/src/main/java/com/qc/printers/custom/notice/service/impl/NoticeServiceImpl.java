@@ -17,7 +17,6 @@ import com.qc.printers.common.notice.domain.entity.NoticeUserRead;
 import com.qc.printers.common.notice.service.INoticeAnnexService;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.dto.UserInfo;
-import com.qc.printers.common.user.service.ISysDeptService;
 import com.qc.printers.custom.notice.domain.vo.req.NoticeAddReq;
 import com.qc.printers.custom.notice.domain.vo.resp.NoticeAddResp;
 import com.qc.printers.custom.notice.domain.vo.resp.NoticeMangerListResp;
@@ -50,9 +49,6 @@ public class NoticeServiceImpl implements NoticeService {
 
     @Autowired
     private NoticeAnnexDao noticeAnnexDao;
-
-    @Autowired
-    private ISysDeptService iSysDeptService;
 
     @Autowired
     private NoticeUserReadDao noticeUserReadDao;
