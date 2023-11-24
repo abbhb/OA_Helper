@@ -906,15 +906,10 @@ public class UserServiceImpl implements UserService {
         if (one.getPassword() == null || one.getSalt() == null) {
             throw new CustomException("此用户未设置密码,请使用oauth2登录");
         }
-        try {
-            String Spassword = PWDMD5.getMD5Encryption(password, one.getSalt());
-            if (!one.getPassword().equals(Spassword)) {
-                throw new CustomException("用户名或密码错误");
-            }
-        } catch (Exception e) {
-            throw new CustomException("刷新再试试");
+        String Spassword = PWDMD5.getMD5Encryption(password, one.getSalt());
+        if (!one.getPassword().equals(Spassword)) {
+            throw new CustomException("用户名或密码错误");
         }
-
         if (one.getStatus().equals(0)) {
             throw new CustomException("账号已被禁用");
         }
