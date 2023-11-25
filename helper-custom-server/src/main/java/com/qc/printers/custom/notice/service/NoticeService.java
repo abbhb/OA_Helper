@@ -13,4 +13,6 @@ public interface NoticeService {
     void deleteNotice(String noticeId);
 
     void updateNoticeBasic(NoticeAddReq noticeAddReq);
+
+    void quickUpdateNotice(NoticeAddReq noticeAddReq);
 }

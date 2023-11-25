@@ -28,6 +28,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -240,6 +241,91 @@ public class NoticeServiceImpl implements NoticeService {
         notice.setUrgency(noticeAddReq.getNotice().getUrgency());
         if (StringUtils.isNotEmpty(noticeAddReq.getNotice().getTag())) {
             notice.setTag(noticeAddReq.getNotice().getTag());
+        }
+        notice.setVisibility(noticeAddReq.getNotice().getVisibility());
+        notice.setUpdateUserList(UpdateUserListUtil.getUpdateUserList(notice.getUpdateUserList(), currentUser.getId()));//默认更新用户就是第一个新建的人
+        noticeDao.updateById(notice);
+        //先删除跟其他部门的绑定
+
+        LambdaQueryWrapper<NoticeDept> noticeDeptLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        noticeDeptLambdaQueryWrapper.eq(NoticeDept::getNoticeId, notice.getId());
+        noticeDeptDao.remove(noticeDeptLambdaQueryWrapper);
+        //再添加新的部门推送
+        if (notice.getVisibility().equals(2)) {
+            // 选择了部门推送该通知
+            for (Long deptId : noticeAddReq.getDeptIds()) {
+                NoticeDept noticeDept = new NoticeDept();
+                noticeDept.setNoticeId(notice.getId());
+                noticeDept.setDeptId(deptId);
+                noticeDeptDao.save(noticeDept);
+
+            }
+        }
+    }
+
+    /**
+     * 该方法不同的是，如果是更新基本信息，则只更新基本信息，不会涉及到发布状态，此方法多了发布状态的更新
+     *
+     * @param noticeAddReq
+     */
+    @Transactional
+    @Override
+    public void quickUpdateNotice(NoticeAddReq noticeAddReq) {
+        if (noticeAddReq == null) {
+            throw new RuntimeException("通知信息不能为空");
+        }
+        if (noticeAddReq.getNotice() == null) {
+            throw new RuntimeException("通知内容不能为空");
+        }
+        if (noticeAddReq.getNotice().getId() == null) {
+            throw new RuntimeException("通知id不能为空");
+        }
+        if (StringUtils.isEmpty(noticeAddReq.getNotice().getTitle())) {
+            throw new RuntimeException("通知标题不能为空");
+        }
+        if (noticeAddReq.getNotice().getUrgency() == null) {
+            throw new RuntimeException("通知紧急程度不能为空");
+        }
+        if (noticeAddReq.getNotice().getVisibility() == null) {
+            throw new RuntimeException("可见性参数不能为空");
+        }
+        if (noticeAddReq.getNotice().getStatus() == null) {
+            throw new RuntimeException("状态不能为空");
+        }
+        if (noticeAddReq.getNotice().getVisibility().equals(2)) {
+            if (noticeAddReq.getDeptIds() == null) {
+                throw new RuntimeException("通知接收人不能为空");
+            }
+            if (noticeAddReq.getDeptIds().size() == 0) {
+                throw new RuntimeException("通知接收人不能为空");
+            }
+        }
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+        if (currentUser == null) {
+            throw new CustomException("登录信息错误", Code.DEL_TOKEN);
+        }
+
+        Notice notice = noticeDao.getById(noticeAddReq.getNotice().getId());
+        notice.setTitle(noticeAddReq.getNotice().getTitle());
+        notice.setUrgency(noticeAddReq.getNotice().getUrgency());
+        if (StringUtils.isNotEmpty(noticeAddReq.getNotice().getTag())) {
+            notice.setTag(noticeAddReq.getNotice().getTag());
+        }
+        // 只有当状态变化了才更新状态
+        if (!noticeAddReq.getNotice().getStatus().equals(notice.getStatus())) {
+            //变化成发布/定时发布了
+            if (noticeAddReq.getNotice().getStatus().equals(2)) {
+                if (noticeAddReq.getNotice().getReleaseTime() != null) {
+                    notice.setReleaseTime(noticeAddReq.getNotice().getReleaseTime());
+                } else {
+                    notice.setReleaseTime(LocalDateTime.now());
+                }
+            } else if (noticeAddReq.getNotice().getStatus().equals(3)) {
+                // 仅更新状态
+            } else {
+                notice.setReleaseTime(null);
+            }
+            notice.setStatus(noticeAddReq.getNotice().getStatus());
         }
         notice.setVisibility(noticeAddReq.getNotice().getVisibility());
         notice.setUpdateUserList(UpdateUserListUtil.getUpdateUserList(notice.getUpdateUserList(), currentUser.getId()));//默认更新用户就是第一个新建的人

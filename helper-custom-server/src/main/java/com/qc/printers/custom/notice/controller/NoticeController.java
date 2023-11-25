@@ -105,4 +105,16 @@ public class NoticeController {
         return "删除成功";
     }
 
+    /**
+     * 快速编辑
+     */
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:notice:update")
+    @NeedToken
+    @ApiOperation(value = "快速编辑", notes = "无论是发布还是内容更新，都共用这一个接口")
+    @PutMapping("/quick_update")
+    public R<String> quickUpdateNotice(@RequestBody NoticeAddReq noticeAddReq) {
+        noticeService.quickUpdateNotice(noticeAddReq);
+        return R.successOnlyObject("更新成功");
+    }
+
 }
