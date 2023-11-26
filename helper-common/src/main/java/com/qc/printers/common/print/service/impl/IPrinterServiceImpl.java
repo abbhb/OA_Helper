@@ -5,11 +5,13 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.ecwid.consul.v1.health.model.HealthService;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.MyString;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.service.ConsulService;
 import com.qc.printers.common.common.utils.FileMD5;
 import com.qc.printers.common.common.utils.RedisUtils;
+import com.qc.printers.common.print.domain.dto.CancelPrintDto;
 import com.qc.printers.common.print.domain.dto.PrintDeviceDto;
 import com.qc.printers.common.print.domain.entity.PrintDevice;
 import com.qc.printers.common.print.domain.entity.PrintDocumentTypeStatistic;
@@ -137,6 +139,52 @@ public class IPrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> imp
             return null;
         }
         return null;
+    }
+
+    @Override
+    public CancelPrintDto cancelPrint(String printId, String deviceId) {
+        if (StringUtils.isEmpty(printId) || StringUtils.isEmpty(deviceId)) {
+            CancelPrintDto cancelPrintDto = new CancelPrintDto();
+            cancelPrintDto.setStatus(0);
+            cancelPrintDto.setMsg("参数错误");
+            return cancelPrintDto;
+        }
+        PrintDeviceDto printDeviceDto = pollingPrintDevice(deviceId);
+        if (printDeviceDto == null) {
+            throw new CustomException("设备不存在");
+        }
+        OkHttpClient client = new OkHttpClient();
+        Request request = new Request.Builder()
+                .url("http://" + printDeviceDto.getIp() + ":" + printDeviceDto.getPort() + "/api/printDevice/cancel/" + printId) // 替换为实际API的URL
+                .delete()
+                .build();
+        try {
+            Response response = client.newCall(request).execute();
+            if (response.isSuccessful()) {
+                ObjectMapper objectMapper = new ObjectMapper();
+                String jsonResponse = response.body().string();
+
+                // 使用Jackson库将JSON字符串解析为List<MyObject>
+                R<String> yuandata = objectMapper.readValue(jsonResponse, new TypeReference<R<String>>() {
+                });
+                if (yuandata == null) {
+                    throw new CustomException("取消失败");
+                }
+                if (!yuandata.getCode().equals(1)) {
+                    throw new CustomException(yuandata.getMsg());
+                }
+                CancelPrintDto cancelPrintDto = new CancelPrintDto();
+                cancelPrintDto.setStatus(1);
+                cancelPrintDto.setMsg(yuandata.getData());
+                return cancelPrintDto;
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+            throw new CustomException("取消失败");
+
+        }
+        throw new CustomException("取消失败");
+
     }
 
     @Override

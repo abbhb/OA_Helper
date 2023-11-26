@@ -163,6 +163,15 @@ public class PrintController {
         return R.success(printerService.printDeviceInfoPolling(id));
     }
 
+    @CrossOrigin("*")
+    @NeedToken
+    @GetMapping("/print_cancel/{id}/{deviceId}")
+    @ApiOperation("取消打印任务")
+    public R<String> printCancel(@PathVariable("id") String id, @PathVariable("deviceId") String deviceId) {
+        printerService.cancelPrint(id, deviceId);
+        return R.successOnlyObject("取消成功，请不要重复点击！");
+    }
+
 
     @CrossOrigin("*")
     @NeedToken
