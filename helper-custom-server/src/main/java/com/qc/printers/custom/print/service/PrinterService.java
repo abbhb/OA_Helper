@@ -41,4 +41,6 @@ public interface PrinterService {
     String printFile(PrintFileReq printFileReq);
 
     PrintDeviceInfoResp printDeviceInfoPolling(String id);
+
+    void cancelPrint(String id, String deviceId);
 }

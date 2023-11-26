@@ -18,6 +18,7 @@ import com.qc.printers.common.common.utils.ThreadLocalUtil;
 import com.qc.printers.common.common.utils.oss.domain.OssReq;
 import com.qc.printers.common.common.utils.oss.domain.OssResp;
 import com.qc.printers.common.config.MinIoProperties;
+import com.qc.printers.common.print.domain.dto.CancelPrintDto;
 import com.qc.printers.common.print.domain.dto.PrintDeviceDto;
 import com.qc.printers.common.print.domain.dto.PrinterRedis;
 import com.qc.printers.common.print.domain.entity.Printer;
@@ -25,6 +26,7 @@ import com.qc.printers.common.print.domain.vo.CountTop10VO;
 import com.qc.printers.common.print.mapper.PrinterMapper;
 import com.qc.printers.common.print.service.IPrinterService;
 import com.qc.printers.common.user.dao.UserDao;
+import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.mapper.UserMapper;
 import com.qc.printers.common.user.service.IUserService;
@@ -440,6 +442,18 @@ public class PrinterServiceImpl implements PrinterService {
         printDeviceInfoResp.setStatusTypeMessage(printDeviceDto.getStatusTypeMessage());
         printDeviceInfoResp.setId(printDeviceDto.getId());
         return printDeviceInfoResp;
+    }
+
+    @Override
+    public void cancelPrint(String id, String deviceId) {
+        // 先执行取消任务逻辑
+        CancelPrintDto cancelPrintDto = iPrinterService.cancelPrint(id, deviceId);
+        if (cancelPrintDto.getStatus().equals(0)) {
+            throw new CustomException(cancelPrintDto.getMsg());
+        }
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+        // 直接使用currentUser就能拿到该用户的信息
+        // todo:利用websocket，添加一个枚举为系统通知，推送所有用户，告知某某某用户取消了一次打印任务，需要前端搭配系统消息中心
     }
 
 }
