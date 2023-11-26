@@ -62,7 +62,7 @@ public class WSAdapter {
         BeanUtil.copyProperties(user, info);
         info.setUid(user.getId());
         info.setActiveStatus(ChatActiveStatusEnum.ONLINE.getStatus());
-        info.setLastOptTime(null);//此处暂时不处理user.getLoginDate()
+        info.setLastOptTime(user.getLoginDate());
         return info;
     }
 
@@ -71,7 +71,8 @@ public class WSAdapter {
         BeanUtil.copyProperties(user, info);
         info.setUid(user.getId());
         info.setActiveStatus(ChatActiveStatusEnum.OFFLINE.getStatus());
-        info.setLastOptTime(null);
+        info.setLastOptTime(user.getLoginDate());
+
         return info;
     }
 

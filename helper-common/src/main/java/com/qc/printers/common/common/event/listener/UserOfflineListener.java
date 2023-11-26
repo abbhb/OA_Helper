@@ -1,7 +1,6 @@
 package com.qc.printers.common.common.event.listener;
 
 import com.qc.printers.common.common.event.UserOfflineEvent;
-import com.qc.printers.common.common.utils.DateUtils;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.domain.enums.ChatActiveStatusEnum;
@@ -35,7 +34,7 @@ public class UserOfflineListener {
     @EventListener(classes = UserOfflineEvent.class)
     public void saveRedisAndPush(UserOfflineEvent event) {
         User user = event.getUser();
-        userCache.offline(user.getId(), DateUtils.localDateTimeToDate(user.getLoginDate()));
+        userCache.offline(user.getId(), user.getLoginDate());
         //推送给所有在线用户，该用户下线
         webSocketService.sendToAllOnline(wsAdapter.buildOfflineNotifyResp(event.getUser()), event.getUser().getId());
     }

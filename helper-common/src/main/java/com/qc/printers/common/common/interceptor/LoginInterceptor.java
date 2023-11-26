@@ -68,6 +68,9 @@ public class LoginInterceptor implements HandlerInterceptor {
             throw new CustomException("认证失败", Code.DEL_TOKEN);
         }
         UserInfo userInfo = userInfoService.getUserInfo(Long.valueOf(userId));
+        if (!userInfo.getStatus().equals(1)) {
+            throw new CustomException("你已被封号", Code.DEL_TOKEN);
+        }
         ThreadLocalUtil.addCurrentUser(userInfo);
         RequestInfo info = new RequestInfo();
         info.setUid(userInfo.getId());

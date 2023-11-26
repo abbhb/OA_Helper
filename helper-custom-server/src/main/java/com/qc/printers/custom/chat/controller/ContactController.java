@@ -6,6 +6,7 @@ import com.qc.printers.common.chat.domain.vo.response.ChatRoomResp;
 import com.qc.printers.common.chat.service.ChatService;
 import com.qc.printers.common.chat.service.RoomAppService;
 import com.qc.printers.common.common.R;
+import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.domain.vo.request.CursorPageBaseReq;
 import com.qc.printers.common.common.domain.vo.request.IdReqVO;
 import com.qc.printers.common.common.domain.vo.response.CursorPageBaseResp;
@@ -41,6 +42,7 @@ public class ContactController {
     private RoomAppService roomService;
 
     @GetMapping("/public/contact/page")
+    @NeedToken
     @ApiOperation("会话列表")
     public R<CursorPageBaseResp<ChatRoomResp>> getRoomPage(@Valid CursorPageBaseReq request) {
         Long uid = RequestHolder.get().getUid();

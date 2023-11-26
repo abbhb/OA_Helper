@@ -4,6 +4,9 @@ server:
     # Controller统一前缀
     context-path: /api
 spring:
+  jackson:
+    serialization:
+      write-dates-as-timestamps: true
   servlet:
     multipart:
       max-file-size: -1
@@ -100,6 +103,10 @@ chatai:
     key: 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
   chatglm2:
     use: false
+# 后期创建个initsql，这些默认是不用变的
+system-message:
+  userId: 10011
+  roomId: 2
 my-consul:
   ip: ${helper.consul.ip}
   port: ${helper.consul.port}

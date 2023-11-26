@@ -3,6 +3,9 @@ package com.qc.printers.custom.print.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ecwid.consul.v1.health.model.HealthService;
+import com.qc.printers.common.chat.domain.enums.MessageTypeEnum;
+import com.qc.printers.common.chat.domain.vo.request.ChatMessageReq;
+import com.qc.printers.common.chat.service.ChatService;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.MyString;
 import com.qc.printers.common.common.R;
@@ -14,10 +17,12 @@ import com.qc.printers.common.common.service.CommonService;
 import com.qc.printers.common.common.service.ConsulService;
 import com.qc.printers.common.common.utils.MinIoUtil;
 import com.qc.printers.common.common.utils.RedisUtils;
+import com.qc.printers.common.common.utils.RequestHolder;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
 import com.qc.printers.common.common.utils.oss.domain.OssReq;
 import com.qc.printers.common.common.utils.oss.domain.OssResp;
 import com.qc.printers.common.config.MinIoProperties;
+import com.qc.printers.common.config.SystemMessageConfig;
 import com.qc.printers.common.print.domain.dto.CancelPrintDto;
 import com.qc.printers.common.print.domain.dto.PrintDeviceDto;
 import com.qc.printers.common.print.domain.dto.PrinterRedis;
@@ -79,6 +84,12 @@ public class PrinterServiceImpl implements PrinterService {
 
     @Autowired
     private IPrinterService iPrinterService;
+
+    @Autowired
+    private ChatService chatService;
+
+    @Autowired
+    private SystemMessageConfig systemMessageConfig;
 
     @Autowired
     public PrinterServiceImpl(CommonService commonService, UserMapper userMapper, PrinterMapper printerMapper) {
@@ -454,6 +465,12 @@ public class PrinterServiceImpl implements PrinterService {
         UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
         // 直接使用currentUser就能拿到该用户的信息
         // todo:利用websocket，添加一个枚举为系统通知，推送所有用户，告知某某某用户取消了一次打印任务，需要前端搭配系统消息中心
+        ChatMessageReq chatMessageReq = new ChatMessageReq();
+        chatMessageReq.setRoomId(Long.valueOf(systemMessageConfig.getRoomId()));
+        chatMessageReq.setMsgType(MessageTypeEnum.TEXT.getType());
+        chatMessageReq.setBody(currentUser.getName() + "[id：" + currentUser.getId() + "]取消了一次打印任务，请注意是否为误取消他人任务！");
+        chatService.sendMsg(chatMessageReq, RequestHolder.get().getUid());
+
     }
 
 }

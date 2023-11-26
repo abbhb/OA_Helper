@@ -28,12 +28,14 @@ import com.qc.printers.common.chat.service.strategy.mark.MsgMarkFactory;
 import com.qc.printers.common.chat.service.strategy.msg.AbstractMsgHandler;
 import com.qc.printers.common.chat.service.strategy.msg.MsgHandlerFactory;
 import com.qc.printers.common.chat.service.strategy.msg.RecallMsgHandler;
+import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.annotation.RedissonLock;
 import com.qc.printers.common.common.domain.enums.NormalOrNoEnum;
 import com.qc.printers.common.common.domain.vo.request.CursorPageBaseReq;
 import com.qc.printers.common.common.domain.vo.response.CursorPageBaseResp;
 import com.qc.printers.common.common.event.MessageSendEvent;
 import com.qc.printers.common.common.utils.AssertUtil;
+import com.qc.printers.common.config.SystemMessageConfig;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.domain.enums.ChatActiveStatusEnum;
@@ -94,6 +96,9 @@ public class ChatServiceImpl implements ChatService {
     @Autowired
     private MQProducer mqProducer;
 
+    @Autowired
+    private SystemMessageConfig systemMessageConfig;
+
     /**
      * 发送消息
      */
@@ -114,6 +119,13 @@ public class ChatServiceImpl implements ChatService {
 
     private void check(ChatMessageReq request, Long uid) {
         Room room = roomCache.get(request.getRoomId());
+        // 系统通知最先校验
+        if (room.getId().equals(Long.valueOf(systemMessageConfig.getRoomId()))) {
+            // 该消息为系统通知，校验是否来自系统通知用户
+            if (!uid.equals(Long.valueOf(systemMessageConfig.getUserId()))) {
+                throw new CustomException("您不是系统通知用户,请勿伪装成系统发消息");
+            }
+        }
         if (room.isHotRoom()) {//全员群跳过校验
             return;
         }
@@ -157,6 +169,7 @@ public class ChatServiceImpl implements ChatService {
                 cursorPage = userDao.getCursorPage(memberUidList, new CursorPageBaseReq(leftSize, null), ChatActiveStatusEnum.OFFLINE);
                 resultList.addAll(MemberAdapter.buildMember(cursorPage.getList()));//添加离线线列表
             }
+
             timeCursor = cursorPage.getCursor();
             isLast = cursorPage.getIsLast();
         } else if (activeStatusEnum == ChatActiveStatusEnum.OFFLINE) {//离线列表
