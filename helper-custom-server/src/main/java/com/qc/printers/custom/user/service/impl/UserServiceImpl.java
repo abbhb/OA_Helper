@@ -812,7 +812,6 @@ public class UserServiceImpl implements UserService {
         user.setCreateUser(1L);
         user.setAvatar("");
         user.setEmail(email.toLowerCase());
-
         user.setName("亲爱的用户，请改名");
         String salt = PWDMD5.getSalt();
         String md5Encryption = PWDMD5.getMD5Encryption(password, salt);

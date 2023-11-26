@@ -11,6 +11,7 @@ import org.springframework.beans.BeanUtils;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.Set;
 
 /**
@@ -22,7 +23,7 @@ import java.util.Set;
 
 @Data
 public class UserInfo extends User implements Serializable {
-    public UserInfo(LocalDateTime createTime, LocalDateTime updateTime, Integer isDeleted, Long id, String username, String name, String phone, String sex, String studentId, Integer status, Long deptId, String email, String avatar, String password, String salt, Long createUser, LocalDateTime loginDate, IpInfo loginIp, Integer activeStatus, String openId, Set<SysRole> sysRoles, Set<SysMenu> sysMenus) {
+    public UserInfo(LocalDateTime createTime, LocalDateTime updateTime, Integer isDeleted, Long id, String username, String name, String phone, String sex, String studentId, Integer status, Long deptId, String email, String avatar, String password, String salt, Long createUser, Date loginDate, IpInfo loginIp, Integer activeStatus, String openId, Set<SysRole> sysRoles, Set<SysMenu> sysMenus) {
         super(createTime, updateTime, isDeleted, id, username, name, phone, sex, studentId, status, deptId, email, avatar, password, salt, createUser, loginDate, loginIp, activeStatus, openId);
         this.sysRoles = sysRoles;
         this.sysMenus = sysMenus;

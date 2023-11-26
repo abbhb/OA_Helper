@@ -1,7 +1,6 @@
 package com.qc.printers.common.user.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.qc.printers.common.common.Code;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.dto.UserInfo;
@@ -58,9 +57,7 @@ public class UserInfoServiceImpl implements UserInfoService {
         if (user == null) {
             throw new CustomException("请重试！");
         }
-        if (!user.getStatus().equals(1)) {
-            throw new CustomException("你已被封号", Code.DEL_TOKEN);
-        }
+
         BeanUtils.copyProperties(user, userInfo);
         // 部门角色为继承制，下级部门继承上级
         SysDept myDept = iSysDeptService.getById(user.getDeptId());

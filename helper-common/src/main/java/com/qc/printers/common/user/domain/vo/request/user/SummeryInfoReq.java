@@ -7,6 +7,7 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.Size;
+import java.io.Serializable;
 import java.util.List;
 
 
@@ -19,13 +20,13 @@ import java.util.List;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-public class SummeryInfoReq {
+public class SummeryInfoReq implements Serializable {
     @ApiModelProperty(value = "用户信息入参")
     @Size(max = 50)
     private List<infoReq> reqList;
 
     @Data
-    public static class infoReq {
+    public static class infoReq implements Serializable {
         @ApiModelProperty(value = "uid")
         private Long uid;
         @ApiModelProperty(value = "最近一次更新用户信息时间")

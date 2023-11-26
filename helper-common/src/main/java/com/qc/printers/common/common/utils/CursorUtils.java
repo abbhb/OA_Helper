@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.domain.vo.request.CursorPageBaseReq;
 import com.qc.printers.common.common.domain.vo.response.CursorPageBaseResp;
 import org.springframework.data.redis.core.ZSetOperations;
@@ -72,6 +73,9 @@ public class CursorUtils {
     }
 
     private static Object parseCursor(String cursor, Class<?> cursorClass) {
+        if (cursor.contains("null")) {
+            throw new CustomException("到底了~");
+        }
         if (Date.class.isAssignableFrom(cursorClass)) {
             return new Date(Long.parseLong(cursor));
         } else {
