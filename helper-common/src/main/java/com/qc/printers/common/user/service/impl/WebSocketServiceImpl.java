@@ -32,7 +32,7 @@ import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.time.Duration;
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.concurrent.ConcurrentHashMap;
@@ -121,7 +121,7 @@ public class WebSocketServiceImpl implements WebSocketService {
         if (uidOptional.isPresent() && offlineAll) {//已登录用户断连,并且全下线成功
             User user = new User();
             user.setId(uidOptional.get());
-            user.setLoginDate(new Date());
+            user.setLoginDate(LocalDateTime.now());
             applicationEventPublisher.publishEvent(new UserOfflineEvent(this, user));
         }
     }
@@ -150,7 +150,7 @@ public class WebSocketServiceImpl implements WebSocketService {
         //发送用户上线事件
         boolean online = userCache.isOnline(user.getId());
         if (!online) {
-            user.setLoginDate(new Date());
+            user.setLoginDate(LocalDateTime.now());
 
             IpInfo loginIp = user.getLoginIp();
             if (loginIp == null) {

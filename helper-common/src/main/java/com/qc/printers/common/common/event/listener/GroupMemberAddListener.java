@@ -25,6 +25,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.event.TransactionalEventListener;
 
 import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
 
 /**
@@ -62,7 +63,7 @@ public class GroupMemberAddListener {
         RoomGroup roomGroup = event.getRoomGroup();
         Long inviteUid = event.getInviteUid();
         User user = userCache.getUserInfo(inviteUid);
-        List<Long> uidList = memberList.stream().map(GroupMember::getUid).collect(Collectors.toList());
+        Set<Long> uidList = memberList.stream().map(GroupMember::getUid).collect(Collectors.toSet());
         ChatMessageReq chatMessageReq = RoomAdapter.buildGroupAddMessage(roomGroup, user, userCache.getUserInfoBatch(uidList));
         chatService.sendMsg(chatMessageReq, User.UID_SYSTEM);
     }

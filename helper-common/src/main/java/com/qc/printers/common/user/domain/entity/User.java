@@ -12,7 +12,6 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.Date;
 
 @Data
 @AllArgsConstructor//不加这个是没有有参构造的
@@ -82,7 +81,7 @@ public class User implements Serializable {
     public Long createUser;
 
     @ApiModelProperty(value = "最后登录的时间")
-    public Date loginDate;
+    public LocalDateTime loginDate;
 
     @ApiModelProperty(value = "最后登录的ip")
     @TableField(value = "login_ip", typeHandler = JacksonTypeHandler.class)

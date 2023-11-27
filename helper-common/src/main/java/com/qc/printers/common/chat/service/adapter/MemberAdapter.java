@@ -3,6 +3,7 @@ package com.qc.printers.common.chat.service.adapter;
 import com.qc.printers.common.chat.domain.entity.GroupMember;
 import com.qc.printers.common.chat.domain.enums.GroupRoleEnum;
 import com.qc.printers.common.chat.domain.vo.response.ChatMemberListResp;
+import com.qc.printers.common.common.utils.DateUtils;
 import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.domain.entity.UserFriend;
@@ -41,7 +42,7 @@ public class MemberAdapter {
             ChatMemberResp resp = new ChatMemberResp();
             resp.setActiveStatus(a.getActiveStatus());
 
-            resp.setLastOptTime(a.getLoginDate());
+            resp.setLastOptTime(DateUtils.localDateTimeToDate(a.getLoginDate()));
             resp.setUid(a.getId());
             return resp;
         }).collect(Collectors.toList());
@@ -55,7 +56,7 @@ public class MemberAdapter {
             User user = userMap.get(userFriend.getFriendUid());
             if (Objects.nonNull(user)) {
                 resp.setActiveStatus(user.getActiveStatus());
-                resp.setLastOptTime(user.getLoginDate());
+                resp.setLastOptTime(DateUtils.localDateTimeToDate(user.getLoginDate()));
 
             }
             return resp;
@@ -92,7 +93,7 @@ public class MemberAdapter {
         wsBaseResp.setType(WSRespTypeEnum.MEMBER_CHANGE.getType());
         WSMemberChange wsMemberChange = new WSMemberChange();
         wsMemberChange.setActiveStatus(user.getActiveStatus());
-        wsMemberChange.setLastOptTime(user.getLoginDate());
+        wsMemberChange.setLastOptTime(DateUtils.localDateTimeToDate(user.getLoginDate()));
         wsMemberChange.setUid(String.valueOf(user.getId()));
         wsMemberChange.setRoomId(String.valueOf(roomId));
         wsMemberChange.setChangeType(CHANGE_TYPE_ADD);
