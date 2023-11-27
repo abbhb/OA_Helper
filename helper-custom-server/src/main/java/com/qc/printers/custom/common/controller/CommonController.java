@@ -4,6 +4,7 @@ import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.service.CommonService;
 import com.qc.printers.common.common.utils.RSAUtil;
+import com.qc.printers.common.config.SystemMessageConfig;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -19,11 +20,16 @@ import org.springframework.web.multipart.MultipartFile;
 public class CommonController {
     @Autowired
     private CommonService commonService;
+
+    @Autowired
+    private SystemMessageConfig systemMessageConfig;
+
+
     @CrossOrigin("*")
     @NeedToken
     @PostMapping("/uploadimage")
     @ApiOperation("上传图像到minio上，返回url,启用了跨域")
-    public R<String> uploadImage(MultipartFile file){
+    public R<String> uploadImage(MultipartFile file) {
         return commonService.uploadFileTOMinio(file);
 
     }
@@ -68,6 +74,17 @@ public class CommonController {
     public R<String> getPublicKey() {
         log.info("获取RSA公钥");
         return R.successOnlyObject(RSAUtil.publicKey);
+    }
+
+    @CrossOrigin("*")
+    @GetMapping("/get_system_message")
+    @ApiOperation(value = "系统通知的用户与房间号", notes = "")
+    public R<SystemMessageConfig> getSystemMessage() {
+        log.info("获取系统通知的用户与房间号");
+        SystemMessageConfig systemMessageConfig1 = new SystemMessageConfig();
+        systemMessageConfig1.setRoomId(systemMessageConfig.getRoomId());
+        systemMessageConfig1.setUserId(systemMessageConfig.getUserId());
+        return R.successOnlyObject(systemMessageConfig1);
     }
 
 }

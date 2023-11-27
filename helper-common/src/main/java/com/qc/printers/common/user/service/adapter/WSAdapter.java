@@ -6,6 +6,7 @@ import com.qc.printers.common.chat.domain.dto.ChatMsgRecallDTO;
 import com.qc.printers.common.chat.domain.vo.response.ChatMemberStatisticResp;
 import com.qc.printers.common.chat.domain.vo.response.ChatMessageResp;
 import com.qc.printers.common.chat.service.ChatService;
+import com.qc.printers.common.common.utils.DateUtils;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.domain.enums.ChatActiveStatusEnum;
 import com.qc.printers.common.user.domain.enums.WSBaseResp;
@@ -62,7 +63,7 @@ public class WSAdapter {
         BeanUtil.copyProperties(user, info);
         info.setUid(user.getId());
         info.setActiveStatus(ChatActiveStatusEnum.ONLINE.getStatus());
-        info.setLastOptTime(user.getLoginDate());
+        info.setLastOptTime(DateUtils.localDateTimeToDate(user.getLoginDate()));
         return info;
     }
 
@@ -71,7 +72,7 @@ public class WSAdapter {
         BeanUtil.copyProperties(user, info);
         info.setUid(user.getId());
         info.setActiveStatus(ChatActiveStatusEnum.OFFLINE.getStatus());
-        info.setLastOptTime(user.getLoginDate());
+        info.setLastOptTime(DateUtils.localDateTimeToDate(user.getLoginDate()));
 
         return info;
     }

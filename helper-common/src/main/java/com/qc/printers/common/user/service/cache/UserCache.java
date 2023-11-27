@@ -111,27 +111,27 @@ public class UserCache {
     /**
      * 获取用户信息，盘路缓存模式
      */
+//    public Map<Long, UserInfo> getUserInfoBatch(List<Long> uids) {
+//        List<String> keys = uids.stream().map(a -> RedisKey.getKey(RedisKey.USER_INFO_STRING, a)).collect(Collectors.toList());
+//        List<UserInfo> mget = RedisUtils.mget(keys, UserInfo.class);
+//        Map<Long, UserInfo> map = mget.stream().filter(Objects::nonNull).collect(Collectors.toMap(UserInfo::getId, Function.identity()));
+//        //还需要load更新的uid
+//        List<Long> needLoadUidList = uids.stream().filter(a -> !map.containsKey(a)).collect(Collectors.toList());
+//        if (CollUtil.isNotEmpty(needLoadUidList)) {
+//            List<UserInfo> needLoadUserList = new ArrayList<>();
+//            for (Long id :
+//                    needLoadUidList) {
+//                UserInfo userInfo = userInfoService.getUserInfo(id);
+//                needLoadUserList.add(userInfo);
+//            }
+//            Map<String, UserInfo> redisMap = needLoadUserList.stream().collect(Collectors.toMap(a -> RedisKey.getKey(RedisKey.USER_INFO_STRING, a.getId()), Function.identity()));
+//            RedisUtils.mset(redisMap, 5 * 60);
+//            map.putAll(needLoadUserList.stream().collect(Collectors.toMap(UserInfo::getId, Function.identity())));
+//        }
+//        return map;
+//    }
     public Map<Long, UserInfo> getUserInfoBatch(Set<Long> uids) {
-        List<String> keys = uids.stream().map(a -> RedisKey.getKey(RedisKey.USER_INFO_STRING, a)).collect(Collectors.toList());
-        List<UserInfo> mget = RedisUtils.mget(keys, UserInfo.class);
-        Map<Long, UserInfo> map = mget.stream().filter(Objects::nonNull).collect(Collectors.toMap(UserInfo::getId, Function.identity()));
-        //还需要load更新的uid
-        List<Long> needLoadUidList = uids.stream().filter(a -> !map.containsKey(a)).collect(Collectors.toList());
-        if (CollUtil.isNotEmpty(needLoadUidList)) {
-            List<UserInfo> needLoadUserList = new ArrayList<>();
-            for (Long id :
-                    needLoadUidList) {
-                UserInfo userInfo = userInfoService.getUserInfo(id);
-                needLoadUserList.add(userInfo);
-            }
-            Map<String, UserInfo> redisMap = needLoadUserList.stream().collect(Collectors.toMap(a -> RedisKey.getKey(RedisKey.USER_INFO_STRING, a.getId()), Function.identity()));
-            RedisUtils.mset(redisMap, 5 * 60);
-            map.putAll(needLoadUserList.stream().collect(Collectors.toMap(UserInfo::getId, Function.identity())));
-        }
-        return map;
-    }
-
-    public Map<Long, UserInfo> getUserInfoBatch(List<Long> uids) {
+        log.info("----------------------uids:{}", uids);
         List<String> keys = uids.stream().map(a -> RedisKey.getKey(RedisKey.USER_INFO_STRING, a)).collect(Collectors.toList());
         List<UserInfo> mget = RedisUtils.mget(keys, UserInfo.class);
         Map<Long, UserInfo> map = mget.stream().filter(Objects::nonNull).collect(Collectors.toMap(UserInfo::getId, Function.identity()));

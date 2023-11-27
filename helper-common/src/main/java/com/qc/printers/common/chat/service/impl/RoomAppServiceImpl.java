@@ -180,7 +180,7 @@ public class RoomAppServiceImpl implements RoomAppService {
         } else {
             RoomGroup roomGroup = roomGroupCache.get(request.getRoomId());
             List<Long> memberUidList = groupMemberDao.getMemberUidList(roomGroup.getId());
-            Map<Long, UserInfo> batch = userCache.getUserInfoBatch(memberUidList);
+            Map<Long, UserInfo> batch = userCache.getUserInfoBatch(memberUidList.stream().collect(Collectors.toSet()));
             return MemberAdapter.buildMemberList(batch);
         }
     }
@@ -297,7 +297,7 @@ public class RoomAppServiceImpl implements RoomAppService {
         List<Long> msgIds = roomBaseInfoMap.values().stream().map(RoomBaseInfo::getLastMsgId).collect(Collectors.toList());
         List<Message> messages = CollectionUtil.isEmpty(msgIds) ? new ArrayList<>() : messageDao.listByIds(msgIds);
         Map<Long, Message> msgMap = messages.stream().collect(Collectors.toMap(Message::getId, Function.identity()));
-        Map<Long, UserInfo> lastMsgUidMap = userCache.getUserInfoBatch(messages.stream().map(Message::getFromUid).collect(Collectors.toList()));
+        Map<Long, UserInfo> lastMsgUidMap = userCache.getUserInfoBatch(messages.stream().map(Message::getFromUid).collect(Collectors.toSet()));
         //消息未读数
         Map<Long, Integer> unReadCountMap = getUnReadCountMap(uid, roomIds);
         return roomBaseInfoMap.values().stream().map(room -> {
@@ -339,7 +339,7 @@ public class RoomAppServiceImpl implements RoomAppService {
         }
         Map<Long, RoomFriend> roomFriendMap = roomFriendCache.getBatch(roomIds);
         Set<Long> friendUidSet = ChatAdapter.getFriendUidSet(roomFriendMap.values(), uid);
-        Map<Long, UserInfo> userBatch = userCache.getUserInfoBatch(new ArrayList<>(friendUidSet));
+        Map<Long, UserInfo> userBatch = userCache.getUserInfoBatch(friendUidSet);
         return roomFriendMap.values()
                 .stream()
                 .collect(Collectors.toMap(RoomFriend::getRoomId, roomFriend -> {

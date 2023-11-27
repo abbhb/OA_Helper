@@ -1,6 +1,7 @@
 package com.qc.printers.common.common.event.listener;
 
 import com.qc.printers.common.common.event.UserOnlineEvent;
+import com.qc.printers.common.common.utils.DateUtils;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.domain.enums.ChatActiveStatusEnum;
@@ -40,7 +41,7 @@ public class UserOnlineListener {
     @EventListener(classes = UserOnlineEvent.class)
     public void saveRedisAndPush(UserOnlineEvent event) {
         User user = event.getUser();
-        userCache.online(user.getId(), user.getLoginDate());
+        userCache.online(user.getId(), DateUtils.localDateTimeToDate(user.getLoginDate()));
         //推送给所有在线用户，该用户登录成功
         pushService.sendPushMsg(wsAdapter.buildOnlineNotifyResp(event.getUser()));
     }

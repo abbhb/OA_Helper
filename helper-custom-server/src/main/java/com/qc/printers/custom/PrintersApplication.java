@@ -1,8 +1,6 @@
 package com.qc.printers.custom;
 
-import com.qc.printers.common.common.service.CommonConfigService;
-import com.qc.printers.common.common.utils.RSAUtil;
-import com.qc.printers.common.user.mapper.PermissionMapper;
+import com.qc.printers.common.common.service.init.InitServer;
 import lombok.extern.slf4j.Slf4j;
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,11 +14,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 @Slf4j
 public class PrintersApplication implements CommandLineRunner {
 
-    @Autowired
-    private PermissionMapper permissionMapper;
 
     @Autowired
-    private CommonConfigService commonConfigService;
+    private InitServer initServer;
 
     public static void main(String[] args) {
         SpringApplication.run(PrintersApplication.class, args);
@@ -30,9 +26,6 @@ public class PrintersApplication implements CommandLineRunner {
     public void run(String... args) throws Exception {
         //启动成功执行该方法
         log.info("启动主程序");
-        //缓存公共配置
-        commonConfigService.list();
-        //创建rsa的key
-        RSAUtil.createKey();
+        initServer.init();
     }
 }

@@ -740,7 +740,7 @@ public class UserServiceImpl implements UserService {
         //需要前端同步的uid
         List<Long> uidList = getNeedSyncUidList(req.getReqList());
         //加载用户信息
-        Map<Long, UserInfo> userInfoBatch = userCache.getUserInfoBatch(uidList);
+        Map<Long, UserInfo> userInfoBatch = userCache.getUserInfoBatch(uidList.stream().collect(Collectors.toSet()));
         return req.getReqList()
                 .stream()
                 .map(a -> userInfoBatch.containsKey(a.getUid()) ? new SummeryInfoDTO(a.getUid(), true, userInfoBatch.get(a.getUid()).getName(), userInfoBatch.get(a.getUid()).getAvatar(), "未知") : SummeryInfoDTO.skip(a.getUid()))
