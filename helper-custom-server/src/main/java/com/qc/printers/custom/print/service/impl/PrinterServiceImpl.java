@@ -464,7 +464,6 @@ public class PrinterServiceImpl implements PrinterService {
         }
         UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
         // 直接使用currentUser就能拿到该用户的信息
-        // todo:利用websocket，添加一个枚举为系统通知，推送所有用户，告知某某某用户取消了一次打印任务，需要前端搭配系统消息中心
         ChatMessageReq chatMessageReq = new ChatMessageReq();
         chatMessageReq.setRoomId(Long.valueOf(systemMessageConfig.getRoomId()));
         chatMessageReq.setMsgType(MessageTypeEnum.TEXT.getType());
