@@ -17,7 +17,6 @@ import com.qc.printers.common.common.service.CommonService;
 import com.qc.printers.common.common.service.ConsulService;
 import com.qc.printers.common.common.utils.MinIoUtil;
 import com.qc.printers.common.common.utils.RedisUtils;
-import com.qc.printers.common.common.utils.RequestHolder;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
 import com.qc.printers.common.common.utils.oss.domain.OssReq;
 import com.qc.printers.common.common.utils.oss.domain.OssResp;
@@ -468,7 +467,8 @@ public class PrinterServiceImpl implements PrinterService {
         chatMessageReq.setRoomId(Long.valueOf(systemMessageConfig.getRoomId()));
         chatMessageReq.setMsgType(MessageTypeEnum.TEXT.getType());
         chatMessageReq.setBody(currentUser.getName() + "[id：" + currentUser.getId() + "]取消了一次打印任务，请注意是否为误取消他人任务！");
-        chatService.sendMsg(chatMessageReq, RequestHolder.get().getUid());
+        // 必须为系统用户发送的消息
+        chatService.sendMsg(chatMessageReq, Long.valueOf(systemMessageConfig.getUserId()));
 
     }
 
