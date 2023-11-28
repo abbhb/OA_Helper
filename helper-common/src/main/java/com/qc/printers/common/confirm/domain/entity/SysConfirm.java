@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 public class SysConfirm implements Serializable {
     private Long id;
 
-    private String key;
+    private String strKey;
 
     private Long userId;
 
