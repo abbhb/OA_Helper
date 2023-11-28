@@ -22,7 +22,15 @@ public class CommonUrlDiscover extends AbstractUrlDiscover {
         String keywords = document.head().select("meta[name=keywords]").attr("content");
         String content = StrUtil.isNotBlank(description) ? description : keywords;
         //只保留一句话的描述
-        return StrUtil.isNotBlank(content) ? content.substring(0, content.indexOf("。")) : content;
+        String oneDes = "";
+        try {
+            oneDes = StrUtil.isNotBlank(content) ? content.substring(0, content.indexOf("。")) : content;
+        } catch (Exception e) {
+//            e.printStackTrace();
+            oneDes = content;
+        }
+
+        return oneDes;
     }
 
     @Nullable
