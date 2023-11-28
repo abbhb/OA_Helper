@@ -371,7 +371,7 @@ CREATE TABLE `printer`
     `need_print_pages_end_index`  int NULL DEFAULT NULL COMMENT '需要解析那些页码',
     `single_document_paper_usage` int NULL DEFAULT NULL COMMENT '单份文件用纸数',
     `content_hash`                varchar(1000) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NULL DEFAULT NULL COMMENT '内容哈希',
-    `name`                        varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '文件名称',
+    `name`                        varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '文件名称',
     `create_time`                 datetime                                                      NOT NULL COMMENT '打印时间',
     `create_user`                 bigint                                                        NOT NULL COMMENT '打印人id',
     `is_duplex`                   int NULL DEFAULT NULL COMMENT '是否双面 1为是，0为否',
@@ -1452,6 +1452,19 @@ CREATE TABLE `user_friend`
 -- ----------------------------
 -- Records of user_friend
 -- ----------------------------
+DROP TABLE IF EXISTS `sys_confirm`;
+CREATE TABLE `sys_confirm`
+(
+    `id`          bigint                                                        NOT NULL,
+    `str_key`     varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '要用户确认的key',
+    `user_id`     bigint                                                        NOT NULL COMMENT '用户确认',
+    `create_time` datetime(3) NOT NULL COMMENT '确认时间',
+    PRIMARY KEY (`id`) USING BTREE,
+    UNIQUE KEY `key_userid` (`str_key`,`user_id`) USING BTREE,
+    KEY           `userid` (`user_id`) USING BTREE,
+    KEY           `key` (`str_key`) USING BTREE
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+
 
 -- ----------------------------
 -- Table structure for user_front_config
@@ -1470,6 +1483,5 @@ CREATE TABLE `user_front_config`
 -- ----------------------------
 -- Records of user_front_config
 -- ----------------------------
-
 SET
 FOREIGN_KEY_CHECKS = 1;
