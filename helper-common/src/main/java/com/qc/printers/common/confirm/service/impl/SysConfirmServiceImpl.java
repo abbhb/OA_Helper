@@ -24,7 +24,7 @@ public class SysConfirmServiceImpl implements SysConfirmService {
             return;
         }
         SysConfirm sysConfirm = new SysConfirm();
-        sysConfirm.setKey(key);
+        sysConfirm.setStrKey(key);
         sysConfirm.setUserId(userId);
         sysConfirmDao.save(sysConfirm);
     }
@@ -32,7 +32,7 @@ public class SysConfirmServiceImpl implements SysConfirmService {
     @Override
     public boolean isConfirmed(String key, Long userId) {
         LambdaQueryWrapper<SysConfirm> sysConfirmLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        sysConfirmLambdaQueryWrapper.eq(SysConfirm::getKey, key);
+        sysConfirmLambdaQueryWrapper.eq(SysConfirm::getStrKey, key);
         sysConfirmLambdaQueryWrapper.eq(SysConfirm::getUserId, userId);
         if (sysConfirmDao.count(sysConfirmLambdaQueryWrapper) > 0) {
             return true;
@@ -43,7 +43,7 @@ public class SysConfirmServiceImpl implements SysConfirmService {
     @Override
     public Integer getConfirmCount(String key) {
         LambdaQueryWrapper<SysConfirm> sysConfirmLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        sysConfirmLambdaQueryWrapper.eq(SysConfirm::getKey, key);
+        sysConfirmLambdaQueryWrapper.eq(SysConfirm::getStrKey, key);
         return sysConfirmDao.count(sysConfirmLambdaQueryWrapper);
     }
 }

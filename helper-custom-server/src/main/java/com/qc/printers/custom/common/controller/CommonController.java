@@ -4,7 +4,9 @@ import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.service.CommonService;
 import com.qc.printers.common.common.utils.RSAUtil;
+import com.qc.printers.common.common.utils.ThreadLocalUtil;
 import com.qc.printers.common.config.SystemMessageConfig;
+import com.qc.printers.common.confirm.service.SysConfirmService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +25,9 @@ public class CommonController {
 
     @Autowired
     private SystemMessageConfig systemMessageConfig;
+
+    @Autowired
+    private SysConfirmService sysConfirmService;
 
 
     @CrossOrigin("*")
@@ -85,6 +90,37 @@ public class CommonController {
         systemMessageConfig1.setRoomId(systemMessageConfig.getRoomId());
         systemMessageConfig1.setUserId(systemMessageConfig.getUserId());
         return R.successOnlyObject(systemMessageConfig1);
+    }
+
+    /**
+     * 公共确认
+     */
+    @CrossOrigin("*")
+    @NeedToken
+    @GetMapping("/confirm/{key}")
+    @ApiOperation(value = "公共确认", notes = "")
+    public R<String> confirm(@PathVariable("key") String key) {
+        log.info("公共确认");
+        if (StringUtils.isEmpty(key)) {
+            return R.error("无法获取");
+        }
+        sysConfirmService.confirm(key, ThreadLocalUtil.getCurrentUser().getId());
+        return R.successOnlyObject("ok");
+    }
+
+    /**
+     * 是否已经确认
+     */
+    @CrossOrigin("*")
+    @NeedToken
+    @GetMapping("/is_confirm/{key}")
+    @ApiOperation(value = "是否已经确认", notes = "")
+    public R<Boolean> isConfirm(@PathVariable("key") String key) {
+        log.info("是否已经确认");
+        if (StringUtils.isEmpty(key)) {
+            return R.error("无法获取");
+        }
+        return R.successOnlyObject(sysConfirmService.isConfirmed(key, ThreadLocalUtil.getCurrentUser().getId()));
     }
 
 }
