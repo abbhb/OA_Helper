@@ -27,10 +27,12 @@ public class PrintErrorListener {
     @TransactionalEventListener(classes = PrintErrorEvent.class, fallbackExecution = true)
     public void error(PrintErrorEvent event) {
         Long printId = event.getId();
+        String message = event.getMessage();
         Printer printer = iPrinterService.getById(printId);
         PrinterRedis printerRedis = RedisUtils.get(MyString.print + printId, PrinterRedis.class);
         printerRedis.setIsPrint(0);
         printerRedis.setSTU(0);
+        printerRedis.setMessage(message);
         printer.setIsPrint(0);
         iPrinterService.updateById(printer);
         RedisUtils.set(MyString.print + printId, printerRedis, 100L, TimeUnit.SECONDS);
