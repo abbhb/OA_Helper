@@ -937,6 +937,23 @@ public class UserServiceImpl implements UserService {
         if (!passwordR.getPassword().equals(passwordR.getRePassword())) {
             throw new CustomException("请保证新密码和确认密码一致!");
         }
+        if (passwordR.getPassword().length() < 6) {
+            throw new CustomException("密码长度不能小于6");
+        }
+        if (passwordR.getPassword().length() > 30) {
+            throw new CustomException("密码长度不能大于30");
+        }
+        String regex = "(?=.*[a-zA-Z])(?=.*[0-9]).{6,30}";
+        // 要验证的字符串
+        // 创建Pattern对象
+        Pattern pattern = Pattern.compile(regex);
+        // 创建Matcher对象
+        Matcher matcher = pattern.matcher(passwordR.getPassword());
+
+        // 进行匹配
+        if (!matcher.matches()) {
+            throw new CustomException("密码需要包含字母数字，且6位以上");
+        }
         LambdaUpdateWrapper<User> userLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         userLambdaUpdateWrapper.eq(User::getId, userInfo.getId());
         String salt = PWDMD5.getSalt();
