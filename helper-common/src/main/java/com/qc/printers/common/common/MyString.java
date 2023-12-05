@@ -30,4 +30,5 @@ public class MyString {
     public final static String pre_common_config = cache + "common_config";
     public static final String CAPTCHA_KEY = pre + "Code::CAPTCHA::";
     public static final String CAPTCHA_Success = pre + "Code::CAPTCHA_SUCCESS::";
+    public static String one_time_code_key = pre + "Code::ONE_TIME_CODE::";//一次性code码，redis里存的的对象是UserInfo.class
 }

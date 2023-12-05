@@ -28,14 +28,13 @@ public class VerifyEmailCodeTypeHandel extends VailCodeVerifyHandel {
 
     @Override
     public void verify(Method method, Object[] args, CheckVailCode checkVailCode) {
-        if (!vailCodeConfig.isUse()) {
+        if (!vailCodeConfig.isEmailVailUse()) {
             return;
         }
         // 该项只需要code
         String email = SpElUtils.parseSpEl(method, args, checkVailCode.key());
         String code = SpElUtils.parseSpEl(method, args, checkVailCode.value());
-
-        String zhenvalue = RedisUtils.get(MyString.email_code + email);
+        String zhenvalue = RedisUtils.get(MyString.email_code + email, String.class);
         if (StringUtils.isEmpty(zhenvalue)) {
             throw new CustomException("邮箱验证码过期了或者错误，请重新获取");
         }

@@ -7,6 +7,8 @@ import com.qc.printers.common.user.domain.dto.SummeryInfoDTO;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.domain.vo.request.user.SummeryInfoReq;
 import com.qc.printers.custom.user.domain.dto.LoginDTO;
+import com.qc.printers.custom.user.domain.vo.request.LoginByEmailCodeReq;
+import com.qc.printers.custom.user.domain.vo.request.PasswordByOneTimeCodeReq;
 import com.qc.printers.custom.user.domain.vo.request.PasswordR;
 import com.qc.printers.custom.user.domain.vo.response.ForgetPasswordResp;
 import com.qc.printers.custom.user.domain.vo.response.LoginRes;
@@ -65,4 +67,8 @@ public interface UserService {
     ForgetPasswordResp forgetPasswordByEmail(String email, String password);
 
     User loginPublic(String username, String password);
+
+    boolean setPasswordByOneTimeCodeReq(PasswordByOneTimeCodeReq passwordR);
+
+    LoginRes loginByEmailCode(LoginByEmailCodeReq loginByEmailCodeReq);
 }

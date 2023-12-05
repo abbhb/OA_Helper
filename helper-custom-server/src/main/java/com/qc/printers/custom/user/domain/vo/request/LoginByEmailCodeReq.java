@@ -9,10 +9,8 @@ import java.io.Serializable;
 @EqualsAndHashCode(callSuper = true)
 @Data
 @ToString
-public class RegisterEmailRes extends EmailReq implements Serializable {
-    /**
-     * 密码
-     */
-    private String password;
+public class LoginByEmailCodeReq extends EmailReq implements Serializable {
+
+    private Boolean week;
 
 }

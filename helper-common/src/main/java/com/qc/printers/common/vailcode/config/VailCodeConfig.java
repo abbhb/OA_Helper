@@ -8,5 +8,6 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConfigurationProperties(prefix = "vail-code")
 public class VailCodeConfig {
-    private boolean use;
+    private boolean imageVailUse;
+    private boolean emailVailUse;
 }

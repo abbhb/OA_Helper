@@ -17,9 +17,7 @@ import com.qc.printers.common.user.service.annotation.UserPermissionGradeCheck;
 import com.qc.printers.common.vailcode.annotations.CheckVailCode;
 import com.qc.printers.common.vailcode.domain.enums.VailType;
 import com.qc.printers.custom.user.domain.dto.LoginDTO;
-import com.qc.printers.custom.user.domain.vo.request.ForgetPasswordEmailRes;
-import com.qc.printers.custom.user.domain.vo.request.PasswordR;
-import com.qc.printers.custom.user.domain.vo.request.RegisterEmailRes;
+import com.qc.printers.custom.user.domain.vo.request.*;
 import com.qc.printers.custom.user.domain.vo.response.ForgetPasswordResp;
 import com.qc.printers.custom.user.domain.vo.response.LoginRes;
 import com.qc.printers.custom.user.domain.vo.response.RegisterResp;
@@ -111,6 +109,16 @@ public class UserController {
         return R.success(userService.emailRegister(registerEmailRes.getEmail(), registerEmailRes.getPassword()));
     }
 
+    @PostMapping("/login_by_email_code")
+    @CheckVailCode(key = "#loginByEmailCodeReq.email", value = "#loginByEmailCodeReq.emailCode", type = VailType.EMAIL)
+    @ApiOperation(value = "Email一键登录", notes = "如果没注册会一键注册")
+    public R<LoginRes> loginByEmailCode(@RequestBody LoginByEmailCodeReq loginByEmailCodeReq) {
+        /**
+         * 直接注册就行，校验邮箱验证码通过验证码通用注解
+         */
+        return R.success(userService.loginByEmailCode(loginByEmailCodeReq));
+    }
+
     //todo:注意注册邮箱的唯一性
     @PostMapping("/forget_password_email")
     @CheckVailCode(key = "#forgetPasswordEmailRes.email", value = "#forgetPasswordEmailRes.emailCode", type = VailType.EMAIL)
@@ -195,6 +203,15 @@ public class UserController {
             return R.success("修改成功,下次登录生效!");
         }
         return R.error("修改失败");
+    }
+
+    @PostMapping("/setPasswordByOneTimeCodeReq")
+    public R<String> setPasswordByOneTimeCodeReq(@RequestBody PasswordByOneTimeCodeReq passwordByOneTimeCodeReq) {
+        boolean isTrue = userService.setPasswordByOneTimeCodeReq(passwordByOneTimeCodeReq);
+        if (isTrue) {
+            return R.successOnlyObject("设置成功");
+        }
+        return R.error("设置失败");
     }
 
     @CrossOrigin("*")

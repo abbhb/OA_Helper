@@ -263,6 +263,14 @@ public class RedisUtils {
         return get(key, String.class);
     }
 
+    /**
+     * 必须提供class，不然默认就是str
+     *
+     * @param key
+     * @param tClass
+     * @param <T>
+     * @return
+     */
     public static <T> T get(String key, Class<T> tClass) {
         String s = get(key);
         return toBeanOrNull(s, tClass);

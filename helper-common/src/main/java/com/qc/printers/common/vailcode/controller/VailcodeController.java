@@ -28,7 +28,7 @@ public class VailcodeController {
     @CrossOrigin("*")
     @PostMapping("/get_captcha")
     public R<Captcha> getCaptcha(@RequestBody Captcha captcha) {
-        if (!vailCodeConfig.isUse()) {
+        if (!vailCodeConfig.isImageVailUse()) {
             captcha.setIsUse(0);
             return R.successOnlyObject(captcha);
         }

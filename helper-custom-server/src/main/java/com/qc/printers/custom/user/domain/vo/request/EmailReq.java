@@ -5,11 +5,8 @@ import lombok.Data;
 import java.io.Serializable;
 
 @Data
-public class RegisterRes implements Serializable {
+public class EmailReq implements Serializable {
+    private String emailCode;
 
-    /**
-     * 密码
-     */
-    private String password;
-
+    private String email;
 }
