@@ -1035,6 +1035,13 @@ public class UserServiceImpl implements UserService {
 
 
     private String createOneTimeSetPasswordCode(User user) {
+        if (user == null) {
+            throw new CustomException("用户异常");
+        }
+        if (StringUtils.isNotEmpty(user.getPassword())) {
+            // 该用户已经存在密码了，不需要在设置了
+            return null;
+        }
         String oneTimeSetPasswordCode = UUID.randomUUID().toString().replaceAll("-", "");
         RedisUtils.set(MyString.one_time_code_key + oneTimeSetPasswordCode, user, 300L, TimeUnit.SECONDS);
         return oneTimeSetPasswordCode;
