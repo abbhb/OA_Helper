@@ -1324,7 +1324,7 @@ CREATE TABLE `tr_login`
     `user_id`    bigint NULL DEFAULT NULL COMMENT '本系统userId',
     `status`     int                                                           NOT NULL COMMENT '是否完成注册或者绑定已有帐号1,完成',
     `is_deleted` int                                                           NOT NULL DEFAULT 0 COMMENT '默认未删除',
-    `type`       int                                                           NOT NULL COMMENT '1:en 2:cas-oauth2.0',
+    `type`       varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci  NOT NULL COMMENT 'qq,wx.....',
     PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
