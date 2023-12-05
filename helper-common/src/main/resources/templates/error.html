@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+  <meta charset="UTF-8">
+  <title>Error Page</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #f0f5f9; /* 浅色背景 */
+      color: #333; /* 主要文本颜色 */
+    }
+
+    .error-container {
+      margin: 50px auto;
+      padding: 20px;
+      max-width: 600px;
+      background-color: #ffffff; /* 白色容器背景 */
+      border-radius: 5px;
+      box-shadow: 0 0 10px rgba(0, 0, 0, 0.1); /* 阴影效果 */
+    }
+
+    h1 {
+      color: #3b5998; /* 蓝色标题 */
+    }
+
+    p {
+      font-size: 18px;
+    }
+  </style>
+</head>
+<body>
+<div class="error-container">
+  <h1>Error</h1>
+  <p>Sorry, an error occurred.</p>
+  <p>Details: <span th:text="${error}"></span></p> <!-- 显示错误消息 -->
+</div>
+</body>
+</html>

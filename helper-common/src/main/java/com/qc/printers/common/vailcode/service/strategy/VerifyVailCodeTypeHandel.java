@@ -29,7 +29,7 @@ public class VerifyVailCodeTypeHandel extends VailCodeVerifyHandel {
 
     @Override
     public void verify(Method method, Object[] args, CheckVailCode checkVailCode) {
-        if (!vailCodeConfig.isUse()) {
+        if (!vailCodeConfig.isImageVailUse()) {
             return;
         }
         // 该项只需要code

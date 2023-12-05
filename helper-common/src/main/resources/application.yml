@@ -112,6 +112,9 @@ my-consul:
 oauth:
   use: true
   frontAddress: http://easyoa.fun:8081
-# 滑块验证码
+# 验证码
 vail-code:
-  use: true
+  # 滑块验证码验证
+  imageVailUse: true
+  # 邮箱验证码验证
+  emailVailUse: true

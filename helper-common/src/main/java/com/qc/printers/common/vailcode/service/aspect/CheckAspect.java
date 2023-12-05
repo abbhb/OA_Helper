@@ -31,10 +31,6 @@ public class CheckAspect {
         VailType target = checkVailCode.type();
         // 获取type参数
         VailCodeVerifyHandel instance = vailCodeVerifyHandelFactory.getInstance(target.getType());
-        if (!instance.isUse()) {
-            return joinPoint.proceed();
-        }
-
         instance.verify(method, joinPoint.getArgs(), checkVailCode);
         // 无异常就继续
 

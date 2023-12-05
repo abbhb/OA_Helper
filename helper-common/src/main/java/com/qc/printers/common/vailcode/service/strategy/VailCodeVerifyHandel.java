@@ -21,7 +21,5 @@ public abstract class VailCodeVerifyHandel {
 
     public abstract void verify(Method method, Object[] args, CheckVailCode checkVailCode);
 
-    public boolean isUse() {
-        return vailCodeConfig.isUse();
-    }
+
 }

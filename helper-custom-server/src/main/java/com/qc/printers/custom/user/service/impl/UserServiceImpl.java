@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qc.printers.common.common.Code;
 import com.qc.printers.common.common.CustomException;
+import com.qc.printers.common.common.MyString;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.common.service.CommonService;
@@ -26,6 +27,8 @@ import com.qc.printers.common.user.service.ISysUserRoleService;
 import com.qc.printers.common.user.service.IUserService;
 import com.qc.printers.common.user.service.cache.UserCache;
 import com.qc.printers.custom.user.domain.dto.LoginDTO;
+import com.qc.printers.custom.user.domain.vo.request.LoginByEmailCodeReq;
+import com.qc.printers.custom.user.domain.vo.request.PasswordByOneTimeCodeReq;
 import com.qc.printers.custom.user.domain.vo.request.PasswordR;
 import com.qc.printers.custom.user.domain.vo.response.*;
 import com.qc.printers.custom.user.domain.vo.response.dept.DeptManger;
@@ -916,5 +919,108 @@ public class UserServiceImpl implements UserService {
         return one;
     }
 
+    @Transactional
+    @Override
+    public boolean setPasswordByOneTimeCodeReq(PasswordByOneTimeCodeReq passwordR) {
+        String oneTimeCode = passwordR.getOneTimeCode();
+        if (StringUtils.isEmpty(oneTimeCode)) {
+            throw new CustomException("一次性验证码为空!");
+        }
+        UserInfo userInfo = RedisUtils.get(MyString.one_time_code_key + oneTimeCode, UserInfo.class);
+        if (userInfo == null) {
+            throw new CustomException("一次性验证码已被使用或已过期!");
+        }
+
+        if (StringUtils.isEmpty(passwordR.getPassword()) || StringUtils.isEmpty(passwordR.getRePassword())) {
+            throw new CustomException("请保证新密码和确认密码不为空!");
+        }
+        if (!passwordR.getPassword().equals(passwordR.getRePassword())) {
+            throw new CustomException("请保证新密码和确认密码一致!");
+        }
+        LambdaUpdateWrapper<User> userLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        userLambdaUpdateWrapper.eq(User::getId, userInfo.getId());
+        String salt = PWDMD5.getSalt();
+        String md5Encryptions = PWDMD5.getMD5Encryption(passwordR.getPassword(), salt);
+        userLambdaUpdateWrapper.set(User::getPassword, md5Encryptions);
+        userLambdaUpdateWrapper.set(User::getSalt, salt);
+        boolean update = userDao.update(userLambdaUpdateWrapper);
+        if (update) {
+            RedisUtils.del(MyString.one_time_code_key + oneTimeCode);
+        }
+        return update;
+    }
+
+    @Override
+    public LoginRes loginByEmailCode(LoginByEmailCodeReq loginByEmailCodeReq) {
+        if (StringUtils.isEmpty(loginByEmailCodeReq.getEmail()) || StringUtils.isEmpty(loginByEmailCodeReq.getEmailCode())) {
+            throw new CustomException("邮箱或验证码为空");
+        }
+        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper.eq(User::getEmail, loginByEmailCodeReq.getEmail());
+        LoginRes loginRes = new LoginRes();
+
+        // 此处会自动排除逻辑删除的数据
+        if (userDao.count(userLambdaQueryWrapper) > 0) {
+            User user = userDao.getOne(userLambdaQueryWrapper);
+            String token = JWTUtil.getToken(String.valueOf(user.getId()));
+
+            //老用户
+            //token分为半天和一周的
+            if (loginByEmailCodeReq.getWeek()) {
+                RedisUtils.set(token, String.valueOf(user.getId()), 7 * 12 * 3600L, TimeUnit.SECONDS);
+            } else {
+                RedisUtils.set(token, String.valueOf(user.getId()), 12 * 3600L, TimeUnit.SECONDS);
+            }
+            loginRes.setToken(token);
+            loginRes.setToSetPassword(0);
+            //300s内有效，每次邮箱验证码登录没有设置密码都会弹出此一次。
+            String oneTimeSetPasswordCode = createOneTimeSetPasswordCode(user);
+            if (StringUtils.isNotEmpty(oneTimeSetPasswordCode)) {
+                loginRes.setToSetPassword(1);
+                loginRes.setOneTimeSetPasswordCode(oneTimeSetPasswordCode);
+            }
+            return loginRes;
+        }
+        // 用户名也得全局唯一，默认为邮箱，要是重复了就用uuid
+        User user = new User();
+        LambdaQueryWrapper<User> userLambdaQueryWrapper1 = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper1.eq(User::getUsername, loginByEmailCodeReq.getEmail());
+        user.setUsername(loginByEmailCodeReq.getEmail());
+        if (userDao.count(userLambdaQueryWrapper1) > 0) {
+            String uuid = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 15);
+            user.setUsername(uuid);
+        }
+        user.setOpenId(UUID.randomUUID().toString());
+        user.setDeptId(1L);
+        // 自己创建
+        user.setCreateUser(1L);
+        user.setAvatar("");
+        user.setEmail(loginByEmailCodeReq.getEmail().toLowerCase());
+        user.setName("亲爱的用户，请改名");
+        user.setStatus(1);
+        user.setSex("未知");
+        user.setPhone("");
+        user.setStudentId("");
+        userDao.save(user);
+        LoginRes loginRes1 = new LoginRes();
+        String token = JWTUtil.getToken(String.valueOf(user.getId()));
+        RedisUtils.set(token, String.valueOf(user.getId()), 12 * 3600L, TimeUnit.SECONDS);
+        loginRes1.setToken(token);
+        //300s内有效，每次邮箱验证码登录没有设置密码都会弹出此一次。
+        String oneTimeSetPasswordCode = createOneTimeSetPasswordCode(user);
+        loginRes1.setToSetPassword(0);
+        if (StringUtils.isNotEmpty(oneTimeSetPasswordCode)) {
+            loginRes1.setToSetPassword(1);
+            loginRes1.setOneTimeSetPasswordCode(oneTimeSetPasswordCode);
+        }
+        return loginRes1;
+    }
+
+
+    private String createOneTimeSetPasswordCode(User user) {
+        String oneTimeSetPasswordCode = UUID.randomUUID().toString().replaceAll("-", "");
+        RedisUtils.set(MyString.one_time_code_key + oneTimeSetPasswordCode, user, 300L, TimeUnit.SECONDS);
+        return oneTimeSetPasswordCode;
+    }
 
 }
