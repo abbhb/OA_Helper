@@ -94,6 +94,9 @@ public class UserController {
     @FrequencyControl(time = 30, count = 10, target = FrequencyControl.Target.EL, spEl = "#email")
     @FrequencyControl(time = 60, count = 15, target = FrequencyControl.Target.EL, spEl = "#email")
     public R<String> getEmailCode(@RequestParam(name = "email") String email, @RequestParam(name = "vail_code", required = false) String vailCode) {
+        if (StringUtils.isEmpty(email)) {
+            return R.error("邮箱不能为空");
+        }
         return R.successOnlyObject(emailService.getEmailCode(email));
     }
 

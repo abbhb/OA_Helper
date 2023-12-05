@@ -66,4 +66,10 @@ public class Captcha {
      **/
     @JsonProperty("place")
     private Integer place;
+
+    /**
+     * 0为不需要验证码，直接返回验证成功!
+     */
+    @JsonProperty("is_use")
+    private Integer isUse;
 }

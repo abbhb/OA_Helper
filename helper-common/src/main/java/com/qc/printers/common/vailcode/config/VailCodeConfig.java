@@ -8,5 +8,5 @@ import org.springframework.context.annotation.Configuration;
 @Configuration
 @ConfigurationProperties(prefix = "vail-code")
 public class VailCodeConfig {
-    private boolean isUse;
+    private boolean use;
 }
