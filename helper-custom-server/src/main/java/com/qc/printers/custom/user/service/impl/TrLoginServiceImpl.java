@@ -113,7 +113,7 @@ public class TrLoginServiceImpl implements TrLoginService {
                 TrLogin trLogin = new TrLogin();
                 trLogin.setStatus(1);
                 trLogin.setTrId(openid);
-                trLogin.setType(2);
+                trLogin.setType("qq");
                 trLogin.setIsDeleted(0);
                 trLogin.setUserId(user.getId());
                 boolean save1 = iTrLoginService.save(trLogin);

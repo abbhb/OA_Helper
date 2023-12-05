@@ -27,8 +27,7 @@ public class TrLogin implements Serializable {
     /**
      * 关键参数
      * 标识第三方
-     * 1：ENRoom
-     * 2:CAS-oauth2.0
+     * qq,wx,......
      */
-    private Integer type;
+    private String type;
 }

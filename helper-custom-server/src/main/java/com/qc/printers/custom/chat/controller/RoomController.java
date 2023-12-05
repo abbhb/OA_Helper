@@ -25,8 +25,8 @@ import java.util.List;
  * 房间相关接口
  * </p>
  *
- * @author <a href="https://github.com/zongzibinbin">abin</a>
- * @since 2023-03-19
+ * @author <a href="https://github.com/abbhb">qc2003</a>
+ * @since 2023-06-19
  */
 @CrossOrigin("*")
 @RestController
