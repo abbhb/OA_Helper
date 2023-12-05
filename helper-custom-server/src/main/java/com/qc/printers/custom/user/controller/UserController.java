@@ -205,6 +205,7 @@ public class UserController {
         return R.error("修改失败");
     }
 
+    @CrossOrigin("*")
     @PostMapping("/setPasswordByOneTimeCodeReq")
     public R<String> setPasswordByOneTimeCodeReq(@RequestBody PasswordByOneTimeCodeReq passwordByOneTimeCodeReq) {
         boolean isTrue = userService.setPasswordByOneTimeCodeReq(passwordByOneTimeCodeReq);
