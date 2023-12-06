@@ -678,7 +678,7 @@ VALUES (4, 'keep', 'menu.dashboard.keep', 1, 3, 'keep', 0, 0, 'C', 1, 1, '', '',
 INSERT INTO `sys_menu`
 VALUES (5, 'usercenter', 'menu.usercenter', 0, 2, '/usercenter', 0, 0, 'M', 1, 1, NULL, 'icon-user', 1, NULL, 1, NULL);
 INSERT INTO `sys_menu`
-VALUES (6, 'profile', 'menu.usercenter.usercenter', 5, 1, 'profile', 0, 0, 'C', 0, 1, '', '', 1, NULL, 1, NULL);
+VALUES (6, 'profile', 'menu.usercenter.usercenter', 5, 1, 'profile', 0, 0, 'C', 1, 1, '', '', 1, NULL, 1, NULL);
 INSERT INTO `sys_menu`
 VALUES (7, 'UserManger', 'menu.sysmanger.UserManger', 10, 1, 'user-manger', 0, 0, 'C', 1, 1, 'sys:user:list', '', 1,
         NULL, 1, NULL);
