@@ -39,13 +39,13 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
 //        log.info("开始静态资源映射");
 //        registry.addResourceHandler("/front/**").addResourceLocations("classpath:/front/");//此处classpath:/front/必须得在末尾加/，否则无法访问
 //        registry.addResourceHandler("/dist/**").addResourceLocations("classpath:/dist/");
-//        registry.addResourceHandler("/static/**").addResourceLocations("classpath:/static/");
+        registry.addResourceHandler("/static/**").addResourceLocations("classpath:/static/");
     }
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         // 注册拦截规则
-        registry.addInterceptor(loginInterceptor).addPathPatterns("/**").excludePathPatterns("/user/login","/user/logout","/swagger-ui/**").order(2);
-        registry.addInterceptor(permissionInterceptor).addPathPatterns("/**").excludePathPatterns("/user/login","/user/logout","/swagger-ui/**").order(3);
+        registry.addInterceptor(loginInterceptor).addPathPatterns("/**").excludePathPatterns("/user/login", "/user/logout", "/swagger-ui/**", "/static/**").order(2);
+        registry.addInterceptor(permissionInterceptor).addPathPatterns("/**").excludePathPatterns("/user/login", "/user/logout", "/swagger-ui/**", "/static/**").order(3);
         // 拦截路径，员工请求的路径都拦截
         //ir.addPathPatterns("/employee/**");
         //ir.addPathPatterns("/store/**");
