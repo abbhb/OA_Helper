@@ -83,7 +83,6 @@ public class TrLoginServiceImpl implements TrLoginService {
             }
             String token = JWTUtil.getToken(String.valueOf(byId.getId()));
             RedisUtils.set(token, String.valueOf(byId.getId()), 12 * 3600L, TimeUnit.SECONDS);
-
             LoginRes userResult = new LoginRes();
             userResult.setToken(token);
             return R.success(userResult);
@@ -186,6 +185,8 @@ public class TrLoginServiceImpl implements TrLoginService {
             throw new CustomException("oauth异常-第三方登录无法找到本地用户");
         }
         String token = JWTUtil.getToken(String.valueOf(user.getId()));
+        RedisUtils.set(token, String.valueOf(user.getId()), 12 * 3600L, TimeUnit.SECONDS);
+
         thirdCallbackResp.setToken(token);
         thirdCallbackResp.setNewUser(false);
         thirdCallbackResp.setThirdSocialUid(uniquekerLoginInfo.getSocialUid());
@@ -196,18 +197,22 @@ public class TrLoginServiceImpl implements TrLoginService {
     @Transactional
     @Override
     public LoginRes uniFirstLogin(ThirdFirstLoginReq thirdFirstLoginReq) {
-        AssertUtil.notEqual(thirdFirstLoginReq, null, "参数异常");
+        if (thirdFirstLoginReq == null) {
+            throw new CustomException("参数异常");
+        }
         UniquekerLoginInfo uniquekerLoginInfoBySocialUid = UniquekerUtil.getUniquekerLoginInfoBySocialUid(thirdFirstLoginReq.getThirdSocialUid(), thirdFirstLoginReq.getThirdType());
         LambdaQueryWrapper<TrLogin> trLoginLambdaQueryWrapper = new LambdaQueryWrapper<>();
         trLoginLambdaQueryWrapper.eq(TrLogin::getTrId, uniquekerLoginInfoBySocialUid.getSocialUid());
         trLoginLambdaQueryWrapper.eq(TrLogin::getType, thirdFirstLoginReq.getThirdType());
         LoginRes loginRes = new LoginRes();
-
+        // 如果这个用户绑定过这个第三方id直接登录，避免老六用户抓接口
         TrLogin trLogin = iTrLoginService.getOne(trLoginLambdaQueryWrapper);
         if (trLogin != null) {
             User user = userDao.getById(trLogin.getUserId());
             if (user != null) {
                 String token = JWTUtil.getToken(String.valueOf(user.getId()));
+                RedisUtils.set(token, String.valueOf(user.getId()), 12 * 3600L, TimeUnit.SECONDS);
+
                 loginRes.setToken(token);
                 return loginRes;
             }
@@ -226,8 +231,11 @@ public class TrLoginServiceImpl implements TrLoginService {
             trLogin1.setTrId(uniquekerLoginInfoBySocialUid.getSocialUid());
             trLogin1.setUserId(user.getId());
             trLogin1.setIsDeleted(0);
+            trLogin1.setStatus(1);
             iTrLoginService.save(trLogin1);
             String token = JWTUtil.getToken(String.valueOf(user.getId()));
+            RedisUtils.set(token, String.valueOf(user.getId()), 12 * 3600L, TimeUnit.SECONDS);
+
             loginRes.setToken(token);
             loginRes.setToSetPassword(0);
             String oneTimeSetPasswordCode = OneTimeSetPasswordCodeUtil.createOneTimeSetPasswordCode(user);
