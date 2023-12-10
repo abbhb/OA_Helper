@@ -15,5 +15,5 @@ public abstract class ThirdLoginHandel {
     abstract ThirdLoginEnum getDataTypeEnum();
 
 
-    public abstract void thirdLoginHandel(HttpServletRequest request, HttpServletResponse response);
+    public abstract String thirdLoginHandel(HttpServletRequest request, HttpServletResponse response);
 }

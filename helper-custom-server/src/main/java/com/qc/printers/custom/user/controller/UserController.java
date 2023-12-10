@@ -162,7 +162,7 @@ public class UserController {
 
     @GetMapping("/third_login")
     @ApiOperation(value = "第三方oauth认证", notes = "目前使用的水滴聚合，这块第三方授权也需要绑定唯一的电子邮箱，防止之后换第三方oauth平台导致原账号数据丢失")
-    public void thirdLogin(String type, HttpServletRequest request, HttpServletResponse response) {
+    public R<String> thirdLogin(String type, HttpServletRequest request, HttpServletResponse response) {
         if (StringUtils.isEmpty(type)) {
             throw new CustomException("type异常");
         }
@@ -170,7 +170,7 @@ public class UserController {
         if (instance == null) {
             throw new CustomException("type不存在");
         }
-        instance.thirdLoginHandel(request, response);
+        return R.successOnlyObject(instance.thirdLoginHandel(request, response));
     }
 
     /**
