@@ -1317,14 +1317,14 @@ CREATE TABLE `sys_user_role`
 -- Table structure for tr_login
 -- ----------------------------
 DROP TABLE IF EXISTS `tr_login`;
-CREATE TABLE `tr_login`
+CREATE TABLE `easy_oa`.`tr_login`
 (
     `id`         bigint                                                        NOT NULL,
     `tr_id`      varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci NOT NULL COMMENT '第三方id/openid',
     `user_id`    bigint NULL DEFAULT NULL COMMENT '本系统userId',
     `status`     int                                                           NOT NULL COMMENT '是否完成注册或者绑定已有帐号1,完成',
     `is_deleted` int                                                           NOT NULL DEFAULT 0 COMMENT '默认未删除',
-    `type`       varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci  NOT NULL COMMENT 'qq,wx.....',
+    `type`       varchar(30) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci  NOT NULL COMMENT 'qq,wx....',
     PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 
