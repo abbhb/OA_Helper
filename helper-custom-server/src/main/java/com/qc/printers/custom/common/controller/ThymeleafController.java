@@ -25,4 +25,14 @@ public class ThymeleafController {
     public String reNewPassword(String oneTimeCode, Model model) {
         return thymeleafService.reNewPassword(oneTimeCode, model);
     }
+
+    /**
+     * error
+     */
+    @RequestMapping("/error")
+    public String error(String msg, Model model) {
+        model.addAttribute("error", msg);
+        return "error";
+    }
+
 }
