@@ -7,21 +7,30 @@ import com.qc.printers.common.common.Code;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.domain.entity.Token;
-import com.qc.printers.common.common.utils.CASOauthUtil;
-import com.qc.printers.common.common.utils.JWTUtil;
-import com.qc.printers.common.common.utils.RedisUtils;
+import com.qc.printers.common.common.utils.*;
+import com.qc.printers.common.config.MinIoProperties;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.entity.TrLogin;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.service.ITrLoginService;
+import com.qc.printers.custom.user.domain.entity.UniquekerLoginInfo;
+import com.qc.printers.custom.user.domain.vo.request.ThirdFirstLoginReq;
 import com.qc.printers.custom.user.domain.vo.response.LoginRes;
+import com.qc.printers.custom.user.domain.vo.response.ThirdCallbackResp;
 import com.qc.printers.custom.user.service.TrLoginService;
+import com.qc.printers.custom.user.utils.UniquekerUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import java.io.InputStream;
+import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -35,6 +44,9 @@ public class TrLoginServiceImpl implements TrLoginService {
     private final RestTemplate restTemplate;
 
     private final ITrLoginService iTrLoginService;
+
+    @Autowired
+    MinIoProperties minIoProperties;
 
 
     @Autowired
@@ -137,5 +149,162 @@ public class TrLoginServiceImpl implements TrLoginService {
             return R.success(userResult);
         }
         return R.error("错误");
+    }
+
+    @Override
+    public ThirdCallbackResp uniCallback(String type, String code) {
+        if (StringUtils.isEmpty(type) || StringUtils.isEmpty(code)) {
+            throw new CustomException("参数异常");
+        }
+        ThirdCallbackResp thirdCallbackResp = new ThirdCallbackResp();
+
+        UniquekerLoginInfo uniquekerLoginInfo = UniquekerUtil.getUniquekerLoginInfo(code, type);
+        AssertUtil.notEqual(uniquekerLoginInfo, null, "获取用户信息失败");
+        String socialUid = uniquekerLoginInfo.getSocialUid();
+
+
+        thirdCallbackResp.setThirdType(uniquekerLoginInfo.getType());
+        thirdCallbackResp.setThirdAvatar(uniquekerLoginInfo.getFaceimg());
+        thirdCallbackResp.setThirdName(uniquekerLoginInfo.getNickname());
+
+        LambdaQueryWrapper<TrLogin> trLoginLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        trLoginLambdaQueryWrapper.eq(TrLogin::getTrId, socialUid);
+        trLoginLambdaQueryWrapper.eq(TrLogin::getType, type);
+        TrLogin trLogin = iTrLoginService.getOne(trLoginLambdaQueryWrapper);
+
+        if (trLogin == null) {
+            // 当前为新用户，起码就是没绑定电子邮箱，通过电子邮箱再去查user，绑定用户id
+
+            thirdCallbackResp.setNewUser(true);
+            thirdCallbackResp.setThirdSocialUid(uniquekerLoginInfo.getSocialUid());
+            thirdCallbackResp.setCanLogin(false);
+            return thirdCallbackResp;
+        }
+        // 登录
+        User user = userDao.getById(trLogin.getUserId());
+        if (user == null) {
+            throw new CustomException("oauth异常-第三方登录无法找到本地用户");
+        }
+        String token = JWTUtil.getToken(String.valueOf(user.getId()));
+        thirdCallbackResp.setToken(token);
+        thirdCallbackResp.setNewUser(false);
+        thirdCallbackResp.setThirdSocialUid(uniquekerLoginInfo.getSocialUid());
+        thirdCallbackResp.setCanLogin(true);
+        return thirdCallbackResp;
+    }
+
+    @Transactional
+    @Override
+    public LoginRes uniFirstLogin(ThirdFirstLoginReq thirdFirstLoginReq) {
+        AssertUtil.notEqual(thirdFirstLoginReq, null, "参数异常");
+        UniquekerLoginInfo uniquekerLoginInfoBySocialUid = UniquekerUtil.getUniquekerLoginInfoBySocialUid(thirdFirstLoginReq.getThirdSocialUid(), thirdFirstLoginReq.getThirdType());
+        LambdaQueryWrapper<TrLogin> trLoginLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        trLoginLambdaQueryWrapper.eq(TrLogin::getTrId, uniquekerLoginInfoBySocialUid.getSocialUid());
+        trLoginLambdaQueryWrapper.eq(TrLogin::getType, thirdFirstLoginReq.getThirdType());
+        LoginRes loginRes = new LoginRes();
+
+        TrLogin trLogin = iTrLoginService.getOne(trLoginLambdaQueryWrapper);
+        if (trLogin != null) {
+            User user = userDao.getById(trLogin.getUserId());
+            if (user != null) {
+                String token = JWTUtil.getToken(String.valueOf(user.getId()));
+                loginRes.setToken(token);
+                return loginRes;
+            }
+            // 绑定过，但用户不存在，直接删除绑定关系
+            iTrLoginService.removeById(trLogin.getId());
+        }
+        // 现在就当没这个trLogin了
+        // 先去判断邮箱是否已经在用户表存在，直接绑定
+        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper.eq(User::getEmail, thirdFirstLoginReq.getEmail());
+        User user = userDao.getOne(userLambdaQueryWrapper);
+        if (user != null) {
+            //用户已经存在，直接绑定即可！
+            TrLogin trLogin1 = new TrLogin();
+            trLogin1.setType(uniquekerLoginInfoBySocialUid.getType());
+            trLogin1.setTrId(uniquekerLoginInfoBySocialUid.getSocialUid());
+            trLogin1.setUserId(user.getId());
+            trLogin1.setIsDeleted(0);
+            iTrLoginService.save(trLogin1);
+            String token = JWTUtil.getToken(String.valueOf(user.getId()));
+            loginRes.setToken(token);
+            loginRes.setToSetPassword(0);
+            String oneTimeSetPasswordCode = OneTimeSetPasswordCodeUtil.createOneTimeSetPasswordCode(user);
+            if (StringUtils.isNotEmpty(oneTimeSetPasswordCode)) {
+                loginRes.setOneTimeSetPasswordCode(oneTimeSetPasswordCode);
+                loginRes.setToSetPassword(1);
+            }
+            return loginRes;
+        }
+        // 这个邮箱也是新邮箱，没创建过用户
+        // 用户名也得全局唯一，默认为邮箱，要是重复了就用uuid
+        User userNew = new User();
+        LambdaQueryWrapper<User> userLambdaQueryWrapperN = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapperN.eq(User::getUsername, thirdFirstLoginReq.getEmail());
+        userNew.setUsername(thirdFirstLoginReq.getEmail().toLowerCase());
+        if (userDao.count(userLambdaQueryWrapperN) > 0) {
+            String uuid = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 15);
+            userNew.setUsername(uuid);
+        }
+        userNew.setOpenId(UUID.randomUUID().toString());
+        userNew.setDeptId(1L);
+        // 自己创建
+        userNew.setCreateUser(1L);
+        // 头像优化
+        userNew.setAvatar(getUniAvatarToLocal(uniquekerLoginInfoBySocialUid.getFaceimg()));
+        userNew.setEmail(thirdFirstLoginReq.getEmail().toLowerCase());
+        userNew.setName(uniquekerLoginInfoBySocialUid.getNickname());
+        userNew.setStatus(1);
+        userNew.setSex("未知");
+        userNew.setPhone("");
+        userNew.setStudentId("");
+        userDao.save(userNew);
+        LoginRes loginRes1 = new LoginRes();
+        String token = JWTUtil.getToken(String.valueOf(userNew.getId()));
+        RedisUtils.set(token, String.valueOf(userNew.getId()), 12 * 3600L, TimeUnit.SECONDS);
+        loginRes1.setToken(token);
+        //300s内有效，每次邮箱验证码登录没有设置密码都会弹出此一次。
+        loginRes1.setToSetPassword(0);
+        String oneTimeSetPasswordCode = OneTimeSetPasswordCodeUtil.createOneTimeSetPasswordCode(user);
+        if (StringUtils.isNotEmpty(oneTimeSetPasswordCode)) {
+            loginRes.setOneTimeSetPasswordCode(oneTimeSetPasswordCode);
+            loginRes.setToSetPassword(1);
+        }
+        return loginRes1;
+    }
+
+    /**
+     * 此处桶名称写死，如果改了桶名称aistudio也得改
+     *
+     * @param avatar
+     * @return
+     */
+    private String getUniAvatarToLocal(String avatar) {
+        if (!avatar.startsWith("http")) {
+            return "";
+        }
+        try {
+            // 下载图片到临时文件
+            URL url = new URL(avatar);
+            Path tempFile = Files.createTempFile("temp", ".jpg");
+            InputStream in;
+            in = url.openStream();
+            Files.copy(in, tempFile);
+            String iamgeUrl = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 15);
+
+            String fileUrl = MinIoUtil.upload(minIoProperties.getBucketName(), iamgeUrl, in);
+            log.info("imageUrl={}", fileUrl);
+            String[] split = fileUrl.split("\\?");
+            // 上传临时文件到 Minio
+
+            // 删除临时文件
+            Files.delete(tempFile);
+            in.close();
+            return split[0].split("/aistudio/")[1];
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return "";
     }
 }

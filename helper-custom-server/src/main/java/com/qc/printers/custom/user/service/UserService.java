@@ -71,4 +71,5 @@ public interface UserService {
     boolean setPasswordByOneTimeCodeReq(PasswordByOneTimeCodeReq passwordR);
 
     LoginRes loginByEmailCode(LoginByEmailCodeReq loginByEmailCodeReq);
+
 }

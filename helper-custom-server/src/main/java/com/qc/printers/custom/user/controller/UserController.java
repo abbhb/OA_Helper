@@ -18,13 +18,12 @@ import com.qc.printers.common.vailcode.annotations.CheckVailCode;
 import com.qc.printers.common.vailcode.domain.enums.VailType;
 import com.qc.printers.custom.user.domain.dto.LoginDTO;
 import com.qc.printers.custom.user.domain.vo.request.*;
-import com.qc.printers.custom.user.domain.vo.response.ForgetPasswordResp;
-import com.qc.printers.custom.user.domain.vo.response.LoginRes;
-import com.qc.printers.custom.user.domain.vo.response.RegisterResp;
-import com.qc.printers.custom.user.domain.vo.response.UserResult;
+import com.qc.printers.custom.user.domain.vo.response.*;
 import com.qc.printers.custom.user.service.RoleService;
 import com.qc.printers.custom.user.service.TrLoginService;
 import com.qc.printers.custom.user.service.UserService;
+import com.qc.printers.custom.user.service.strategy.ThirdLoginHandel;
+import com.qc.printers.custom.user.service.strategy.ThirdLoginHandelFactory;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -33,6 +32,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
 import java.util.List;
 import java.util.Map;
@@ -54,6 +54,9 @@ public class UserController {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private ThirdLoginHandelFactory thirdLoginHandelFactory;
 
 
     public UserController(UserService userService, TrLoginService trLoginService, CASOauthUtil casOauthUtil) {
@@ -156,6 +159,54 @@ public class UserController {
 
         return userService.loginByToken();
     }
+
+    @GetMapping("/third_login")
+    @ApiOperation(value = "第三方oauth认证", notes = "目前使用的水滴聚合，这块第三方授权也需要绑定唯一的电子邮箱，防止之后换第三方oauth平台导致原账号数据丢失")
+    public void thirdLogin(String type, HttpServletRequest request, HttpServletResponse response) {
+        if (StringUtils.isEmpty(type)) {
+            throw new CustomException("type异常");
+        }
+        ThirdLoginHandel instance = thirdLoginHandelFactory.getInstance(type);
+        if (instance == null) {
+            throw new CustomException("type不存在");
+        }
+        instance.thirdLoginHandel(request, response);
+    }
+
+    /**
+     * 水滴聚合登录回调
+     *
+     * @param type
+     * @param code
+     * @param state 水滴聚合官方没使用state，所以此字段为空
+     * @return
+     */
+    @GetMapping("/uni_callback")
+    @ApiOperation(value = "第三方oauth认证回调", notes = "目前使用的水滴聚合，这块第三方授权也需要绑定唯一的电子邮箱，防止之后换第三方oauth平台导致原账号数据丢失")
+    public R<ThirdCallbackResp> uniCallback(String type, String code, String state) {
+        if (StringUtils.isEmpty(type)) {
+            throw new CustomException("type异常");
+        }
+        if (StringUtils.isEmpty(code)) {
+            throw new CustomException("code异常");
+        }
+        return R.success(trLoginService.uniCallback(type, code));
+    }
+
+
+    /**
+     * 不用手动校验email验证码，验证码校验通过注解
+     *
+     * @param thirdFirstLoginReq
+     * @return
+     */
+    @CheckVailCode(key = "#thirdFirstLoginReq.email", value = "#thirdFirstLoginReq.emailCode", type = VailType.EMAIL)
+    @PostMapping("/uni_first_login")
+    @ApiOperation(value = "第三方oauth认证回调首次登录绑定", notes = "第三方oauth认证回调首次登录绑定，通过电子邮箱验证码来校验，如果该邮箱验证码正确且已绑定就直接登录，否则就一键创建新用户！")
+    public R<LoginRes> uniFirstLogin(@RequestBody ThirdFirstLoginReq thirdFirstLoginReq) {
+        return R.success(trLoginService.uniFirstLogin(thirdFirstLoginReq));
+    }
+
 
     @NeedToken
     @PutMapping("/update")

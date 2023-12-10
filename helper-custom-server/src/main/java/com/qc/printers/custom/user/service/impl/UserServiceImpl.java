@@ -21,10 +21,7 @@ import com.qc.printers.common.user.domain.entity.SysRole;
 import com.qc.printers.common.user.domain.entity.SysUserRole;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.domain.vo.request.user.SummeryInfoReq;
-import com.qc.printers.common.user.service.ISysDeptService;
-import com.qc.printers.common.user.service.ISysRoleService;
-import com.qc.printers.common.user.service.ISysUserRoleService;
-import com.qc.printers.common.user.service.IUserService;
+import com.qc.printers.common.user.service.*;
 import com.qc.printers.common.user.service.cache.UserCache;
 import com.qc.printers.custom.user.domain.dto.LoginDTO;
 import com.qc.printers.custom.user.domain.vo.request.LoginByEmailCodeReq;
@@ -79,6 +76,9 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private EmailService emailService;
+
+    @Autowired
+    private ITrLoginService iTrLoginService;
 
     @Autowired
     public UserServiceImpl(RestTemplate restTemplate) {
@@ -991,7 +991,7 @@ public class UserServiceImpl implements UserService {
             loginRes.setToken(token);
             loginRes.setToSetPassword(0);
             //300s内有效，每次邮箱验证码登录没有设置密码都会弹出此一次。
-            String oneTimeSetPasswordCode = createOneTimeSetPasswordCode(user);
+            String oneTimeSetPasswordCode = OneTimeSetPasswordCodeUtil.createOneTimeSetPasswordCode(user);
             if (StringUtils.isNotEmpty(oneTimeSetPasswordCode)) {
                 loginRes.setToSetPassword(1);
                 loginRes.setOneTimeSetPasswordCode(oneTimeSetPasswordCode);
@@ -1002,7 +1002,7 @@ public class UserServiceImpl implements UserService {
         User user = new User();
         LambdaQueryWrapper<User> userLambdaQueryWrapper1 = new LambdaQueryWrapper<>();
         userLambdaQueryWrapper1.eq(User::getUsername, loginByEmailCodeReq.getEmail());
-        user.setUsername(loginByEmailCodeReq.getEmail());
+        user.setUsername(loginByEmailCodeReq.getEmail().toLowerCase());
         if (userDao.count(userLambdaQueryWrapper1) > 0) {
             String uuid = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 15);
             user.setUsername(uuid);
@@ -1024,7 +1024,7 @@ public class UserServiceImpl implements UserService {
         RedisUtils.set(token, String.valueOf(user.getId()), 12 * 3600L, TimeUnit.SECONDS);
         loginRes1.setToken(token);
         //300s内有效，每次邮箱验证码登录没有设置密码都会弹出此一次。
-        String oneTimeSetPasswordCode = createOneTimeSetPasswordCode(user);
+        String oneTimeSetPasswordCode = OneTimeSetPasswordCodeUtil.createOneTimeSetPasswordCode(user);
         loginRes1.setToSetPassword(0);
         if (StringUtils.isNotEmpty(oneTimeSetPasswordCode)) {
             loginRes1.setToSetPassword(1);
@@ -1033,18 +1033,5 @@ public class UserServiceImpl implements UserService {
         return loginRes1;
     }
 
-
-    private String createOneTimeSetPasswordCode(User user) {
-        if (user == null) {
-            throw new CustomException("用户异常");
-        }
-        if (StringUtils.isNotEmpty(user.getPassword())) {
-            // 该用户已经存在密码了，不需要在设置了
-            return null;
-        }
-        String oneTimeSetPasswordCode = UUID.randomUUID().toString().replaceAll("-", "");
-        RedisUtils.set(MyString.one_time_code_key + oneTimeSetPasswordCode, user, 300L, TimeUnit.SECONDS);
-        return oneTimeSetPasswordCode;
-    }
 
 }
