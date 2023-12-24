@@ -18,4 +18,8 @@ public class NoticeUpdateReq implements Serializable {
     // 附件列表，如果有
     private List<NoticeAnnex> annexes;
 
+    /**
+     * 限制了某些部门可见时，需要传入部门id列表,为空时就是都不可见，通知列表里管理员也不可见
+     */
+    private List<Long> deptIds;
 }

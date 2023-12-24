@@ -6,18 +6,19 @@ import com.qc.printers.common.notice.dao.NoticeDeptDao;
 import com.qc.printers.common.notice.service.INoticeAnnexService;
 import com.qc.printers.common.user.service.ISysDeptService;
 import com.qc.printers.custom.notice.domain.enums.NoticeUpdateEnum;
-import com.qc.printers.custom.notice.domain.vo.req.NoticeUpdateReq;
+import com.qc.printers.custom.notice.domain.vo.req.NoticeAddReq;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 /**
  * 通知更新处理类
+ * 仅仅更新状态
  */
 
 @Service
 @Slf4j
-public abstract class NoticeUpdateHandel {
+public abstract class NoticeUpdateStatusHandel {
     @Autowired
     private INoticeAnnexService iNoticeAnnexService;
 
@@ -42,5 +43,6 @@ public abstract class NoticeUpdateHandel {
      * 生成返回数据
      * 返回数据都基于PrinterBaseResp<T></>
      */
-    public abstract String updateNotice(NoticeUpdateReq noticeUpdateReq);
+    public abstract String updateNotice(NoticeAddReq noticeBasicReq);
+
 }
