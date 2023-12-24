@@ -5,17 +5,20 @@ import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.annotation.PermissionCheck;
 import com.qc.printers.common.common.domain.entity.PageData;
+import com.qc.printers.common.notice.domain.entity.Notice;
 import com.qc.printers.custom.notice.domain.vo.req.NoticeAddReq;
 import com.qc.printers.custom.notice.domain.vo.req.NoticeUpdateReq;
 import com.qc.printers.custom.notice.domain.vo.resp.NoticeAddResp;
 import com.qc.printers.custom.notice.domain.vo.resp.NoticeMangerListResp;
+import com.qc.printers.custom.notice.domain.vo.resp.NoticeUserResp;
+import com.qc.printers.custom.notice.domain.vo.resp.NoticeViewResp;
 import com.qc.printers.custom.notice.service.NoticeService;
-import com.qc.printers.custom.notice.service.strategy.NoticeUpdateHandelFactory;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 @RestController//@ResponseBody+@Controller
@@ -28,8 +31,7 @@ public class NoticeController {
     @Autowired
     private NoticeService noticeService;
 
-    @Autowired
-    private NoticeUpdateHandelFactory noticeUpdateHandelFactory;
+
 
     /**
      * 添加通知
@@ -67,31 +69,32 @@ public class NoticeController {
 
 
     /**
-     * 基本信息变更接口，就刚创建时哪些信息，比如可见性等等
-     */
-    @PermissionCheck(role = {"superadmin"}, permission = "sys:notice:update")
-    @NeedToken
-    @ApiOperation(value = "更新通知基本信息", notes = "")
-    @PutMapping("/update_basic")
-    public R<String> updateNoticeBasic(@RequestBody NoticeAddReq noticeAddReq) {
-        noticeService.updateNoticeBasic(noticeAddReq);
-        return R.successOnlyObject("更新成功");
-    }
-
-
-    /**
      * 仅更新通知接口
      */
     @PermissionCheck(role = {"superadmin"}, permission = "sys:notice:update")
     @NeedToken
+    @Transactional
     @ApiOperation(value = "更新通知", notes = "无论是发布还是内容更新，都共用这一个接口")
     @PutMapping("/update")
     public R<String> updateNotice(@RequestBody NoticeUpdateReq noticeUpdateReq) {
         if (noticeUpdateReq.getNotice().getStatus() == null) {
             throw new CustomException("最少包含一种状态");
         }
-        String s = noticeUpdateHandelFactory.getInstance(noticeUpdateReq.getNotice().getStatus()).updateNotice(noticeUpdateReq);
-        return R.successOnlyObject(s);
+
+        NoticeAddReq noticeAddReq = new NoticeAddReq();
+        Notice noticeY = noticeUpdateReq.getNotice();
+        noticeAddReq.setDeptIds(noticeUpdateReq.getDeptIds());
+        if (noticeUpdateReq.getAnnexes() != null && noticeUpdateReq.getAnnexes().size() > 0) {
+            noticeY.setIsAnnex(1);
+        } else {
+            noticeY.setIsAnnex(0);
+        }
+        noticeAddReq.setNotice(noticeY);
+        //更细基本信息
+        noticeService.quickUpdateNotice(noticeAddReq);
+        //更新内容
+        noticeService.updateNoticeContent(noticeUpdateReq);
+        return R.successOnlyObject("更新成功");
     }
 
     /**
@@ -99,10 +102,10 @@ public class NoticeController {
      */
     @PermissionCheck(role = {"superadmin"}, permission = "sys:notice:delete")
     @NeedToken
-    @DeleteMapping("/delete")
-    public String deleteNotice(String noticeId) {
+    @DeleteMapping("/delete/{noticeId}")
+    public R<String> deleteNotice(@PathVariable("noticeId") String noticeId) {
         noticeService.deleteNotice(noticeId);
-        return "删除成功";
+        return R.successOnlyObject("删除成功");
     }
 
     /**
@@ -115,6 +118,31 @@ public class NoticeController {
     public R<String> quickUpdateNotice(@RequestBody NoticeAddReq noticeAddReq) {
         noticeService.quickUpdateNotice(noticeAddReq);
         return R.successOnlyObject("更新成功");
+    }
+
+    /**
+     * 编辑通知-获取通知基本信息
+     */
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:notice:update")
+    @NeedToken
+    @ApiOperation(value = "编辑通知-获取通知基本信息", notes = "")
+    @GetMapping("/view/edit/{id}")
+    public R<NoticeViewResp> viewNotice(@PathVariable("id") String noticeId) {
+        return R.successOnlyObject(noticeService.viewNoticeEdit(noticeId));
+    }
+
+    // 以下为用户端查看的相关接口
+
+    /**
+     * 通知列表
+     *
+     * @return
+     */
+    @NeedToken
+    @ApiOperation(value = "用户端通知列表接口", notes = "")
+    @GetMapping("/list/{urgency}")
+    public R<PageData<NoticeUserResp>> getNoticeList(@PathVariable("urgency") Integer urgency, @RequestParam("pageNum") Integer pageNum, @RequestParam("pageSize") Integer pageSize, String tag, Long deptId) {
+        return R.successOnlyObject(noticeService.getNoticeList(urgency, pageNum, pageSize, tag, deptId));
     }
 
 }

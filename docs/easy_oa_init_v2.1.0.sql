@@ -315,6 +315,8 @@ CREATE TABLE `notice_annex`
     `is_deleted`     int                                                           NOT NULL DEFAULT 0 COMMENT '逻辑删除',
     `create_time`    datetime                                                      NOT NULL,
     `create_user`    bigint                                                        NOT NULL,
+    `file_name`      varchar(500)                                                  NOT NULL COMMENT '附件名',
+
     PRIMARY KEY (`id`) USING BTREE
 ) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci ROW_FORMAT = DYNAMIC;
 

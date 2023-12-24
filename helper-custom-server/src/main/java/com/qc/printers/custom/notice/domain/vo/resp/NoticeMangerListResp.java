@@ -4,6 +4,7 @@ import lombok.Data;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 public class NoticeMangerListResp implements Serializable {
@@ -58,4 +59,9 @@ public class NoticeMangerListResp implements Serializable {
     private Integer version;
 
     private Integer visibility;
+
+    /**
+     * visibility为仅部门可见才存在
+     */
+    private List<Long> deptIds;
 }

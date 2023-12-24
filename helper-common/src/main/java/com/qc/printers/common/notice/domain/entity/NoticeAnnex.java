@@ -18,6 +18,8 @@ public class NoticeAnnex implements Serializable {
 
     private String fileUrl;
 
+    private String fileName;
+
     private Integer downloadCount;
 
     @TableField(fill = FieldFill.INSERT)
