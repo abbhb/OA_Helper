@@ -144,12 +144,24 @@ public class NoticeController {
 
     /**
      * 通知预览接口
+     * 仅包含type为1的通知
      */
     @NeedToken
-    @ApiOperation(value = "通知预览接口", notes = "通知阅读入口")
+    @ApiOperation(value = "通知预览接口1", notes = "通知阅读入口-type:1")
     @GetMapping("/read/{notice_id}")
-    public R<NoticeUserReadResp> getNoticeList(@PathVariable("notice_id") Long noticeId, @ApiParam("预发布时携带预发布的口令即可") String password) {
+    public R<NoticeUserReadResp> readNoticeWithContent(@PathVariable("notice_id") Long noticeId, @ApiParam("预发布时携带预发布的口令即可") String password) {
         return R.successOnlyObject(noticeService.getNotice(noticeId, password));
     }
 
+    /**
+     * 预览记录
+     * 此接口仅作记录已读
+     */
+    @NeedToken
+    @ApiOperation(value = "添加预览记录")
+    @GetMapping("/log/{notice_id}")
+    public R<String> addNoticeReadLog(@PathVariable("notice_id") Long noticeId) {
+        noticeService.addNoticeReadLog(noticeId);
+        return R.success("成功");
+    }
 }

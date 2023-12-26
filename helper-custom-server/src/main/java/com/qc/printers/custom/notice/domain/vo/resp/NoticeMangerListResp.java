@@ -18,6 +18,18 @@ public class NoticeMangerListResp implements Serializable {
 
     private Integer status;
 
+    /**
+     * 类型
+     * 1为内容模式
+     * 2为url模式
+     */
+    private Integer type;
+
+    /**
+     * 正常是不需要的，但是后来加的URL模式需要
+     */
+    private String content;
+
     private Integer amount;
 
     //是否携带了附件

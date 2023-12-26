@@ -92,11 +92,15 @@ public class LogAspect {
                 params = getJsonStrByRequest(request);
             }
             sysLog.setParams(params); // 请求参数
-            R dataResult = (R)result;  //返回值信息
+            R dataResult = (R) result;  //返回值信息
             //需要先判断返回值是不是Map <String, Object>，如果不是會拋異常，需要控制层的接口返回数据格式统一
             //如果嫌返回格式统一太麻烦建议日志保存时去掉操作结果
             sysLog.setType(request.getMethod());
             sysLog.setModel(dataResult.getData().toString());
+            if (dataResult.getData().toString().length() > 100) {
+                sysLog.setModel(dataResult.getData().toString().substring(0, 100) + "......");
+            }
+
             sysLog.setResult(dataResult.getMsg()); //獲取方法返回值中的msg，如果上面的類型錯誤就拿不到msg就會拋異常
             logDao.insert(sysLog);
         } catch (Exception e) {

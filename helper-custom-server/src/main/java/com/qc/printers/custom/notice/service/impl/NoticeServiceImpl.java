@@ -77,8 +77,14 @@ public class NoticeServiceImpl implements NoticeService {
         if (noticeAddReq.getNotice().getUrgency() == null) {
             throw new CustomException("通知紧急程度不能为空");
         }
+        if (StringUtils.isEmpty(noticeAddReq.getNotice().getTag())) {
+            throw new CustomException("通知Tag不能为空");
+        }
         if (noticeAddReq.getNotice().getVisibility() == null) {
             throw new CustomException("可见性参数不能为空");
+        }
+        if (noticeAddReq.getNotice().getType() == null) {
+            throw new CustomException("通知类型不能为空");
         }
         if (noticeAddReq.getNotice().getVisibility().equals(2)) {
             if (noticeAddReq.getDeptIds() == null) {
@@ -86,6 +92,11 @@ public class NoticeServiceImpl implements NoticeService {
             }
             if (noticeAddReq.getDeptIds().size() == 0) {
                 throw new CustomException("通知接收人不能为空");
+            }
+        }
+        if (noticeAddReq.getNotice().getType().equals(2)) {
+            if (StringUtils.isEmpty(noticeAddReq.getNotice().getContent())) {
+                throw new CustomException("通知跳转链接不可为空");
             }
         }
         UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
@@ -96,9 +107,14 @@ public class NoticeServiceImpl implements NoticeService {
         notice.setTitle(noticeAddReq.getNotice().getTitle());
         notice.setUrgency(noticeAddReq.getNotice().getUrgency());
         notice.setStatus(0);
+        notice.setType(noticeAddReq.getNotice().getType());
         notice.setAmount(0);// 默认阅读量为空
         notice.setIsAnnex(0);
+        //默认通知内容添加为空，但要是url模式可能是有内容的
         notice.setContent("");
+        if (noticeAddReq.getNotice().getType().equals(2)) {
+            notice.setContent(noticeAddReq.getNotice().getContent());
+        }
         notice.setType(noticeAddReq.getNotice().getType());
         notice.setVersion(1);
         if (StringUtils.isNotEmpty(noticeAddReq.getNotice().getTag())) {
@@ -164,6 +180,8 @@ public class NoticeServiceImpl implements NoticeService {
                 noticeMangerListResp.setTag(notice.getTag());
                 noticeMangerListResp.setStatus(notice.getStatus());
                 noticeMangerListResp.setId(notice.getId());
+                noticeMangerListResp.setType(notice.getType());
+                noticeMangerListResp.setContent(notice.getContent());
                 noticeMangerListResp.setTitle(notice.getTitle());
                 noticeMangerListResp.setCreateTime(notice.getCreateTime());
                 noticeMangerListResp.setUpdateTime(notice.getUpdateTime());
@@ -250,6 +268,17 @@ public class NoticeServiceImpl implements NoticeService {
                 throw new CustomException("通知接收人不能为空");
             }
         }
+        if (noticeAddReq.getNotice().getType() == null) {
+            throw new CustomException("通知类型不能为空");
+        }
+        if (StringUtils.isEmpty(noticeAddReq.getNotice().getTag())) {
+            throw new CustomException("通知Tag不能为空");
+        }
+        if (noticeAddReq.getNotice().getType().equals(2)) {
+            if (StringUtils.isEmpty(noticeAddReq.getNotice().getContent())) {
+                throw new CustomException("通知跳转链接不可为空");
+            }
+        }
         UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
         if (currentUser == null) {
             throw new CustomException("登录信息错误", Code.DEL_TOKEN);
@@ -262,6 +291,14 @@ public class NoticeServiceImpl implements NoticeService {
             notice.setTag(noticeAddReq.getNotice().getTag());
         }
         notice.setType(noticeAddReq.getNotice().getType());
+        if (noticeAddReq.getNotice().getType().equals(2)) {
+            // 默认快捷更新无法更新内容，但是url模型下此处为URL链接
+            notice.setContent(noticeAddReq.getNotice().getContent());
+            // 删除所有的附件
+            LambdaQueryWrapper<NoticeAnnex> noticeAnnexLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            noticeAnnexLambdaQueryWrapper.eq(NoticeAnnex::getNoticeId, notice.getId());
+            noticeAnnexDao.remove(noticeAnnexLambdaQueryWrapper);
+        }
         // 更新发布状态
         notice.setVisibility(noticeAddReq.getNotice().getVisibility());
         notice.setUpdateUserList(UpdateUserListUtil.getUpdateUserList(notice.getUpdateUserList(), currentUser.getId()));//默认更新用户就是第一个新建的人
@@ -426,7 +463,41 @@ public class NoticeServiceImpl implements NoticeService {
     @Override
     public NoticeUserReadResp getNotice(Long noticeId, String password) {
         Notice notice = noticeDao.getById(noticeId);
+        if (!notice.getType().equals(1)) {
+            throw new CustomException("暂不支持预览该通知!");
+        }
         return noticeReadHandelFactory.getInstance(notice.getStatus()).readNotice(notice, password);
+    }
+
+    @Transactional
+    @Override
+    public void addNoticeReadLog(Long noticeId) {
+        Notice notice = noticeDao.getById(noticeId);
+        if (notice == null) {
+            throw new CustomException("阅读失败");
+        }
+        if (!notice.getStatus().equals(2)) {
+            throw new CustomException("阅读失败");
+        }
+        if (notice.getReleaseTime().isAfter(LocalDateTime.now())) {
+            throw new CustomException("阅读失败");
+        }
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+        if (currentUser == null) {
+            throw new CustomException("无法鉴权,阅读失败");
+        }
+        if (notice.getVisibility().equals(2)) {
+            LambdaQueryWrapper<NoticeDept> noticeDeptLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            noticeDeptLambdaQueryWrapper.eq(NoticeDept::getNoticeId, notice.getId());
+            noticeDeptLambdaQueryWrapper.eq(NoticeDept::getDeptId, currentUser.getDeptId());
+            if (noticeDeptDao.count(noticeDeptLambdaQueryWrapper) < 1) {
+                throw new CustomException("权限不足,阅读失败");
+            }
+        }
+        NoticeUserRead noticeUserRead = new NoticeUserRead();
+        noticeUserRead.setNoticeId(notice.getId());
+        noticeUserRead.setUserId(currentUser.getId());
+        noticeUserReadDao.save(noticeUserRead);
     }
 
 
