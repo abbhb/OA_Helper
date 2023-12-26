@@ -1,4 +1,4 @@
-package com.qc.printers.custom.notice.service.strategy;
+package com.qc.printers.custom.notice.service.strategy.noticeupdate;
 
 import org.springframework.beans.BeansException;
 import org.springframework.context.ApplicationContext;

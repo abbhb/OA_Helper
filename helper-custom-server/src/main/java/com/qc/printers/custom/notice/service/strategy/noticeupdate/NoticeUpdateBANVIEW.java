@@ -1,4 +1,5 @@
-package com.qc.printers.custom.notice.service.strategy;
+package com.qc.printers.custom.notice.service.strategy.noticeupdate;
+
 
 import com.qc.printers.common.common.Code;
 import com.qc.printers.common.common.CustomException;
@@ -8,16 +9,16 @@ import com.qc.printers.common.notice.dao.NoticeDao;
 import com.qc.printers.common.notice.domain.entity.Notice;
 import com.qc.printers.common.notice.service.INoticeAnnexService;
 import com.qc.printers.common.user.domain.dto.UserInfo;
-import com.qc.printers.custom.notice.domain.enums.NoticeUpdateEnum;
+import com.qc.printers.custom.notice.domain.enums.NoticeStatusEnum;
 import com.qc.printers.custom.notice.domain.vo.req.NoticeAddReq;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 @Slf4j
-public class NoticeUpdatePRERELEASE extends NoticeUpdateStatusHandel {
-
+public class NoticeUpdateBANVIEW extends NoticeUpdateStatusHandel {
     @Autowired
     private INoticeAnnexService iNoticeAnnexService;
 
@@ -28,18 +29,11 @@ public class NoticeUpdatePRERELEASE extends NoticeUpdateStatusHandel {
     private NoticeAnnexDao noticeAnnexDao;
 
     @Override
-    NoticeUpdateEnum getNoticeUpdateEnum() {
-        return NoticeUpdateEnum.PRERELEASE;
+    NoticeStatusEnum getNoticeUpdateEnum() {
+        return NoticeStatusEnum.BANVIEW;
     }
 
-    /**
-     * 预发布
-     * 直接改状态为预发布，然后前端成功后，直接通过id去获取预发布地址，写两个接口，一个获取预发布地址，当id为预发布时生成对应查看接口的地址，查看接口可以配合前端，新建个预发布预览组件，这样更容易拓展
-     * 前端只需要在预发布成功时主动请求预发布地址获取就行
-     *
-     * @param noticeBasicReq
-     * @return
-     */
+    @Transactional
     @Override
     public String updateNotice(NoticeAddReq noticeBasicReq) {
         if (noticeBasicReq == null) {
@@ -59,10 +53,8 @@ public class NoticeUpdatePRERELEASE extends NoticeUpdateStatusHandel {
         if (byId == null) {
             throw new CustomException("通知不存在");
         }
-        byId.setStatus(1);
-
+        byId.setStatus(3);
         noticeDao.updateById(byId);
-        return "预发布成功,如预览链接未生成请手动！";
-
+        return "禁止查看成功";
     }
 }

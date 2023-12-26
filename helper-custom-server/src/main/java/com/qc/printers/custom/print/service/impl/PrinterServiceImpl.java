@@ -158,7 +158,7 @@ public class PrinterServiceImpl implements PrinterService {
     }
 
     @Override
-    public R<PageData<PrinterResult>> listAllPrinter(Integer pageNum, Integer pageSize, String name, String user, Integer onlyPrinted, LocalDateTime startDate, LocalDateTime endDate) {
+    public R<PageData<PrinterResult>> listAllPrinter(Integer pageNum, Integer pageSize, String name, Integer onlyPrinted, LocalDateTime startDate, LocalDateTime endDate, List<Long> onlyUser) {
         if (pageNum == null) {
             return R.error("传参错误");
         }
@@ -170,8 +170,8 @@ public class PrinterServiceImpl implements PrinterService {
         LambdaQueryWrapper<Printer> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.orderByDesc(Printer::getCreateTime);
         lambdaQueryWrapper.like(!StringUtils.isEmpty(name), Printer::getName, name);
-        lambdaQueryWrapper.eq(!StringUtils.isEmpty(user), Printer::getCreateUser, user);
         lambdaQueryWrapper.eq(onlyPrinted.equals(1), Printer::getIsPrint, onlyPrinted);
+        lambdaQueryWrapper.in(onlyUser != null && onlyUser.size() > 0, Printer::getCreateUser, onlyUser);
         //创建时间大于startTime
         lambdaQueryWrapper.ge(startDate != null, Printer::getCreateTime, startDate);
         lambdaQueryWrapper.le(endDate != null, Printer::getCreateTime, endDate);

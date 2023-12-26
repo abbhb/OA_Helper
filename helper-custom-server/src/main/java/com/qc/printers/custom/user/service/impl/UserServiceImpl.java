@@ -1033,5 +1033,15 @@ public class UserServiceImpl implements UserService {
         return loginRes1;
     }
 
+    @Override
+    public UserSelectListResp userSelectList(String name) {
+        LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.like(User::getName, name);
+        List<User> list = userDao.list(lambdaQueryWrapper);
+        UserSelectListResp userSelectListResp = new UserSelectListResp();
+        userSelectListResp.setOptions(list);
+        return userSelectListResp;
+    }
+
 
 }
