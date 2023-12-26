@@ -1,11 +1,11 @@
-package com.qc.printers.custom.notice.service.strategy;
+package com.qc.printers.custom.notice.service.strategy.noticeupdate;
 
 import com.qc.printers.common.common.utils.AssertUtil;
 import com.qc.printers.common.notice.dao.NoticeAnnexDao;
 import com.qc.printers.common.notice.dao.NoticeDao;
 import com.qc.printers.common.notice.domain.entity.Notice;
 import com.qc.printers.common.notice.service.INoticeAnnexService;
-import com.qc.printers.custom.notice.domain.enums.NoticeUpdateEnum;
+import com.qc.printers.custom.notice.domain.enums.NoticeStatusEnum;
 import com.qc.printers.custom.notice.domain.vo.req.NoticeAddReq;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -28,8 +28,8 @@ public class NoticeUpdateDRAFT extends NoticeUpdateStatusHandel {
     private NoticeAnnexDao noticeAnnexDao;
 
     @Override
-    NoticeUpdateEnum getNoticeUpdateEnum() {
-        return NoticeUpdateEnum.DRAFT;
+    NoticeStatusEnum getNoticeUpdateEnum() {
+        return NoticeStatusEnum.DRAFT;
     }
 
     @Transactional

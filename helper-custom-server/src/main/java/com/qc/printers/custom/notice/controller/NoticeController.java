@@ -8,10 +8,7 @@ import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.notice.domain.entity.Notice;
 import com.qc.printers.custom.notice.domain.vo.req.NoticeAddReq;
 import com.qc.printers.custom.notice.domain.vo.req.NoticeUpdateReq;
-import com.qc.printers.custom.notice.domain.vo.resp.NoticeAddResp;
-import com.qc.printers.custom.notice.domain.vo.resp.NoticeMangerListResp;
-import com.qc.printers.custom.notice.domain.vo.resp.NoticeUserResp;
-import com.qc.printers.custom.notice.domain.vo.resp.NoticeViewResp;
+import com.qc.printers.custom.notice.domain.vo.resp.*;
 import com.qc.printers.custom.notice.service.NoticeService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -143,6 +140,16 @@ public class NoticeController {
     @GetMapping("/list/{urgency}")
     public R<PageData<NoticeUserResp>> getNoticeList(@PathVariable("urgency") Integer urgency, @RequestParam("pageNum") Integer pageNum, @RequestParam("pageSize") Integer pageSize, String tag, Long deptId) {
         return R.successOnlyObject(noticeService.getNoticeList(urgency, pageNum, pageSize, tag, deptId));
+    }
+
+    /**
+     * 通知预览接口
+     */
+    @NeedToken
+    @ApiOperation(value = "通知预览接口", notes = "通知阅读入口")
+    @GetMapping("/read/{notice_id}")
+    public R<NoticeUserReadResp> getNoticeList(@PathVariable("notice_id") Long noticeId, @ApiParam("预发布时携带预发布的口令即可") String password) {
+        return R.successOnlyObject(noticeService.getNotice(noticeId, password));
     }
 
 }

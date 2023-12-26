@@ -19,12 +19,10 @@ import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.custom.notice.domain.vo.req.NoticeAddReq;
 import com.qc.printers.custom.notice.domain.vo.req.NoticeUpdateReq;
-import com.qc.printers.custom.notice.domain.vo.resp.NoticeAddResp;
-import com.qc.printers.custom.notice.domain.vo.resp.NoticeMangerListResp;
-import com.qc.printers.custom.notice.domain.vo.resp.NoticeUserResp;
-import com.qc.printers.custom.notice.domain.vo.resp.NoticeViewResp;
+import com.qc.printers.custom.notice.domain.vo.resp.*;
 import com.qc.printers.custom.notice.service.NoticeService;
-import com.qc.printers.custom.notice.service.strategy.NoticeUpdateHandelFactory;
+import com.qc.printers.custom.notice.service.strategy.noticeread.NoticeReadHandelFactory;
+import com.qc.printers.custom.notice.service.strategy.noticeupdate.NoticeUpdateHandelFactory;
 import com.qc.printers.custom.notice.utils.UpdateUserListUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -60,6 +58,9 @@ public class NoticeServiceImpl implements NoticeService {
     private NoticeUserReadDao noticeUserReadDao;
     @Autowired
     private NoticeUpdateHandelFactory noticeUpdateHandelFactory;
+
+    @Autowired
+    private NoticeReadHandelFactory noticeReadHandelFactory;
 
     @Transactional
     @Override
@@ -98,6 +99,7 @@ public class NoticeServiceImpl implements NoticeService {
         notice.setAmount(0);// 默认阅读量为空
         notice.setIsAnnex(0);
         notice.setContent("");
+        notice.setType(noticeAddReq.getNotice().getType());
         notice.setVersion(1);
         if (StringUtils.isNotEmpty(noticeAddReq.getNotice().getTag())) {
             notice.setTag(noticeAddReq.getNotice().getTag());
@@ -259,6 +261,7 @@ public class NoticeServiceImpl implements NoticeService {
         if (StringUtils.isNotEmpty(noticeAddReq.getNotice().getTag())) {
             notice.setTag(noticeAddReq.getNotice().getTag());
         }
+        notice.setType(noticeAddReq.getNotice().getType());
         // 更新发布状态
         notice.setVisibility(noticeAddReq.getNotice().getVisibility());
         notice.setUpdateUserList(UpdateUserListUtil.getUpdateUserList(notice.getUpdateUserList(), currentUser.getId()));//默认更新用户就是第一个新建的人
@@ -410,6 +413,20 @@ public class NoticeServiceImpl implements NoticeService {
         pageData.setCountId(page.getCountId());
         pageData.setRecords(noticeUserRespList);
         return pageData;
+    }
+
+    /**
+     * 查看发布的或者预发布的通知
+     *
+     * @param noticeId 查看的通知id
+     * @param password 仅在查看预发布的通知需要该字段
+     * @return
+     */
+    @Transactional
+    @Override
+    public NoticeUserReadResp getNotice(Long noticeId, String password) {
+        Notice notice = noticeDao.getById(noticeId);
+        return noticeReadHandelFactory.getInstance(notice.getStatus()).readNotice(notice, password);
     }
 
 

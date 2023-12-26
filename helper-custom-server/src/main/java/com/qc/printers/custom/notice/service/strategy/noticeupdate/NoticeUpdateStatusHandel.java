@@ -1,11 +1,11 @@
-package com.qc.printers.custom.notice.service.strategy;
+package com.qc.printers.custom.notice.service.strategy.noticeupdate;
 
 import com.qc.printers.common.notice.dao.NoticeAnnexDao;
 import com.qc.printers.common.notice.dao.NoticeDao;
 import com.qc.printers.common.notice.dao.NoticeDeptDao;
 import com.qc.printers.common.notice.service.INoticeAnnexService;
 import com.qc.printers.common.user.service.ISysDeptService;
-import com.qc.printers.custom.notice.domain.enums.NoticeUpdateEnum;
+import com.qc.printers.custom.notice.domain.enums.NoticeStatusEnum;
 import com.qc.printers.custom.notice.domain.vo.req.NoticeAddReq;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -37,7 +37,7 @@ public abstract class NoticeUpdateStatusHandel {
     /**
      * 数据的类型
      */
-    abstract NoticeUpdateEnum getNoticeUpdateEnum();
+    abstract NoticeStatusEnum getNoticeUpdateEnum();
 
     /**
      * 生成返回数据

@@ -10,10 +10,7 @@ import com.qc.printers.custom.user.domain.dto.LoginDTO;
 import com.qc.printers.custom.user.domain.vo.request.LoginByEmailCodeReq;
 import com.qc.printers.custom.user.domain.vo.request.PasswordByOneTimeCodeReq;
 import com.qc.printers.custom.user.domain.vo.request.PasswordR;
-import com.qc.printers.custom.user.domain.vo.response.ForgetPasswordResp;
-import com.qc.printers.custom.user.domain.vo.response.LoginRes;
-import com.qc.printers.custom.user.domain.vo.response.RegisterResp;
-import com.qc.printers.custom.user.domain.vo.response.UserResult;
+import com.qc.printers.custom.user.domain.vo.response.*;
 
 import java.util.List;
 
@@ -72,4 +69,5 @@ public interface UserService {
 
     LoginRes loginByEmailCode(LoginByEmailCodeReq loginByEmailCodeReq);
 
+    UserSelectListResp userSelectList(String name);
 }

@@ -11,6 +11,7 @@ import com.qc.printers.common.print.domain.entity.PrintDocumentTypeStatistic;
 import com.qc.printers.common.print.domain.vo.CountTop10VO;
 import com.qc.printers.custom.print.domain.vo.PrinterResult;
 import com.qc.printers.custom.print.domain.vo.request.PrintFileReq;
+import com.qc.printers.custom.print.domain.vo.request.QueryHistoryPrintsReq;
 import com.qc.printers.custom.print.domain.vo.response.*;
 import com.qc.printers.custom.print.service.PrinterService;
 import io.swagger.annotations.Api;
@@ -18,11 +19,9 @@ import io.swagger.annotations.ApiOperation;
 import io.swagger.annotations.ApiParam;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController//@ResponseBody+@Controller
@@ -63,11 +62,11 @@ public class PrintController {
      * @param pageSize 分页之页面最大
      * @return
      */
-    @GetMapping("/getAllHistoryPrints")
+    @PostMapping("/getAllHistoryPrints/{page_num}/{page_size}")
     @NeedToken
     @PermissionCheck(role = {"superadmin"}, permission = "sys:print:alldata")
     @ApiOperation(value = "获取历史打印记录", notes = "所有人历史记录：需要有管理员权限")
-    public R<PageData<PrinterResult>> getAllHistoryPrints(@RequestParam("page_num") Integer pageNum, @RequestParam("page_size") Integer pageSize, Integer onlyPrinted, String name, @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime startDate, @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endDate, String user) {
+    public R<PageData<PrinterResult>> getAllHistoryPrints(@PathVariable("page_num") Integer pageNum, @PathVariable("page_size") Integer pageSize, @RequestBody QueryHistoryPrintsReq data) {
         if (pageNum == null) {
             return R.error("传参错误");
         }
@@ -78,7 +77,7 @@ public class PrintController {
             return R.error("传参错误");
         }
         //默认只展示时打印了的历史文件
-        return printerService.listAllPrinter(pageNum, pageSize, name, user, onlyPrinted == null ? 1 : onlyPrinted, startDate, endDate);
+        return printerService.listAllPrinter(pageNum, pageSize, data.getName(), data.getOnlyPrinted() == null ? 1 : data.getOnlyPrinted(), data.getStartDate(), data.getEndDate(), data.getOnlyUser());
     }
     
 
@@ -101,16 +100,14 @@ public class PrintController {
      * 需要分页
      * 将管理员接口和用户接口分离 方便接入权限过滤器
      *
-     * @param name     模糊查询 根据文件名筛选(user：id不为空就得带上user 的id)
-     * @param date     传回日期范围筛选 为后期优化预留
      * @param pageNum  分页之当前页
      * @param pageSize 分页之页面最大
      * @return
      */
-    @GetMapping("/getMyHistoryPrints")
+    @PostMapping("/getMyHistoryPrints/{page_num}/{page_size}")
     @ApiOperation(value = "获取本人历史打印记录", notes = "因为没有token过不了needtoken，所以没必要再次校验token")
     @NeedToken
-    public R<PageData<PrinterResult>> getMyHistoryPrints(@RequestParam("page_num") Integer pageNum, @RequestParam("page_size") Integer pageSize, @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime startDate, @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") LocalDateTime endDate, Integer onlyPrinted, String name, String date) {
+    public R<PageData<PrinterResult>> getMyHistoryPrints(@PathVariable("page_num") Integer pageNum, @PathVariable("page_size") Integer pageSize, @RequestBody QueryHistoryPrintsReq data) {
         if (pageNum == null) {
             return R.error("传参错误");
         }
@@ -120,7 +117,7 @@ public class PrintController {
         if (pageSize > 100) {
             return R.error("传参错误");
         }
-        return printerService.listPrinter(pageNum, pageSize, name, onlyPrinted == null ? 1 : onlyPrinted, startDate, endDate);
+        return printerService.listPrinter(pageNum, pageSize, data.getName(), data.getOnlyPrinted() == null ? 1 : data.getOnlyPrinted(), data.getStartDate(), data.getEndDate());
     }
 
     //获取当日打印数

@@ -34,6 +34,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.validation.Valid;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -327,6 +328,21 @@ public class UserController {
     @ApiOperation("用户聚合信息-返回的代表需要刷新的")
     public R<List<SummeryInfoDTO>> getSummeryUserInfo(@Valid @RequestBody SummeryInfoReq req) {
         return R.success(userService.getSummeryUserInfo(req));
+    }
+
+    @NeedToken
+    @FrequencyControl(time = 2, count = 1, target = FrequencyControl.Target.UID)
+    @FrequencyControl(time = 60, count = 30, target = FrequencyControl.Target.UID)
+    @FrequencyControl(time = 180, count = 60, target = FrequencyControl.Target.UID)
+    @ApiOperation(value = "筛选用户列表", notes = "")
+    @GetMapping("/user_select_list")
+    public R<UserSelectListResp> userSelectList(String name) {
+        if (StringUtils.isEmpty(name)) {
+            UserSelectListResp userSelectListResp = new UserSelectListResp();
+            userSelectListResp.setOptions(new ArrayList<>());
+            return R.successOnlyObject(userSelectListResp);
+        }
+        return R.successOnlyObject(userService.userSelectList(name));
     }
 
 }

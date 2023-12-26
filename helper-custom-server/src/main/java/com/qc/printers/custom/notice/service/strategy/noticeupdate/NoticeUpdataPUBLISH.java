@@ -1,4 +1,4 @@
-package com.qc.printers.custom.notice.service.strategy;
+package com.qc.printers.custom.notice.service.strategy.noticeupdate;
 
 import com.qc.printers.common.common.Code;
 import com.qc.printers.common.common.CustomException;
@@ -10,7 +10,7 @@ import com.qc.printers.common.notice.domain.entity.Notice;
 import com.qc.printers.common.notice.service.INoticeAnnexService;
 import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.service.ISysDeptService;
-import com.qc.printers.custom.notice.domain.enums.NoticeUpdateEnum;
+import com.qc.printers.custom.notice.domain.enums.NoticeStatusEnum;
 import com.qc.printers.custom.notice.domain.vo.req.NoticeAddReq;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,8 +38,8 @@ public class NoticeUpdataPUBLISH extends NoticeUpdateStatusHandel {
     private ISysDeptService iSysDeptService;
 
     @Override
-    NoticeUpdateEnum getNoticeUpdateEnum() {
-        return NoticeUpdateEnum.PUBLISH;
+    NoticeStatusEnum getNoticeUpdateEnum() {
+        return NoticeStatusEnum.PUBLISH;
     }
 
     @Transactional
