@@ -35,6 +35,12 @@ public class NoticeReadPUBLISH extends NoticeReadHandel {
     @Transactional
     @Override
     public void readSuccessLog(Notice notice) {
+        /**
+         *  此处直接记录而不是用
+         *  @see com.qc.printers.custom.notice.service.NoticeService
+         *  里的addLog方法是因为这里前面已经判断了可以阅读，肯定符合条件的，没必要重复校验
+         */
+
         NoticeUserRead noticeUserRead = new NoticeUserRead();
         noticeUserRead.setNoticeId(notice.getId());
         UserInfo currentUser = ThreadLocalUtil.getCurrentUser();

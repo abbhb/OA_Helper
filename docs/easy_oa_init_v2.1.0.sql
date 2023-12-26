@@ -271,7 +271,7 @@ CREATE TABLE `message_mark`
 -- Table structure for notice
 -- ----------------------------
 DROP TABLE IF EXISTS `notice`;
-CREATE TABLE `notice`
+CREATE TABLE `easy_oa`.`notice`
 (
     `id`                bigint                                                         NOT NULL,
     `title`             varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_0900_ai_ci  NOT NULL COMMENT '通知标题',

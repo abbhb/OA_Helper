@@ -21,4 +21,6 @@ public interface NoticeService {
     PageData<NoticeUserResp> getNoticeList(Integer urgency, Integer pageNum, Integer pageSize, String tag, Long deptId);
 
     NoticeUserReadResp getNotice(Long noticeId, String password);
+
+    void addNoticeReadLog(Long noticeId);
 }

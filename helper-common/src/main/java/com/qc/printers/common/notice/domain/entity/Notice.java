@@ -16,12 +16,15 @@ public class Notice implements Serializable {
 
     private String title;
 
+    /**
+     * 当type为2时此处就是url了,type为1为富文本
+     */
     private String content;
 
     private Integer status;
 
     /**
-     * 1为正常的content模式，2为外联模式
+     * 1为正常的content模式，2为外链模式
      */
     private Integer type;
 
