@@ -83,7 +83,7 @@ public class PrintController {
 
     @GetMapping("/getUserPrintTopList")
     @NeedToken
-    @ApiOperation(value = "获取打印榜前10名用户", notes = "会排序好返回")
+    @ApiOperation(value = "获取打印榜前20名用户", notes = "会排序好返回")
     public R<List<CountTop10VO>> getUserPrintTopList(@ApiParam("type:1为总，2为每天") Integer type) {
         return printerService.getUserPrintTopList(type);
     }

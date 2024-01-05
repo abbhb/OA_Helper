@@ -498,6 +498,11 @@ public class NoticeServiceImpl implements NoticeService {
         noticeUserRead.setNoticeId(notice.getId());
         noticeUserRead.setUserId(currentUser.getId());
         noticeUserReadDao.save(noticeUserRead);
+
+        // 还需对通知上的冗余字段进行递增
+        Notice notice1 = noticeDao.getById(notice.getId());
+        notice1.setAmount(notice1.getAmount() + 1);
+        noticeDao.updateById(notice1);
     }
 
 
