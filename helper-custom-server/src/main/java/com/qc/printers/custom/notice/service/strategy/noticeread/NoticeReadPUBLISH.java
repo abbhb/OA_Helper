@@ -3,6 +3,7 @@ package com.qc.printers.custom.notice.service.strategy.noticeread;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
+import com.qc.printers.common.notice.dao.NoticeDao;
 import com.qc.printers.common.notice.dao.NoticeDeptDao;
 import com.qc.printers.common.notice.dao.NoticeUserReadDao;
 import com.qc.printers.common.notice.domain.entity.Notice;
@@ -26,6 +27,8 @@ public class NoticeReadPUBLISH extends NoticeReadHandel {
 
     @Autowired
     private NoticeUserReadDao noticeUserReadDao;
+    @Autowired
+    private NoticeDao noticeDao;
 
     @Override
     NoticeStatusEnum getNoticeReadEnum() {
@@ -49,6 +52,11 @@ public class NoticeReadPUBLISH extends NoticeReadHandel {
         }
         noticeUserRead.setUserId(currentUser.getId());
         noticeUserReadDao.save(noticeUserRead);
+
+        // 还需对通知上的冗余字段进行递增
+        Notice notice1 = noticeDao.getById(notice.getId());
+        notice1.setAmount(notice1.getAmount() + 1);
+        noticeDao.updateById(notice1);
     }
 
     @Override

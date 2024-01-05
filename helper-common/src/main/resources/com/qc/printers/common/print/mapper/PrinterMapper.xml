@@ -16,7 +16,7 @@
               WHERE printer.create_user = user.id
                 AND printer.is_print = 1
               GROUP BY printer.create_user
-              ORDER BY total DESC) tables LIMIT 10
+              ORDER BY total DESC) tables LIMIT 20
     </select>
     <!-- public List<CountTop10VO> getCountTop10EveryDay();-->
     <select id="getCountTop10EveryDay" resultType="com.qc.printers.common.print.domain.vo.CountTop10VO">
