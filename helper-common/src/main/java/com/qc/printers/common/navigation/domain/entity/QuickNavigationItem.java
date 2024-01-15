@@ -10,9 +10,6 @@ public class QuickNavigationItem {
     private Long id;
     private String name;
     private String path;
-
-    //权限存入数据库必须改逗号分隔格式
-    private String permission;
     private String image;
     private String introduction;
     private Long categorizeId;

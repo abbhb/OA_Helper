@@ -7,5 +7,5 @@ import com.qc.printers.custom.navigation.domain.vo.QuickNavigationResult;
 import java.util.List;
 
 public interface QuickNavigationService {
-    R<List<QuickNavigationResult>> list(Long userId);
+    R<List<QuickNavigationResult>> list();
 }
