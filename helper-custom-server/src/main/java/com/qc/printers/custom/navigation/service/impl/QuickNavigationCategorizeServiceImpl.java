@@ -1,16 +1,18 @@
 package com.qc.printers.custom.navigation.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.common.domain.vo.selectOptionsResult;
+import com.qc.printers.common.navigation.dao.QuickNavigationDeptDao;
 import com.qc.printers.common.navigation.domain.entity.QuickNavigationCategorize;
+import com.qc.printers.common.navigation.domain.entity.QuickNavigationDept;
 import com.qc.printers.common.navigation.service.IQuickNavigationCategorizeService;
 import com.qc.printers.common.navigation.service.IQuickNavigationItemService;
 import com.qc.printers.custom.navigation.domain.vo.QuickNavigationCategorizeResult;
+import com.qc.printers.custom.navigation.domain.vo.req.QuickNavigationCategorizeUpdateReq;
 import com.qc.printers.custom.navigation.service.QuickNavigationCategorizeService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -29,6 +31,9 @@ public class QuickNavigationCategorizeServiceImpl implements QuickNavigationCate
     private IQuickNavigationCategorizeService iQuickNavigationCategorizeService;
     @Autowired
     private IQuickNavigationItemService iQuickNavigationItemService;
+    @Autowired
+    private QuickNavigationDeptDao quickNavigationDeptDao;
+
 
     /**
      * 后期通过注解controller校验权限
@@ -72,19 +77,39 @@ public class QuickNavigationCategorizeServiceImpl implements QuickNavigationCate
 
     }
 
+    @Transactional
     @Override
-    public R<String> updataForQuickNavigationCategorize(QuickNavigationCategorize quickNavigation) {
-        if (StringUtils.isEmpty(quickNavigation.getName())){
+    public R<String> updataForQuickNavigationCategorize(QuickNavigationCategorizeUpdateReq quickNavigation) {
+        if (StringUtils.isEmpty(quickNavigation.getQuickNavigationCategorize().getName())) {
             return R.error("更新失败");
         }
-        if (quickNavigation.getId()==null){
+        if (quickNavigation.getQuickNavigationCategorize().getId() == null) {
             return R.error("更新失败");
         }
-        LambdaUpdateWrapper<QuickNavigationCategorize> quickNavigationCategorizeLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
-        quickNavigationCategorizeLambdaUpdateWrapper.set(QuickNavigationCategorize::getName,quickNavigation.getName());
-        quickNavigationCategorizeLambdaUpdateWrapper.eq(QuickNavigationCategorize::getId,quickNavigation.getId());
-        boolean update = iQuickNavigationCategorizeService.update(quickNavigationCategorizeLambdaUpdateWrapper);
-        if (update){
+        QuickNavigationCategorize quickNavigationCategorize = iQuickNavigationCategorizeService.getById(quickNavigation.getQuickNavigationCategorize().getId());
+        quickNavigationCategorize.setName(quickNavigation.getQuickNavigationCategorize().getName());
+        quickNavigationCategorize.setVisibility(quickNavigation.getQuickNavigationCategorize().getVisibility());
+        boolean update = iQuickNavigationCategorizeService.updateById(quickNavigationCategorize);
+
+        LambdaQueryWrapper<QuickNavigationDept> quickNavigationDeptLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        quickNavigationDeptLambdaQueryWrapper.eq(QuickNavigationDept::getQuickNavCategorizeId, quickNavigationCategorize.getId());
+
+        if (quickNavigation.getQuickNavigationCategorize().getVisibility().equals(1)) {
+            // 仅部门可见
+            int count = quickNavigationDeptDao.count(quickNavigationDeptLambdaQueryWrapper);
+            if (count > 0) {
+                // 先删除当前分类的绑定
+                quickNavigationDeptDao.remove(quickNavigationDeptLambdaQueryWrapper);
+            }
+            // 添加当前绑定
+            for (int i = 0; i < quickNavigation.getVisDeptIds().size(); i++) {
+                QuickNavigationDept quickNavigationDept = new QuickNavigationDept();
+                quickNavigationDept.setQuickNavCategorizeId(quickNavigationCategorize.getId());
+                quickNavigationDept.setDeptId(quickNavigation.getVisDeptIds().get(i));
+                quickNavigationDeptDao.save(quickNavigationDept);
+            }
+        }
+        if (update) {
             return R.success("更新成功");
         }
         return R.error("更新失败");
@@ -95,6 +120,7 @@ public class QuickNavigationCategorizeServiceImpl implements QuickNavigationCate
      * @param id
      * @return
      */
+    @Transactional
     @Override
     public R<String> deleteNavigationCategorize(String id) {
         if (StringUtils.isEmpty(id)){
@@ -102,34 +128,38 @@ public class QuickNavigationCategorizeServiceImpl implements QuickNavigationCate
         }
         if (id.contains(",")){
             String[] split = id.split(",");
-            for (String s:
+            for (String s :
                     split) {
-
-                if (iQuickNavigationItemService.hasId(Long.valueOf(s))) {
-                    return R.error("该分类绑定了item,请先删除这些item");
-                }
-                LambdaQueryWrapper<QuickNavigationCategorize> lambdaUpdateWrapper = new LambdaQueryWrapper<>();
-                lambdaUpdateWrapper.eq(QuickNavigationCategorize::getId, Long.valueOf(s));
-                iQuickNavigationCategorizeService.remove(lambdaUpdateWrapper);
+                removeNavigationCategorizeOne(Long.valueOf(id));
             }
-        }else {
-
-            if (iQuickNavigationItemService.hasId(Long.valueOf(id))) {
-                return R.error("该分类绑定了item,请先删除这些item");
-            }
-            LambdaQueryWrapper<QuickNavigationCategorize> lambdaUpdateWrapper = new LambdaQueryWrapper<>();
-            lambdaUpdateWrapper.eq(QuickNavigationCategorize::getId, Long.valueOf(id));
-            iQuickNavigationCategorizeService.remove(lambdaUpdateWrapper);
+        } else {
+            removeNavigationCategorizeOne(Long.valueOf(id));
         }
-
         return R.success("删除成功");
+    }
+
+    @Transactional
+    public void removeNavigationCategorizeOne(Long id) {
+        if (iQuickNavigationItemService.hasId(id)) {
+            throw new CustomException("该分类绑定了item,请先删除这些item");
+        }
+        LambdaQueryWrapper<QuickNavigationCategorize> lambdaUpdateWrapper = new LambdaQueryWrapper<>();
+        lambdaUpdateWrapper.eq(QuickNavigationCategorize::getId, Long.valueOf(id));
+        iQuickNavigationCategorizeService.remove(lambdaUpdateWrapper);
+        LambdaQueryWrapper<QuickNavigationDept> quickNavigationDeptLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        quickNavigationDeptLambdaQueryWrapper.eq(QuickNavigationDept::getQuickNavCategorizeId, id);
+        int count = quickNavigationDeptDao.count(quickNavigationDeptLambdaQueryWrapper);
+        if (count > 0) {
+            // 删除废弃信息
+            quickNavigationDeptDao.remove(quickNavigationDeptLambdaQueryWrapper);
+        }
     }
 
     @Override
     public R<List<selectOptionsResult>> getCategorizeSelectOptionsList() {
         List<QuickNavigationCategorize> list = iQuickNavigationCategorizeService.list();
         List<selectOptionsResult> selectOptionsResults = new ArrayList<>();
-        for (QuickNavigationCategorize q:
+        for (QuickNavigationCategorize q :
                 list) {
             selectOptionsResult selectOptionsResult = new selectOptionsResult();
             selectOptionsResult.setLabel(q.getName());
@@ -141,14 +171,32 @@ public class QuickNavigationCategorizeServiceImpl implements QuickNavigationCate
 
     @Transactional
     @Override
-    public R<String> createNavCategorize(QuickNavigationCategorize quickNavigationCategorize) {
-        if (StringUtils.isEmpty(quickNavigationCategorize.getName())){
+    public R<String> createNavCategorize(QuickNavigationCategorizeUpdateReq quickNavigationCategorize) {
+        if (StringUtils.isEmpty(quickNavigationCategorize.getQuickNavigationCategorize().getName())) {
             throw new CustomException("必参缺失");
         }
-        quickNavigationCategorize.setId(null);
-        quickNavigationCategorize.setIsDeleted(null);
-        boolean save = iQuickNavigationCategorizeService.save(quickNavigationCategorize);
-        if (save){
+        QuickNavigationCategorize quickNavigationCategorize1 = quickNavigationCategorize.getQuickNavigationCategorize();
+        quickNavigationCategorize1.setId(null);
+        quickNavigationCategorize1.setIsDeleted(null);
+        boolean save = iQuickNavigationCategorizeService.save(quickNavigationCategorize1);
+        LambdaQueryWrapper<QuickNavigationDept> quickNavigationDeptLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        quickNavigationDeptLambdaQueryWrapper.eq(QuickNavigationDept::getQuickNavCategorizeId, quickNavigationCategorize1.getId());
+        if (quickNavigationCategorize.getQuickNavigationCategorize().getVisibility().equals(1)) {
+            // 仅部门可见
+            int count = quickNavigationDeptDao.count(quickNavigationDeptLambdaQueryWrapper);
+            if (count > 0) {
+                // 先删除当前分类的绑定
+                quickNavigationDeptDao.remove(quickNavigationDeptLambdaQueryWrapper);
+            }
+            // 添加当前绑定
+            for (int i = 0; i < quickNavigationCategorize.getVisDeptIds().size(); i++) {
+                QuickNavigationDept quickNavigationDept = new QuickNavigationDept();
+                quickNavigationDept.setQuickNavCategorizeId(quickNavigationCategorize1.getId());
+                quickNavigationDept.setDeptId(quickNavigationCategorize.getVisDeptIds().get(i));
+                quickNavigationDeptDao.save(quickNavigationDept);
+            }
+        }
+        if (save) {
             return R.success("成功");
         }
         return R.error("失败");

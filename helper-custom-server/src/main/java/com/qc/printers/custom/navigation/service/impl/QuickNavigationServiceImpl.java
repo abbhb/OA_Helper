@@ -31,14 +31,12 @@ public class QuickNavigationServiceImpl implements QuickNavigationService {
     @Autowired
     private IQuickNavigationItemService iQuickNavigationCategorizeItemService;
 
+
     @Override
-    public R<List<QuickNavigationResult>> list(Long userId) {
+    public R<List<QuickNavigationResult>> list() {
         UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
         if (currentUser == null) {
             return R.error("异常1");
-        }
-        if (userId == null) {
-            return R.error("异常");
         }
         List<QuickNavigationCategorize> quickNavigationCategorizes = iQuickNavigationCategorizeService.list();
         List<QuickNavigationItem> quickNavigationItems = iQuickNavigationCategorizeItemService.list();
@@ -72,20 +70,6 @@ public class QuickNavigationServiceImpl implements QuickNavigationService {
                     throw new CustomException("运行异常");
                 }
                 quickNavigationItemResult.setCategorizeName(quickNavigationCategorizeServiceById.getName());
-                String permission = quickNavigationItem.getPermission();
-                if (permission.contains(",")){
-                    List<Integer> integerList = new ArrayList<>();
-                    String[] split = permission.split(",");
-                    for (String s:
-                         split) {
-                        integerList.add(Integer.valueOf(s));
-                    }
-                    quickNavigationItemResult.setPermission(integerList);
-                }else {
-                    List<Integer> integerList = new ArrayList<>();
-                    integerList.add(Integer.valueOf(permission));
-                    quickNavigationItemResult.setPermission(integerList);
-                }
                 quickNavigationItemResults.add(quickNavigationItemResult);
             }
             quickNavigationResult.setItem(quickNavigationItemResults);

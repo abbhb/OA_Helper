@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.domain.entity.PageData;
@@ -68,13 +67,6 @@ public class QuickNavigationItemServiceImpl extends ServiceImpl<QuickNavigationI
             quickNavigationItemResult.setImage(quickNavigationItem.getImage());
             quickNavigationItemResult.setType(quickNavigationItem.getType());
             quickNavigationItemResult.setContent(quickNavigationItem.getContent());
-            String[] split = quickNavigationItem.getPermission().split(",");
-            List<Integer> list = new ArrayList<>();
-            for (String s:
-                    split) {
-                list.add(Integer.valueOf(s));
-            }
-            quickNavigationItemResult.setPermission(list);
             quickNavigationItemResult.setCategorizeId(String.valueOf(quickNavigationItem.getCategorizeId()));
 
 
@@ -108,9 +100,6 @@ public class QuickNavigationItemServiceImpl extends ServiceImpl<QuickNavigationI
         if(quickNavigationItem.getCategorizeId()==null){
             throw new CustomException("必参缺少");
         }
-        if(StringUtils.isEmpty(quickNavigationItem.getPermission())){
-            throw new CustomException("必参缺少");
-        }
         if (quickNavigationItem.getType()==null){
             throw new CustomException("必参缺少");
         }
@@ -123,10 +112,6 @@ public class QuickNavigationItemServiceImpl extends ServiceImpl<QuickNavigationI
             if(StringUtils.isEmpty(quickNavigationItem.getContent())){
                 throw new CustomException("必参缺少");
             }
-        }
-        //权限存入数据库必须改逗号分隔格式
-        if (quickNavigationItem.getPermission().equals("2")){
-            quickNavigationItem.setPermission("1,2");
         }
         boolean save = super.save(quickNavigationItem);
         if (save){
@@ -178,9 +163,6 @@ public class QuickNavigationItemServiceImpl extends ServiceImpl<QuickNavigationI
         if (StringUtils.isEmpty(quickNavigationItem.getName())){
             return R.error("更新失败");
         }
-        if (StringUtils.isEmpty(quickNavigationItem.getPermission())){
-            return R.error("更新失败");
-        }
         if (quickNavigationItem.getType()==null){
             throw new CustomException("必参缺少");
         }
@@ -201,12 +183,6 @@ public class QuickNavigationItemServiceImpl extends ServiceImpl<QuickNavigationI
         quickNavigationItemLambdaUpdateWrapper.set(QuickNavigationItem::getIntroduction,quickNavigationItem.getIntroduction());
         quickNavigationItemLambdaUpdateWrapper.set(QuickNavigationItem::getPath,quickNavigationItem.getPath());
         quickNavigationItemLambdaUpdateWrapper.set(QuickNavigationItem::getContent,quickNavigationItem.getContent());
-        //权限存入数据库必须改逗号分隔格式
-        if (quickNavigationItem.getPermission().equals("2")){
-            quickNavigationItem.setPermission("1,2");
-        }
-
-        quickNavigationItemLambdaUpdateWrapper.set(QuickNavigationItem::getPermission,quickNavigationItem.getPermission());
         quickNavigationItemLambdaUpdateWrapper.set(QuickNavigationItem::getType,quickNavigationItem.getType());
         quickNavigationItemLambdaUpdateWrapper.set(QuickNavigationItem::getCategorizeId,quickNavigationItem.getCategorizeId());
         boolean update = super.update(quickNavigationItemLambdaUpdateWrapper);

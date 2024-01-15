@@ -6,11 +6,11 @@ import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.annotation.PermissionCheck;
 import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.common.domain.vo.selectOptionsResult;
-import com.qc.printers.common.navigation.domain.entity.QuickNavigationCategorize;
 import com.qc.printers.common.navigation.domain.entity.QuickNavigationItem;
 import com.qc.printers.custom.navigation.domain.vo.QuickNavigationCategorizeResult;
 import com.qc.printers.custom.navigation.domain.vo.QuickNavigationItemResult;
 import com.qc.printers.custom.navigation.domain.vo.QuickNavigationResult;
+import com.qc.printers.custom.navigation.domain.vo.req.QuickNavigationCategorizeUpdateReq;
 import com.qc.printers.custom.navigation.service.QuickNavigationCategorizeService;
 import com.qc.printers.custom.navigation.service.QuickNavigationItemService;
 import com.qc.printers.custom.navigation.service.QuickNavigationService;
@@ -46,12 +46,8 @@ public class QuickNavigationController {
     @NeedToken
     @GetMapping("/list")
     @ApiOperation("返回可以展导航页内容")
-    //后期可以传回token拿到用户信息
-    public R<List<QuickNavigationResult>> list(String userId) {
-        if (StringUtils.isEmpty(userId)){
-            return R.error("传参错误");
-        }
-        return quickNavigationService.list(Long.valueOf(userId));
+    public R<List<QuickNavigationResult>> list() {
+        return quickNavigationService.list();
     }
 
     /**
@@ -59,7 +55,7 @@ public class QuickNavigationController {
      * @return
      */
     @NeedToken
-    @PermissionCheck(role = {"superadmin"}, permission = "sys:user:query")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:nav:update")
     @GetMapping("/listnavfenlei")
     @ApiOperation("导航分类管理系统")
     //后期可以传回token拿到用户信息
@@ -75,7 +71,7 @@ public class QuickNavigationController {
      */
     @ApiOperation("创建导航内容")
     @NeedToken
-    @PermissionCheck(role = {"superadmin"}, permission = "sys:user:add")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:nav:add")
     @PostMapping("/createItem")
     public R<String> createItem(@RequestBody QuickNavigationItem quickNavigationItem){
 //        System.out.println("quickNavigationItem = " + quickNavigationItem);
@@ -86,14 +82,15 @@ public class QuickNavigationController {
 
     /**
      * 权限等用注解后期实现,通过过滤器
+     *
      * @param quickNavigationCategorize
      * @return
      */
     @ApiOperation("创建导航分类")
     @NeedToken
-    @PermissionCheck(role = {"superadmin"}, permission = "sys:user:add")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:nav:add")
     @PostMapping("/createCategorize")
-    public R<String> createCategorize(@RequestBody QuickNavigationCategorize quickNavigationCategorize){
+    public R<String> createCategorize(@RequestBody QuickNavigationCategorizeUpdateReq quickNavigationCategorize) {
 //        System.out.println("quickNavigationCategorize = " + quickNavigationCategorize);
 
         return quickNavigationCategorizeService.createNavCategorize(quickNavigationCategorize);
@@ -128,21 +125,29 @@ public class QuickNavigationController {
 
 
     @NeedToken
-    @PermissionCheck(role = {"superadmin"}, permission = "sys:user:update")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:nav:update")
     @PutMapping("/updataforquicknavigationcategorize")
-    public R<String> updataForQuickNavigationCategorize(@RequestBody QuickNavigationCategorize quickNavigation){
+    public R<String> updataForQuickNavigationCategorize(@RequestBody QuickNavigationCategorizeUpdateReq quickNavigation) {
 
-        if (StringUtils.isEmpty(quickNavigation.getName())){
+        if (StringUtils.isEmpty(quickNavigation.getQuickNavigationCategorize().getName())) {
             return R.error("更新失败");
         }
-        if (quickNavigation.getId()==null){
+        if (quickNavigation.getQuickNavigationCategorize().getId() == null) {
             return R.error("更新失败");
+        }
+        if (quickNavigation.getQuickNavigationCategorize().getVisibility() == null) {
+            throw new CustomException("更新失败-请设置可见性");
+        }
+        if (quickNavigation.getQuickNavigationCategorize().getVisibility().equals(1)) {
+            if (quickNavigation.getVisDeptIds() == null || quickNavigation.getVisDeptIds().size() == 0) {
+                throw new CustomException("更新失败-最少保证有部门可见");
+            }
         }
         return quickNavigationCategorizeService.updataForQuickNavigationCategorize(quickNavigation);
     }
 
     @NeedToken
-    @PermissionCheck(role = {"superadmin"}, permission = "sys:user:update")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:nav:update")
     @PutMapping("/updataforquicknavigationitem")
     public R<String> updataForQuickNavigationItem(@RequestBody QuickNavigationItem quickNavigationItem){
 
@@ -150,9 +155,6 @@ public class QuickNavigationController {
             return R.error("更新失败");
         }
         if (quickNavigationItem.getId()==null){
-            return R.error("更新失败");
-        }
-        if (StringUtils.isEmpty(quickNavigationItem.getPermission())){
             return R.error("更新失败");
         }
 
@@ -173,7 +175,7 @@ public class QuickNavigationController {
     }
 
     @NeedToken
-    @PermissionCheck(role = {"superadmin"}, permission = "sys:user:delete")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:nav:delete")
     @DeleteMapping("/deleteCategorize")
     public R<String> deleteNavigationCategorize(String id){
         log.info("id = {}",id);
@@ -185,7 +187,7 @@ public class QuickNavigationController {
     }
 
     @NeedToken
-    @PermissionCheck(role = {"superadmin"}, permission = "sys:user:delete")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:nav:delete")
     @DeleteMapping("/deleteItem")
     public R<String> deleteNavigationItem(String id){
         log.info("id = {}",id);
