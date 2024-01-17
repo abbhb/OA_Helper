@@ -41,16 +41,31 @@ public class OauthController {
     @Autowired
     private GetAccessTokenHandelFactory getAccessTokenHandelFactory;
 
+
     //todo:注册的默认用户名
+
+    /**
+     * state不为强制，提供则返回
+     *
+     * @param response
+     * @param responseType
+     * @param clientId
+     * @param redirectUri
+     * @param state
+     * @param scope
+     * @throws IOException
+     */
     @GetMapping("/authorize")
-    public void authorize(HttpServletResponse response, @RequestParam("response_type") String responseType, @RequestParam("client_id") String clientId, @RequestParam("redirect_uri") String redirectUri, @RequestParam("state") String state, String scope) throws IOException {
+    public void authorize(HttpServletResponse response, @RequestParam("response_type") String responseType, @RequestParam("client_id") String clientId, @RequestParam("redirect_uri") String redirectUri, String state, String scope) throws IOException {
         // 没有scope就只剩原始的me接口，只能拿到openid
         CanAuthorize canAuthorize = oauthService.isCanAuthorize(responseType, clientId, redirectUri, state, scope);
         if (canAuthorize.isCan()) {
             String pinjie = "";
             pinjie = pinjie + "&client_id=" + clientId;
             pinjie = pinjie + "&redirect_uri=" + redirectUri;
-            pinjie = pinjie + "&state=" + state;
+            if (StringUtils.isNotEmpty(state)) {
+                pinjie = pinjie + "&state=" + state;
+            }
             if (StringUtils.isNotEmpty(scope)) {
                 pinjie = pinjie + "&scope=" + scope;
             }
