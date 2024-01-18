@@ -83,7 +83,7 @@ public class OauthServiceImpl implements OauthService {
             String host1 = getIP(URI.create(redirectUri)).getHost();
             String host = getIP(URI.create(sysOauth.getDomainName())).getHost();
             if (!host.equals(host1)) {
-                return new CanAuthorize(false, "TheCallbackAddressIsNotSecure");
+                return new CanAuthorize(false, "回调地址不安全，请参考业务域名");
             }
         }
         return new CanAuthorize(true, "");
@@ -283,12 +283,24 @@ public class OauthServiceImpl implements OauthService {
         if (StringUtils.isEmpty(sysOauth.getClientName())) {
             throw new CustomException("clientName不能为空");
         }
+        if (sysOauth.getForceConfigurationRedirect() == null) {
+            throw new CustomException("请选择静态回调或动态回调");
+        }
+        if (sysOauth.getForceConfigurationRedirect().equals(1) && StringUtils.isEmpty(sysOauth.getRedirectUri())) {
+            throw new CustomException("静态回调必须包含回调地址");
+        }
         return oauthMangerService.updateOauth(sysOauth);
     }
 
     @Transactional
     @Override
     public String add(SysOauth sysOauth) {
+        if (sysOauth.getForceConfigurationRedirect() == null) {
+            throw new CustomException("请选择静态回调或动态回调");
+        }
+        if (sysOauth.getForceConfigurationRedirect().equals(1) && StringUtils.isEmpty(sysOauth.getRedirectUri())) {
+            throw new CustomException("静态回调必须包含回调地址");
+        }
         sysOauth.setId(null);
         return oauthMangerService.addOauth(sysOauth);
     }
@@ -331,6 +343,28 @@ public class OauthServiceImpl implements OauthService {
             return oauthUserInfoResp;
         }
         return this.getUserInfo(token, one.getOpenId(), clientId);
+    }
+
+    @Override
+    public String getEndRedirectUri(String clientId, String redirectUri) {
+        LambdaQueryWrapper<SysOauth> sysOauthLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysOauthLambdaQueryWrapper.eq(SysOauth::getClientId, clientId);
+        SysOauth sysOauth = sysOauthDao.getOne(sysOauthLambdaQueryWrapper);
+        if (sysOauth == null) {
+            throw new CustomException("无法获取该oauth客户端");
+        }
+        if (sysOauth.getForceConfigurationRedirect().equals(1)) {
+            // 静态回调
+            if (StringUtils.isEmpty(sysOauth.getRedirectUri())) {
+                throw new CustomException("请检查oauth后台信息是否包含回调地址");
+            }
+            return sysOauth.getRedirectUri();
+        }
+        // 万一动态回调但是没传入回调地址就取数据库的
+        if (StringUtils.isEmpty(redirectUri)) {
+            return sysOauth.getRedirectUri();
+        }
+        return redirectUri;
     }
 
 }

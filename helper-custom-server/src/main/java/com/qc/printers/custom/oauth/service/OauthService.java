@@ -35,4 +35,6 @@ public interface OauthService {
     String add(SysOauth sysOauth);
 
     OauthUserInfoResp getUserInfoHeader(HttpServletRequest request);
+
+    String getEndRedirectUri(String clientId, String redirectUri);
 }
