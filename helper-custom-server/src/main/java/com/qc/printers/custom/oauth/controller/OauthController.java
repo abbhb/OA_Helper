@@ -4,7 +4,6 @@ import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.annotation.PermissionCheck;
 import com.qc.printers.common.config.OauthConfig;
-import com.qc.printers.common.oauth.annotation.CheckScope;
 import com.qc.printers.common.oauth.domain.entity.SysOauth;
 import com.qc.printers.custom.oauth.domain.dto.Authorize;
 import com.qc.printers.custom.oauth.domain.vo.CanAuthorize;
@@ -21,6 +20,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
@@ -145,10 +145,20 @@ public class OauthController {
      * @param cilentId
      * @return
      */
-    @CheckScope(token = "#accessToken", cliendId = "#cilentId", needScope = "get_user_info")
     @GetMapping("/get_user_info")
     public OauthUserInfoResp getUserInfo(@RequestParam(name = "access_token") String accessToken, @RequestParam(name = "openid") String openid, @RequestParam(name = "oauth_consumer_key") String cilentId) {
         return oauthService.getUserInfo(accessToken, openid, cilentId);
+    }
+
+    /**
+     * 兼容信息获取
+     * 通过header来传输access_token
+     *
+     * @return
+     */
+    @GetMapping("/get_user_info_header")
+    public OauthUserInfoResp getUserInfoHeader(HttpServletRequest request) {
+        return oauthService.getUserInfoHeader(request);
     }
 
     @NeedToken
@@ -165,6 +175,11 @@ public class OauthController {
         return R.successOnlyObject(oauthService.delete(id));
     }
 
+
+    /**
+     * @param sysOauth
+     * @return
+     */
     @NeedToken
     @PermissionCheck(role = "superadmin", permission = "sys:oauth:update")
     @PutMapping("update")

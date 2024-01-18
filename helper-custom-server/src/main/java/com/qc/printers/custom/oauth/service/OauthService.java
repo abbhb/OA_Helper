@@ -9,6 +9,7 @@ import com.qc.printers.custom.oauth.domain.vo.resp.AgreeResp;
 import com.qc.printers.custom.oauth.domain.vo.resp.MeResp;
 import com.qc.printers.custom.oauth.domain.vo.resp.OauthUserInfoResp;
 
+import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 
 public interface OauthService {
@@ -32,4 +33,6 @@ public interface OauthService {
     String update(SysOauth sysOauth);
 
     String add(SysOauth sysOauth);
+
+    OauthUserInfoResp getUserInfoHeader(HttpServletRequest request);
 }
