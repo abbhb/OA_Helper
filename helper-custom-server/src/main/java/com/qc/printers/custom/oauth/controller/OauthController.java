@@ -56,13 +56,15 @@ public class OauthController {
      * @throws IOException
      */
     @GetMapping("/authorize")
-    public void authorize(HttpServletResponse response, @RequestParam("response_type") String responseType, @RequestParam("client_id") String clientId, @RequestParam("redirect_uri") String redirectUri, String state, String scope) throws IOException {
+    public void authorize(HttpServletResponse response, @RequestParam("response_type") String responseType, @RequestParam("client_id") String clientId, @RequestParam(value = "redirect_uri", required = false) String redirectUri, String state, String scope) throws IOException {
+        // 静态回调的情况下,传入的回调地址就不重要了,传了直接扔掉,直接取该客户端绑定的回调地址
+        String redirectUriEnd = oauthService.getEndRedirectUri(clientId, redirectUri);
         // 没有scope就只剩原始的me接口，只能拿到openid
-        CanAuthorize canAuthorize = oauthService.isCanAuthorize(responseType, clientId, redirectUri, state, scope);
+        CanAuthorize canAuthorize = oauthService.isCanAuthorize(responseType, clientId, redirectUriEnd, state, scope);
         if (canAuthorize.isCan()) {
             String pinjie = "";
             pinjie = pinjie + "&client_id=" + clientId;
-            pinjie = pinjie + "&redirect_uri=" + redirectUri;
+            pinjie = pinjie + "&redirect_uri=" + redirectUriEnd;
             if (StringUtils.isNotEmpty(state)) {
                 pinjie = pinjie + "&state=" + state;
             }
@@ -99,9 +101,11 @@ public class OauthController {
 
     @GetMapping("/token")
     public TokenResp authorizeCodeTOAccessToken(String code, String grant_type, String client_id, String client_secret, String redirect_uri, String refresh_token) {
+        String redirectUriEnd = oauthService.getEndRedirectUri(client_id, redirect_uri);
+
         Authorize authorize = new Authorize();
         authorize.setCode(code);
-        authorize.setRedirectUri(redirect_uri);
+        authorize.setRedirectUri(redirectUriEnd);
         authorize.setClientId(client_id);
         authorize.setClientSecret(client_secret);
         authorize.setGrantType(grant_type);
