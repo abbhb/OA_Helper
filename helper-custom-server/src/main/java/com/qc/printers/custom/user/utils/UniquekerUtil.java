@@ -14,7 +14,7 @@ import org.springframework.web.client.RestTemplate;
 public class UniquekerUtil {
     private static final String APP_ID = "2277";
     private static final String APP_KEY = "c784fcd2eaf6a869f945aedb72db40f2";
-    private static final String REDIRECT_URI = "http://easyoa.fun:8081/#/UniquekerCallback";
+    private static final String REDIRECT_URI = "http://easyoa.fun:8081/#/callback";
 
 
     /**
