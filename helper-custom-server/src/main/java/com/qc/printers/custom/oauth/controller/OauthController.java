@@ -165,6 +165,13 @@ public class OauthController {
         return oauthService.getUserInfoHeader(request);
     }
 
+    /**
+     * logout接口，用于注销该access_token
+     * 暂时不做
+     *
+     * @return
+     */
+
     @NeedToken
     @PermissionCheck(role = "superadmin", permission = "sys:oauth:list")
     @GetMapping("list")
