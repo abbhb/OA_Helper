@@ -220,7 +220,7 @@ public class OauthController {
      * 该接口按照gitlab标准实现
      * 兼容header和get请求传输token
      */
-    @GetMapping("/user_info")
+    @GetMapping("/gitlab/user_info")
     public OauthUserInfoResp getUserInfoHeader(@RequestParam(name = "access_token", required = false) String accessToken, HttpServletRequest request) {
         if (StringUtils.isEmpty(accessToken)) {
             return oauthService.getUserInfoHeader(request);
