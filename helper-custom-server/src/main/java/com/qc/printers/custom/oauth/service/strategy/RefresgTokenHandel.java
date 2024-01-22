@@ -7,8 +7,10 @@ import com.qc.printers.custom.oauth.domain.dto.Authorize;
 import com.qc.printers.custom.oauth.domain.dto.RefreshToken;
 import com.qc.printers.custom.oauth.domain.enums.AccessTokenEnum;
 import com.qc.printers.custom.oauth.domain.vo.resp.TokenResp;
+import com.qc.printers.custom.oauth.service.OauthService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -17,6 +19,9 @@ import java.util.concurrent.TimeUnit;
 @Service
 @Slf4j
 public class RefresgTokenHandel extends GetAccessTokenHandel {
+    @Autowired
+    private OauthService oauthService;
+
     @Override
     AccessTokenEnum getDataTypeEnum() {
         return AccessTokenEnum.REFRESHTOKEN;
@@ -56,9 +61,13 @@ public class RefresgTokenHandel extends GetAccessTokenHandel {
         // 刷新token也只能让用一次,过期时间也得刷新，原令牌删除
         RedisUtils.del(MyString.oauth_refresh_token + authorize.getRefreshToken());
         RedisUtils.set(MyString.oauth_refresh_token + refreshToken, refreshToken1, expire);
+        String userWithClientScope = oauthService.getUserWithClientScope(refreshTokenlast.getUserId(), authorize.getClientId());
         TokenResp tokenResp1 = new TokenResp();
         tokenResp1.setRefreshToken(refreshToken);
         tokenResp1.setAccessToken(accessToken);
+        tokenResp1.setTokenType("bearer");
+        tokenResp1.setScope(userWithClientScope);
+        tokenResp1.setCreatedAt(System.currentTimeMillis());
         tokenResp1.setExpiresIn(2 * 3600L);
         tokenResp1.setCode(0);
         tokenResp1.setMsg("正常");

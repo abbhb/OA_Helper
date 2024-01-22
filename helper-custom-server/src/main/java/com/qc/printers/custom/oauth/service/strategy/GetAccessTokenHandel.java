@@ -6,6 +6,7 @@ import com.qc.printers.common.oauth.domain.entity.SysOauth;
 import com.qc.printers.custom.oauth.domain.dto.Authorize;
 import com.qc.printers.custom.oauth.domain.enums.AccessTokenEnum;
 import com.qc.printers.custom.oauth.domain.vo.resp.TokenResp;
+import com.qc.printers.custom.oauth.service.OauthService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -18,6 +19,8 @@ import org.springframework.stereotype.Service;
 @Slf4j
 public abstract class GetAccessTokenHandel {
 
+    @Autowired
+    private OauthService oauthService;
     @Autowired
     private SysOauthDao sysOauthDao;
 

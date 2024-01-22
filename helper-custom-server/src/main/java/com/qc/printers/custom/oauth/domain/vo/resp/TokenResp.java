@@ -18,6 +18,15 @@ public class TokenResp implements Serializable {
     @JsonProperty("expires_in")
     private Long expiresIn;
 
+    @JsonProperty("token_type")
+    private String tokenType;
+
+    @JsonProperty("scope")
+    private String scope;
+
+    @JsonProperty("created_at")
+    private Long createdAt;
+
     /**
      * 当异常时才会返回以下字段
      */

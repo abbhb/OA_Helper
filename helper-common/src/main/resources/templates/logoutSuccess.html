@@ -1,8 +1,8 @@
 <!DOCTYPE html>
-<html xmlns:th="http://www.thymeleaf.org">
+<html>
 <head>
   <meta charset="UTF-8">
-  <title>异常页</title>
+  <title>注销页</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -10,7 +10,7 @@
       color: #333; /* 主要文本颜色 */
     }
 
-    .error-container {
+    .msg-container {
       margin: 50px auto;
       padding: 20px;
       max-width: 600px;
@@ -29,10 +29,8 @@
   </style>
 </head>
 <body>
-<div class="error-container">
-  <h1>Error</h1>
-  <p>Sorry, an error occurred.</p>
-  <p>Details: <span th:text="${error}"></span></p> <!-- 显示错误消息 -->
+<div class="msg-container">
+  <h1>注销成功!</h1>
 </div>
 </body>
 </html>

@@ -8,6 +8,7 @@ import com.qc.printers.custom.oauth.domain.vo.resp.AgreeLoginResp;
 import com.qc.printers.custom.oauth.domain.vo.resp.AgreeResp;
 import com.qc.printers.custom.oauth.domain.vo.resp.MeResp;
 import com.qc.printers.custom.oauth.domain.vo.resp.OauthUserInfoResp;
+import org.springframework.ui.Model;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -34,7 +35,13 @@ public interface OauthService {
 
     String add(SysOauth sysOauth);
 
+    String getUserWithClientScope(Long userId, String clientId);
+
     OauthUserInfoResp getUserInfoHeader(HttpServletRequest request);
 
     String getEndRedirectUri(String clientId, String redirectUri);
+
+    String loginOut(HttpServletRequest request, Model model);
+
+    OauthUserInfoResp getUserInfoOnlyAccessToken(String accessToken);
 }

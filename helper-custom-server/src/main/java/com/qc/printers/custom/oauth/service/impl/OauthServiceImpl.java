@@ -9,8 +9,10 @@ import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
 import com.qc.printers.common.oauth.annotation.CheckScope;
 import com.qc.printers.common.oauth.dao.SysOauthDao;
+import com.qc.printers.common.oauth.dao.SysOauthUserDao;
 import com.qc.printers.common.oauth.domain.dto.AccessToken;
 import com.qc.printers.common.oauth.domain.entity.SysOauth;
+import com.qc.printers.common.oauth.domain.entity.SysOauthUser;
 import com.qc.printers.common.oauth.service.OauthMangerService;
 import com.qc.printers.common.oauth.utils.OauthUtil;
 import com.qc.printers.common.user.dao.UserDao;
@@ -31,6 +33,7 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.ui.Model;
 
 import javax.servlet.http.HttpServletRequest;
 import java.net.URI;
@@ -43,6 +46,9 @@ public class OauthServiceImpl implements OauthService {
 
     @Autowired
     private SysOauthDao sysOauthDao;
+
+    @Autowired
+    private SysOauthUserDao sysOauthUserDao;
 
     @Autowired
     private OauthMangerService oauthMangerService;
@@ -240,11 +246,15 @@ public class OauthServiceImpl implements OauthService {
                 oauthUserInfoResp.setAvatar(one.getAvatar());
                 oauthUserInfoResp.setNickname(one.getName());
                 oauthUserInfoResp.setUsername(one.getUsername());
+                oauthUserInfoResp.setName(one.getName());
+                oauthUserInfoResp.setId(one.getOpenId());
+
                 oauthUserInfoResp.setCode(0);
                 return oauthUserInfoResp;
 
             }
         } catch (Exception e) {
+            log.error(e.getMessage());
             oauthUserInfoResp.setCode(100055);
             oauthUserInfoResp.setMsg("业务异常");
             return oauthUserInfoResp;
@@ -306,7 +316,30 @@ public class OauthServiceImpl implements OauthService {
     }
 
     @Override
+    public String getUserWithClientScope(Long userId, String clientId) {
+        LambdaQueryWrapper<SysOauth> sysOauthLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysOauthLambdaQueryWrapper.eq(SysOauth::getClientId, clientId);
+        SysOauth one = sysOauthDao.getOne(sysOauthLambdaQueryWrapper);
+        LambdaQueryWrapper<SysOauthUser> sysOauthUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysOauthUserLambdaQueryWrapper.eq(SysOauthUser::getUserId, userId);
+        sysOauthUserLambdaQueryWrapper.eq(SysOauthUser::getOauthId, one.getId());
+        List<SysOauthUser> list = sysOauthUserDao.list(sysOauthUserLambdaQueryWrapper);
+        if (list == null || list.size() == 0) {
+            return "";
+        }
+        if (list.size() == 1) {
+            return list.get(0).getScope();
+        }
+        String scope = new String();
+        for (int i = 0; i < list.size(); i++) {
+            scope = scope + list.get(i).getScope() + ",";
+        }
+        return scope.substring(0, scope.length() - 1);
+    }
+
+    @Override
     public OauthUserInfoResp getUserInfoHeader(HttpServletRequest request) {
+        log.info("oauth_user_info:req:{}", request.getHeader(JWTUtil.AUTH_HEADER_KEY));
         final String authHeader = request.getHeader(JWTUtil.AUTH_HEADER_KEY);
         OauthUserInfoResp oauthUserInfoResp = new OauthUserInfoResp();
         if (StringUtils.isBlank(authHeader) || !authHeader.startsWith(JWTUtil.TOKEN_PREFIX)) {
@@ -316,33 +349,7 @@ public class OauthServiceImpl implements OauthService {
         }
         // 获取token
         final String token = authHeader.substring(7);
-        if (StringUtils.isEmpty(token)) {
-            oauthUserInfoResp.setCode(10065);
-            oauthUserInfoResp.setMsg("请先登录!");
-            return oauthUserInfoResp;
-        }
-        AccessToken accessToken = RedisUtils.get(MyString.oauth_access_token + token, AccessToken.class);
-        if (accessToken == null) {
-            oauthUserInfoResp.setCode(10065);
-            oauthUserInfoResp.setMsg("请先登录!");
-            return oauthUserInfoResp;
-        }
-        Long userId = accessToken.getUserId();
-        String clientId = accessToken.getClientId();
-        if (userId == null) {
-            oauthUserInfoResp.setCode(10065);
-            oauthUserInfoResp.setMsg("请先登录!");
-            return oauthUserInfoResp;
-        }
-        LambdaQueryWrapper<User> sysOauthLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        sysOauthLambdaQueryWrapper.eq(User::getId, userId);
-        User one = userDao.getOne(sysOauthLambdaQueryWrapper);
-        if (one == null) {
-            oauthUserInfoResp.setCode(100055);
-            oauthUserInfoResp.setMsg("查询用户授权信息失败");
-            return oauthUserInfoResp;
-        }
-        return this.getUserInfo(token, one.getOpenId(), clientId);
+        return this.getUserInfoOnlyAccessToken(token);
     }
 
     @Override
@@ -365,6 +372,59 @@ public class OauthServiceImpl implements OauthService {
             return sysOauth.getRedirectUri();
         }
         return redirectUri;
+    }
+
+    @Override
+    public String loginOut(HttpServletRequest request, Model model) {
+        final String authHeader = request.getHeader(JWTUtil.AUTH_HEADER_KEY);
+        OauthUserInfoResp oauthUserInfoResp = new OauthUserInfoResp();
+        if (StringUtils.isBlank(authHeader) || !authHeader.startsWith(JWTUtil.TOKEN_PREFIX)) {
+            model.addAttribute("error", "请先登录");
+            return "error";
+        }
+        // 获取token
+        final String token = authHeader.substring(7);
+        if (StringUtils.isEmpty(token)) {
+            model.addAttribute("error", "请先登录");
+            return "error";
+        }
+        if (RedisUtils.hasKey(MyString.oauth_access_token + token)) {
+            RedisUtils.del(MyString.oauth_access_token + token);
+        }
+
+        return "logoutSuccess";
+    }
+
+    @Override
+    public OauthUserInfoResp getUserInfoOnlyAccessToken(String accessToken) {
+        OauthUserInfoResp oauthUserInfoResp = new OauthUserInfoResp();
+        if (StringUtils.isEmpty(accessToken)) {
+            oauthUserInfoResp.setCode(10065);
+            oauthUserInfoResp.setMsg("请先登录!");
+            return oauthUserInfoResp;
+        }
+        AccessToken accessTokenObject = RedisUtils.get(MyString.oauth_access_token + accessToken, AccessToken.class);
+        if (accessTokenObject == null) {
+            oauthUserInfoResp.setCode(10065);
+            oauthUserInfoResp.setMsg("请先登录!");
+            return oauthUserInfoResp;
+        }
+        Long userId = accessTokenObject.getUserId();
+        String clientId = accessTokenObject.getClientId();
+        if (userId == null) {
+            oauthUserInfoResp.setCode(10065);
+            oauthUserInfoResp.setMsg("请先登录!");
+            return oauthUserInfoResp;
+        }
+        LambdaQueryWrapper<User> sysOauthLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysOauthLambdaQueryWrapper.eq(User::getId, userId);
+        User one = userDao.getOne(sysOauthLambdaQueryWrapper);
+        if (one == null) {
+            oauthUserInfoResp.setCode(100055);
+            oauthUserInfoResp.setMsg("查询用户授权信息失败");
+            return oauthUserInfoResp;
+        }
+        return this.getUserInfo(accessToken, one.getOpenId(), clientId);
     }
 
 }
