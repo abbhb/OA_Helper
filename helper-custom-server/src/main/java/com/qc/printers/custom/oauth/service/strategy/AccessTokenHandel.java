@@ -8,8 +8,10 @@ import com.qc.printers.custom.oauth.domain.dto.OauthCodeDto;
 import com.qc.printers.custom.oauth.domain.dto.RefreshToken;
 import com.qc.printers.custom.oauth.domain.enums.AccessTokenEnum;
 import com.qc.printers.custom.oauth.domain.vo.resp.TokenResp;
+import com.qc.printers.custom.oauth.service.OauthService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.UUID;
@@ -17,6 +19,10 @@ import java.util.UUID;
 @Service
 @Slf4j
 public class AccessTokenHandel extends GetAccessTokenHandel {
+
+    @Autowired
+    private OauthService oauthService;
+
     @Override
     AccessTokenEnum getDataTypeEnum() {
         return AccessTokenEnum.ACCESSTOKEN;
@@ -50,6 +56,7 @@ public class AccessTokenHandel extends GetAccessTokenHandel {
         accessToken1.setClientId(authorize.getClientId());
         accessToken1.setUserId(oauthCodeDto.getUserId());
         RedisUtils.set(MyString.oauth_access_token + accessToken, accessToken1, 2 * 3600L);
+        String userWithClientScope = oauthService.getUserWithClientScope(oauthCodeDto.getUserId(), authorize.getClientId());
         RefreshToken refreshToken1 = new RefreshToken();
         refreshToken1.setAccessToken(accessToken);
         refreshToken1.setUserId(oauthCodeDto.getUserId());
@@ -58,7 +65,10 @@ public class AccessTokenHandel extends GetAccessTokenHandel {
         TokenResp tokenResp1 = new TokenResp();
         tokenResp1.setRefreshToken(refreshToken);
         tokenResp1.setAccessToken(accessToken);
+        tokenResp1.setTokenType("bearer");
+        tokenResp1.setCreatedAt(System.currentTimeMillis());
         tokenResp1.setExpiresIn(2 * 3600L);
+        tokenResp1.setScope(userWithClientScope);
         tokenResp1.setCode(0);
         tokenResp1.setMsg("正常");
         return tokenResp1;

@@ -18,6 +18,7 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -25,6 +26,10 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 
+
+/**
+ * 当前兼容qq，和gitlab的code模式，在第三方应用需要接入时可以选择这两项然后自定义服务器地址！接入文档也可以暂时参考
+ */
 @RestController//@ResponseBody+@Controller
 @RequestMapping("/oauth2.0")
 @Slf4j
@@ -99,6 +104,17 @@ public class OauthController {
         return R.success(oauthService.agreeLogin(agreeReq));
     }
 
+    /**
+     * 该接口按照qq标准实现
+     *
+     * @param code
+     * @param grant_type
+     * @param client_id
+     * @param client_secret
+     * @param redirect_uri
+     * @param refresh_token
+     * @return
+     */
     @GetMapping("/token")
     public TokenResp authorizeCodeTOAccessToken(String code, String grant_type, String client_id, String client_secret, String redirect_uri, String refresh_token) {
         String redirectUriEnd = oauthService.getEndRedirectUri(client_id, redirect_uri);
@@ -121,8 +137,43 @@ public class OauthController {
 
     }
 
+
+    /**
+     * 该接口按照gitlab标准实现
+     *
+     * @param code
+     * @param grant_type
+     * @param client_id
+     * @param client_secret
+     * @param redirect_uri
+     * @param refresh_token
+     * @return
+     */
+    @PostMapping("/gitlab/token")
+    public TokenResp authorizeCodeToAccessTokenForGitlab(String code, String grant_type, String client_id, String client_secret, String redirect_uri, String refresh_token) {
+        String redirectUriEnd = oauthService.getEndRedirectUri(client_id, redirect_uri);
+
+        Authorize authorize = new Authorize();
+        authorize.setCode(code);
+        authorize.setRedirectUri(redirectUriEnd);
+        authorize.setClientId(client_id);
+        authorize.setClientSecret(client_secret);
+        authorize.setGrantType(grant_type);
+        authorize.setRefreshToken(refresh_token);
+        GetAccessTokenHandel instance = getAccessTokenHandelFactory.getInstance(authorize.getGrantType());
+        if (instance == null) {
+            TokenResp tokenResp = new TokenResp();
+            tokenResp.setCode(100000);
+            tokenResp.setMsg("缺少参数response_type或response_type非法");
+            return tokenResp;
+        }
+        return instance.getAccessToken(authorize);
+
+    }
+
     /**
      * 这个接口都能访问，无需授权
+     * 此接口用于获取openid但是目前仅支持get传参来传入access_token
      *
      * @param accessToken
      * @return
@@ -143,7 +194,7 @@ public class OauthController {
      * get_user_info
      * oauth提供获取用户信息的接口，需要用户授权
      * 用户没给get_user_info授权就无法获取这些信息
-     *
+     * 该接口按照qq标准实现
      * @param accessToken
      * @param openid
      * @param cilentId
@@ -166,11 +217,29 @@ public class OauthController {
     }
 
     /**
-     * logout接口，用于注销该access_token
-     * 暂时不做
+     * 该接口按照gitlab标准实现
+     * 兼容header和get请求传输token
+     */
+    @GetMapping("/user_info")
+    public OauthUserInfoResp getUserInfoHeader(@RequestParam(name = "access_token", required = false) String accessToken, HttpServletRequest request) {
+        if (StringUtils.isEmpty(accessToken)) {
+            return oauthService.getUserInfoHeader(request);
+        }
+        return oauthService.getUserInfoOnlyAccessToken(accessToken);
+
+    }
+
+
+    /**
+     * logout接口，用于注销header里的该access_token
      *
      * @return
      */
+    @RequestMapping("/logout")
+    public String loginOut(HttpServletRequest request, Model model) {
+        return oauthService.loginOut(request, model);
+    }
+
 
     @NeedToken
     @PermissionCheck(role = "superadmin", permission = "sys:oauth:list")
