@@ -25,7 +25,7 @@ public interface OauthService {
 
     String getClientName(String clientId);
 
-    OauthUserInfoResp getUserInfo(String accessToken, String openid, String cilentId);
+    OauthUserInfoResp getUserInfo(String accessToken, String cilentId);
 
     List<SysOauth> list();
 
@@ -44,4 +44,6 @@ public interface OauthService {
     String loginOut(HttpServletRequest request, Model model);
 
     OauthUserInfoResp getUserInfoOnlyAccessToken(String accessToken);
+
+    OauthUserInfoResp getUserInfoNeedCheckOpenId(String accessToken, String openid, String clientId);
 }

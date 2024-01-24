@@ -1126,6 +1126,15 @@ public class RedisUtils {
     }
 
     /**
+     * 给该key的value递增
+     *
+     * @param key
+     */
+    public static Long inc(String key) {
+        return stringRedisTemplate.opsForValue().increment(key);
+    }
+
+    /**
      * @param prefix 前缀
      * @param ids    id
      */

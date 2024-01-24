@@ -9,11 +9,14 @@ import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
 import com.qc.printers.common.oauth.annotation.CheckScope;
 import com.qc.printers.common.oauth.dao.SysOauthDao;
+import com.qc.printers.common.oauth.dao.SysOauthOpenidDao;
 import com.qc.printers.common.oauth.dao.SysOauthUserDao;
 import com.qc.printers.common.oauth.domain.dto.AccessToken;
 import com.qc.printers.common.oauth.domain.entity.SysOauth;
+import com.qc.printers.common.oauth.domain.entity.SysOauthOpenid;
 import com.qc.printers.common.oauth.domain.entity.SysOauthUser;
 import com.qc.printers.common.oauth.service.OauthMangerService;
+import com.qc.printers.common.oauth.service.OauthOpenidService;
 import com.qc.printers.common.oauth.utils.OauthUtil;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.dto.UserInfo;
@@ -46,6 +49,8 @@ public class OauthServiceImpl implements OauthService {
 
     @Autowired
     private SysOauthDao sysOauthDao;
+    @Autowired
+    private SysOauthOpenidDao sysOauthOpenidDao;
 
     @Autowired
     private SysOauthUserDao sysOauthUserDao;
@@ -58,6 +63,9 @@ public class OauthServiceImpl implements OauthService {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private OauthOpenidService oauthOpenidService;
 
     private static URI getIP(URI uri) {
         URI effectiveURI = null;
@@ -125,6 +133,15 @@ public class OauthServiceImpl implements OauthService {
         agreeResp.setCode(code);
         agreeResp.setState(agreeReq.getState());
         agreeResp.setRedirectUri(agreeReq.getRedirectUri());
+        boolean haveOpenidByUser = oauthOpenidService.isHaveOpenidByUser(currentUser.getId(), sysOauth.getId());
+        if (!haveOpenidByUser) {
+            Integer oneOpenidForOauth = oauthOpenidService.getOneOpenidForOauth(sysOauth.getId());
+            SysOauthOpenid sysOauthOpenid = new SysOauthOpenid();
+            sysOauthOpenid.setOpenid(oneOpenidForOauth);
+            sysOauthOpenid.setSysOauthId(sysOauth.getId());
+            sysOauthOpenid.setUserId(currentUser.getId());
+            sysOauthOpenidDao.save(sysOauthOpenid);
+        }
         oauthMangerService.userAgree(sysOauth.getId(), currentUser.getId(), agreeReq.getScope());
         return agreeResp;
     }
@@ -177,16 +194,22 @@ public class OauthServiceImpl implements OauthService {
         MeResp meResp = new MeResp();
         AccessToken accessToken1 = RedisUtils.get(MyString.oauth_access_token + accessToken, AccessToken.class);
         if (accessToken1.getUserId() != null) {
-            LambdaQueryWrapper<User> sysOauthLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            sysOauthLambdaQueryWrapper.eq(User::getId, accessToken1.getUserId());
-            User one = userDao.getOne(sysOauthLambdaQueryWrapper);
+            LambdaQueryWrapper<User> sysUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            sysUserLambdaQueryWrapper.eq(User::getId, accessToken1.getUserId());
+            User one = userDao.getOne(sysUserLambdaQueryWrapper);
             if (one == null) {
                 meResp.setCode(100055);
                 meResp.setMsg("查询用户授权信息失败");
                 return meResp;
             }
+            LambdaQueryWrapper<SysOauth> sysOauthLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            sysOauthLambdaQueryWrapper.eq(SysOauth::getClientId, accessToken1.getClientId());
+            SysOauth sysOauth = sysOauthDao.getOne(sysOauthLambdaQueryWrapper);
+            LambdaQueryWrapper<SysOauthOpenid> sysOauthOpenidLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            sysOauthOpenidLambdaQueryWrapper.eq(SysOauthOpenid::getSysOauthId, sysOauth.getId());
+            SysOauthOpenid sysOauthOpenid = sysOauthOpenidDao.getOne(sysOauthOpenidLambdaQueryWrapper);
             meResp.setClientId(accessToken1.getClientId());
-            meResp.setOpenId(one.getOpenId());
+            meResp.setOpenId(String.valueOf(sysOauthOpenid.getOpenid()));
             meResp.setCode(0);
             return meResp;
         }
@@ -203,66 +226,7 @@ public class OauthServiceImpl implements OauthService {
         return one.getClientName();
     }
 
-    /**
-     * 校验权限
-     *
-     * @param accessToken
-     * @param openid
-     * @param cilentId
-     * @return
-     */
-    @CheckScope(token = "#accessToken", cliendId = "#cilentId", needScope = "get_user_info")
-    @Override
-    public OauthUserInfoResp getUserInfo(String accessToken, String openid, String cilentId) {
-        OauthUserInfoResp oauthUserInfoResp = new OauthUserInfoResp();
-        try {
-            if (StringUtils.isEmpty(accessToken) || StringUtils.isEmpty(openid) || StringUtils.isEmpty(cilentId)) {
-                log.info("getUserInfo参数{},{},{}", accessToken, openid, cilentId);
-                oauthUserInfoResp.setCode(100055);
-                oauthUserInfoResp.setMsg("参数异常");
-                return oauthUserInfoResp;
-            }
-            if (RedisUtils.get(MyString.oauth_access_token + accessToken, AccessToken.class) == null) {
-                oauthUserInfoResp.setCode(100055);
-                oauthUserInfoResp.setMsg("token失效");
-                return oauthUserInfoResp;
-            }
-            if (RedisUtils.get(MyString.oauth_access_token + accessToken, AccessToken.class).getClientId().equals(cilentId)) {
-                LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
-                userLambdaQueryWrapper.eq(User::getOpenId, openid);
-                User one = userDao.getOne(userLambdaQueryWrapper);
-                if (one == null) {
-                    oauthUserInfoResp.setCode(100055);
-                    oauthUserInfoResp.setMsg("查询用户信息失败");
-                    return oauthUserInfoResp;
-                }
-                if (!one.getOpenId().equals(openid)) {
-                    oauthUserInfoResp.setCode(100055);
-                    oauthUserInfoResp.setMsg("身份异常");
-                    return oauthUserInfoResp;
-                }
-                oauthUserInfoResp.setSex(one.getSex());
-                oauthUserInfoResp.setEmail(one.getEmail());
-                oauthUserInfoResp.setAvatar(one.getAvatar());
-                oauthUserInfoResp.setNickname(one.getName());
-                oauthUserInfoResp.setUsername(one.getUsername());
-                oauthUserInfoResp.setName(one.getName());
-                oauthUserInfoResp.setId(one.getOpenId());
 
-                oauthUserInfoResp.setCode(0);
-                return oauthUserInfoResp;
-
-            }
-        } catch (Exception e) {
-            log.error(e.getMessage());
-            oauthUserInfoResp.setCode(100055);
-            oauthUserInfoResp.setMsg("业务异常");
-            return oauthUserInfoResp;
-        }
-        oauthUserInfoResp.setCode(100055);
-        oauthUserInfoResp.setMsg("业务异常");
-        return oauthUserInfoResp;
-    }
 
     @Override
     public List<SysOauth> list() {
@@ -395,6 +359,69 @@ public class OauthServiceImpl implements OauthService {
         return "logoutSuccess";
     }
 
+    /**
+     * 校验权限
+     *
+     * @param accessToken
+     * @param cilentId
+     * @return
+     */
+    @CheckScope(token = "#accessToken", cliendId = "#cilentId", needScope = "get_user_info")
+    @Override
+    public OauthUserInfoResp getUserInfo(String accessToken, String cilentId) {
+        OauthUserInfoResp oauthUserInfoResp = new OauthUserInfoResp();
+        try {
+            if (StringUtils.isEmpty(accessToken) || StringUtils.isEmpty(cilentId)) {
+                log.info("getUserInfo参数{},{}", accessToken, cilentId);
+                oauthUserInfoResp.setCode(100055);
+                oauthUserInfoResp.setMsg("参数异常");
+                return oauthUserInfoResp;
+            }
+            AccessToken accessTokenObject = RedisUtils.get(MyString.oauth_access_token + accessToken, AccessToken.class);
+            if (accessTokenObject == null) {
+                oauthUserInfoResp.setCode(100055);
+                oauthUserInfoResp.setMsg("token失效");
+                return oauthUserInfoResp;
+            }
+            if (accessTokenObject.getClientId().equals(cilentId)) {
+                User one = userDao.getById(accessTokenObject.getUserId());
+                if (one == null) {
+                    oauthUserInfoResp.setCode(100055);
+                    oauthUserInfoResp.setMsg("查询用户信息失败");
+                    return oauthUserInfoResp;
+                }
+                // 获取openid 👇
+                oauthUserInfoResp.setSex(one.getSex());
+                oauthUserInfoResp.setEmail(one.getEmail());
+                oauthUserInfoResp.setAvatar(one.getAvatar());
+                oauthUserInfoResp.setNickname(one.getName());
+                oauthUserInfoResp.setUsername(one.getUsername());
+                oauthUserInfoResp.setName(one.getName());
+                LambdaQueryWrapper<SysOauthOpenid> sysOauthOpenidLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                sysOauthOpenidLambdaQueryWrapper.eq(SysOauthOpenid::getUserId, one.getId());
+                LambdaQueryWrapper<SysOauth> sysOauthLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                sysOauthLambdaQueryWrapper.eq(SysOauth::getClientId, cilentId);
+                SysOauth sysOauthDaoOne = sysOauthDao.getOne(sysOauthLambdaQueryWrapper);
+                sysOauthOpenidLambdaQueryWrapper.eq(SysOauthOpenid::getSysOauthId, sysOauthDaoOne.getId());
+                SysOauthOpenid sysOauthOpenid = sysOauthOpenidDao.getOne(sysOauthOpenidLambdaQueryWrapper);
+                // 获取openid 向👆
+
+                oauthUserInfoResp.setId(sysOauthOpenid.getOpenid());
+                oauthUserInfoResp.setCode(0);
+                return oauthUserInfoResp;
+
+            }
+        } catch (Exception e) {
+            log.error(e.getMessage());
+            oauthUserInfoResp.setCode(100055);
+            oauthUserInfoResp.setMsg("业务异常");
+            return oauthUserInfoResp;
+        }
+        oauthUserInfoResp.setCode(100055);
+        oauthUserInfoResp.setMsg("业务异常");
+        return oauthUserInfoResp;
+    }
+
     @Override
     public OauthUserInfoResp getUserInfoOnlyAccessToken(String accessToken) {
         OauthUserInfoResp oauthUserInfoResp = new OauthUserInfoResp();
@@ -416,15 +443,44 @@ public class OauthServiceImpl implements OauthService {
             oauthUserInfoResp.setMsg("请先登录!");
             return oauthUserInfoResp;
         }
-        LambdaQueryWrapper<User> sysOauthLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        sysOauthLambdaQueryWrapper.eq(User::getId, userId);
-        User one = userDao.getOne(sysOauthLambdaQueryWrapper);
-        if (one == null) {
-            oauthUserInfoResp.setCode(100055);
-            oauthUserInfoResp.setMsg("查询用户授权信息失败");
+
+        return this.getUserInfo(accessToken, clientId);
+
+    }
+
+    @Override
+    public OauthUserInfoResp getUserInfoNeedCheckOpenId(String accessToken, String openid, String clientId) {
+        OauthUserInfoResp oauthUserInfoResp = new OauthUserInfoResp();
+        if (StringUtils.isEmpty(accessToken)) {
+            oauthUserInfoResp.setCode(10065);
+            oauthUserInfoResp.setMsg("请先登录!");
             return oauthUserInfoResp;
         }
-        return this.getUserInfo(accessToken, one.getOpenId(), clientId);
+        AccessToken accessTokenObject = RedisUtils.get(MyString.oauth_access_token + accessToken, AccessToken.class);
+        if (accessTokenObject == null) {
+            oauthUserInfoResp.setCode(10065);
+            oauthUserInfoResp.setMsg("请先登录!");
+            return oauthUserInfoResp;
+        }
+        Long userId = accessTokenObject.getUserId();
+        String clientIdT = accessTokenObject.getClientId();
+        if (userId == null) {
+            oauthUserInfoResp.setCode(10065);
+            oauthUserInfoResp.setMsg("请先登录!");
+            return oauthUserInfoResp;
+        }
+        LambdaQueryWrapper<SysOauth> sysOauthLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysOauthLambdaQueryWrapper.eq(SysOauth::getClientId, clientIdT);
+        SysOauth sysOauth = sysOauthDao.getOne(sysOauthLambdaQueryWrapper);
+        LambdaQueryWrapper<SysOauthOpenid> sysOauthOpenidLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysOauthOpenidLambdaQueryWrapper.eq(SysOauthOpenid::getSysOauthId, sysOauth.getId());
+        SysOauthOpenid sysOauthOpenid = sysOauthOpenidDao.getOne(sysOauthOpenidLambdaQueryWrapper);
+        if (!sysOauthOpenid.getOpenid().equals(Integer.valueOf(openid))) {
+            oauthUserInfoResp.setCode(10065);
+            oauthUserInfoResp.setMsg("openid异常!");
+            return oauthUserInfoResp;
+        }
+        return this.getUserInfo(accessToken, clientIdT);
     }
 
 }

@@ -74,6 +74,11 @@ public class OauthController {
                 pinjie = pinjie + "&state=" + state;
             }
             if (StringUtils.isNotEmpty(scope)) {
+                log.info("oauth_scope源字符串{}", scope);
+                // 兼容空格分割的网站
+                scope = scope.replace("%20", ",").replace(" ", ",");
+                log.info("oauth_scope处理后的字符串{}", scope);
+
                 pinjie = pinjie + "&scope=" + scope;
             }
 
@@ -84,6 +89,13 @@ public class OauthController {
         response.sendRedirect(oauthConfig.getFrontAddress() + "/?which=error&msg=" + canAuthorize.getMsg() + "#/show");
     }
 
+    /**
+     * 仅当首次或者有新的scpoe需求才需要用户手动确认授权，否则直接回调登录即可！
+     * 点击授权时判断是否已经存在openid，没有就创建一个绑定
+     *
+     * @param agreeReq
+     * @return
+     */
     // 两种状态的确认授权，一种是已经登录的状态
     @PostMapping("/agree")
     @NeedToken
@@ -94,6 +106,7 @@ public class OauthController {
 
     /**
      * 未登录时的鉴权接口
+     * 登录统一了，该接口废弃
      *
      * @param agreeReq
      * @return
@@ -202,7 +215,7 @@ public class OauthController {
      */
     @GetMapping("/get_user_info")
     public OauthUserInfoResp getUserInfo(@RequestParam(name = "access_token") String accessToken, @RequestParam(name = "openid") String openid, @RequestParam(name = "oauth_consumer_key") String cilentId) {
-        return oauthService.getUserInfo(accessToken, openid, cilentId);
+        return oauthService.getUserInfoNeedCheckOpenId(accessToken, openid, cilentId);
     }
 
     /**

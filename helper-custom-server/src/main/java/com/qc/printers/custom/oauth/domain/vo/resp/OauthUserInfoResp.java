@@ -17,7 +17,7 @@ public class OauthUserInfoResp extends OauthBase implements Serializable {
      * 此id其实返回的是openid，返回给三方的不可能给真实id
      */
     @JsonProperty("id")
-    private String id;
+    private Integer id;
 
     @JsonProperty("name")
     private String name;

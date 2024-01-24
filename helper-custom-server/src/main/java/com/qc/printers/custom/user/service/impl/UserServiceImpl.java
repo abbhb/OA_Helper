@@ -809,7 +809,6 @@ public class UserServiceImpl implements UserService {
             String uuid = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 15);
             user.setUsername(uuid);
         }
-        user.setOpenId(UUID.randomUUID().toString());
         user.setDeptId(1L);
         // 自己创建
         user.setCreateUser(1L);
@@ -1007,7 +1006,6 @@ public class UserServiceImpl implements UserService {
             String uuid = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 15);
             user.setUsername(uuid);
         }
-        user.setOpenId(UUID.randomUUID().toString());
         user.setDeptId(1L);
         // 自己创建
         user.setCreateUser(1L);
