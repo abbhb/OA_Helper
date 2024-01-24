@@ -32,4 +32,6 @@ public class MyString {
     public static final String CAPTCHA_Success = pre + "Code::CAPTCHA_SUCCESS::";
     public static final String one_time_code_key = pre + "Code::ONE_TIME_CODE::";//一次性code码，redis里存的的对象是UserInfo.class
     public static final String notice_time_read_key = pre + "Code::NOTICE_TIME_READ::";// key为这个加上notice_id ，value暂时为NoticeTimeRead.class
+    public static final String oauth_client_inr = pre + "Inr::Oauth_client_openid::";// oauth_client_openid的id自增
+    public static final String oauth_client_init_time = pre + "init::Oauth_client_openid_time";
 }

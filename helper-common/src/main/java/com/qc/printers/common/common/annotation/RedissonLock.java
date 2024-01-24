@@ -26,6 +26,8 @@ public @interface RedissonLock {
      */
     String key();
 
+    Target target() default Target.EL;
+
     /**
      * 等待锁的时间，默认-1，不等待直接失败,redisson默认也是-1
      *
@@ -40,4 +42,7 @@ public @interface RedissonLock {
      */
     TimeUnit unit() default TimeUnit.MILLISECONDS;
 
+    enum Target {
+        STR, EL
+    }
 }

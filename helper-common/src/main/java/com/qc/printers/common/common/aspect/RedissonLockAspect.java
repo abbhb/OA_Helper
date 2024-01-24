@@ -33,7 +33,14 @@ public class RedissonLockAspect {
         Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
         RedissonLock redissonLock = method.getAnnotation(RedissonLock.class);
         String prefix = StrUtil.isBlank(redissonLock.prefixKey()) ? SpElUtils.getMethodKey(method) : redissonLock.prefixKey();//默认方法限定名+注解排名（可能多个）
-        String key = SpElUtils.parseSpEl(method, joinPoint.getArgs(), redissonLock.key());
+        String key = "";
+
+        switch (redissonLock.target()) {
+            case EL:
+                key = SpElUtils.parseSpEl(method, joinPoint.getArgs(), redissonLock.key());
+            case STR:
+                key = redissonLock.key();
+        }
         return lockService.executeWithLockThrows(prefix + ":" + key, redissonLock.waitTime(), redissonLock.unit(), joinPoint::proceed);
     }
 }

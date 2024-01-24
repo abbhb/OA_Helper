@@ -55,7 +55,7 @@ public class QuickNavigationController {
      * @return
      */
     @NeedToken
-    @PermissionCheck(role = {"superadmin"}, permission = "sys:nav:update")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:nav:list")
     @GetMapping("/listnavfenlei")
     @ApiOperation("导航分类管理系统")
     //后期可以传回token拿到用户信息

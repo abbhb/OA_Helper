@@ -255,7 +255,6 @@ public class TrLoginServiceImpl implements TrLoginService {
             String uuid = UUID.randomUUID().toString().replaceAll("-", "").substring(0, 15);
             userNew.setUsername(uuid);
         }
-        userNew.setOpenId(UUID.randomUUID().toString());
         userNew.setDeptId(1L);
         // 自己创建
         userNew.setCreateUser(1L);
