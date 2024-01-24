@@ -1,15 +1,14 @@
 # AI综合服务平台
 
-
-
 ### Version：1.8.0
 
 ## 环境准备
-- rabbitmq v5 加上延迟队列插件 推荐docker安装 单体文件太多
-- redis v8
-- consul v1.15.4
-- mysql8.0.20
-- minio 最新版即可
+
+- rabbitmq v5 推荐docker安装 单体文件太多[必须安装]
+- redis v8 [必须安装]
+- consul v1.15.4 [必须安装]
+- mysql8.0.20 [必须安装]
+- minio 最新版即可 [必须安装]
 
 
 - [Easy_OA服务平台主后端](https://github.com/abbhb/OA_Helper)
@@ -61,7 +60,26 @@ update 修改权限
 
 + 项目启动时会自动初始化数据库，如果数据库中已经存在数据，则会删除重建，如果数据库中没有数据，则会自动初始化
 + 项目启动时会自动初始化redis，如果redis中已经存在数据，则会删除重建，如果redis中没有数据，则会自动初始化
-+ 项目启动时会自动初始化rabbitmq，如果rabbitmq中已经存在数据，则会删除重建，如果rabbitmq中没有数据，则会自动初始化
 + 代码多处的桶名称写死，如果改了桶名称aistudio也得改，全局搜索修改
 
+## rocketmq里的队列需要手动创建并修改springboot的配置
+
+当前部署示例
+![img.png](img.png)
+![img_1.png](img_1.png)
+
+### topic 详细配置
+
+#### 注意dev和prod用的是两套环境，具体请自己研究配置文件
+
+topicname: writeQueueNums readQueueNums perm
+chat_send_msg:16 16 6
+print_filetopdf_send_msg:16 16 6
+print_filetopdf_send_msg_r:16 16 6
+print_pdf_toimage_send_msg:16 16 6
+print_pdf_toimage_send_msg_r:16 16 6
+print_send_msg    :16 16 6
+print_send_msg_r:16 16 6
+websocket_push:4 4 6
+test:16 16 6
 
