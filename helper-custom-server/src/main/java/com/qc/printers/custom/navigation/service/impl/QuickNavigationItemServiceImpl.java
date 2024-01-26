@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.domain.entity.PageData;
+import com.qc.printers.common.common.utils.oss.OssDBUtil;
 import com.qc.printers.common.navigation.domain.entity.QuickNavigationCategorize;
 import com.qc.printers.common.navigation.domain.entity.QuickNavigationItem;
 import com.qc.printers.common.navigation.mapper.QuickNavigationItemMapper;
@@ -64,7 +65,7 @@ public class QuickNavigationItemServiceImpl extends ServiceImpl<QuickNavigationI
             quickNavigationItemResult.setId(String.valueOf(quickNavigationItem.getId()));
             quickNavigationItemResult.setIntroduction(quickNavigationItem.getIntroduction());
             quickNavigationItemResult.setPath(quickNavigationItem.getPath());
-            quickNavigationItemResult.setImage(quickNavigationItem.getImage());
+            quickNavigationItemResult.setImage(OssDBUtil.toUseUrl(quickNavigationItem.getImage()));
             quickNavigationItemResult.setType(quickNavigationItem.getType());
             quickNavigationItemResult.setContent(quickNavigationItem.getContent());
             quickNavigationItemResult.setCategorizeId(String.valueOf(quickNavigationItem.getCategorizeId()));
@@ -179,7 +180,7 @@ public class QuickNavigationItemServiceImpl extends ServiceImpl<QuickNavigationI
         LambdaUpdateWrapper<QuickNavigationItem> quickNavigationItemLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         quickNavigationItemLambdaUpdateWrapper.set(QuickNavigationItem::getName,quickNavigationItem.getName());
         quickNavigationItemLambdaUpdateWrapper.eq(QuickNavigationItem::getId,quickNavigationItem.getId());
-        quickNavigationItemLambdaUpdateWrapper.set(!StringUtils.isEmpty(quickNavigationItem.getImage()),QuickNavigationItem::getImage,quickNavigationItem.getImage());
+        quickNavigationItemLambdaUpdateWrapper.set(!StringUtils.isEmpty(quickNavigationItem.getImage()),QuickNavigationItem::getImage,OssDBUtil.toDBUrl(quickNavigationItem.getImage()));
         quickNavigationItemLambdaUpdateWrapper.set(QuickNavigationItem::getIntroduction,quickNavigationItem.getIntroduction());
         quickNavigationItemLambdaUpdateWrapper.set(QuickNavigationItem::getPath,quickNavigationItem.getPath());
         quickNavigationItemLambdaUpdateWrapper.set(QuickNavigationItem::getContent,quickNavigationItem.getContent());

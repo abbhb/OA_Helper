@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
+import com.qc.printers.common.common.utils.oss.OssDBUtil;
 import com.qc.printers.common.common.utils.permissionstringsplit.MySplit;
 import com.qc.printers.common.navigation.dao.QuickNavigationDeptDao;
 import com.qc.printers.common.navigation.domain.entity.QuickNavigationCategorize;
@@ -93,7 +94,7 @@ public class QuickNavigationServiceImpl implements QuickNavigationService {
                 quickNavigationItemResult.setId(String.valueOf(quickNavigationItem.getId()));
                 quickNavigationItemResult.setName(quickNavigationItem.getName());
                 quickNavigationItemResult.setPath(quickNavigationItem.getPath());
-                quickNavigationItemResult.setImage(quickNavigationItem.getImage());
+                quickNavigationItemResult.setImage(OssDBUtil.toUseUrl(quickNavigationItem.getImage()));
                 quickNavigationItemResult.setIntroduction(quickNavigationItem.getIntroduction());
                 quickNavigationItemResult.setType(quickNavigationItem.getType());
                 //markdown
