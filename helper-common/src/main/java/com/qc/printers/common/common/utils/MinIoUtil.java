@@ -15,6 +15,7 @@ import io.minio.http.Method;
 import io.minio.messages.Bucket;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.apache.tomcat.util.http.fileupload.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -211,7 +212,7 @@ public class MinIoUtil {
      */
     @SneakyThrows
     public OssResp getPreSignedObjectUrl(OssReq req) {
-        String absolutePath = req.isAutoPath() ? generateAutoPath(req) : req.getFilePath() + StrUtil.SLASH + req.getFileName();
+        String absolutePath = req.isAutoPath() ? generateAutoPath(req) : req.getFilePath() + (StringUtils.isNotEmpty(req.getFilePath())?StrUtil.SLASH:"") + req.getFileName();
         String url = minioClient.getPresignedObjectUrl(
                 GetPresignedObjectUrlArgs.builder()
                         .method(Method.PUT)
