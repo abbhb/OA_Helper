@@ -26,6 +26,9 @@ public class SysOauth implements Serializable {
     @JsonProperty("client_id")
     private String clientId;
 
+    /**
+     * 客户端name
+     */
     @JsonProperty("client_name")
     private String clientName;
 
@@ -42,7 +45,7 @@ public class SysOauth implements Serializable {
     private String redirectUri;
 
     /**
-     * 客户端name
+     * 客户端image
      */
     @JsonProperty("client_image")
     private String clientImage;
