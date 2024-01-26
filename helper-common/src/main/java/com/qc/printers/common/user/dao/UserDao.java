@@ -10,6 +10,7 @@ import com.qc.printers.common.common.domain.enums.NormalOrNoEnum;
 import com.qc.printers.common.common.domain.vo.request.CursorPageBaseReq;
 import com.qc.printers.common.common.domain.vo.response.CursorPageBaseResp;
 import com.qc.printers.common.common.utils.CursorUtils;
+import com.qc.printers.common.common.utils.oss.OssDBUtil;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.domain.enums.ChatActiveStatusEnum;
 import com.qc.printers.common.user.mapper.UserMapper;
@@ -23,6 +24,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Transactional
 @Service
@@ -43,7 +45,13 @@ public class UserDao extends ServiceImpl<UserMapper, User> {
                 .orderByDesc(User::getLoginDate)//最近活跃的1000个人，可以用lastOptTime字段，但是该字段没索引，updateTime可平替
                 .last("limit 1000")//毕竟是大群聊，人数需要做个限制
                 .select(User::getId, User::getName, User::getAvatar)
-                .list();
+                .list().stream().map(user -> {
+                    User user1 = new User();
+                    user1.setId(user.getId());
+                    user1.setName(user.getName());
+                    user1.setAvatar(OssDBUtil.toUseUrl(user.getAvatar()));
+                    return user1;
+                }).collect(Collectors.toList());
 
     }
 

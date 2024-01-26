@@ -8,6 +8,7 @@ import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.domain.entity.Token;
 import com.qc.printers.common.common.utils.*;
+import com.qc.printers.common.common.utils.oss.OssDBUtil;
 import com.qc.printers.common.config.MinIoProperties;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.entity.TrLogin;
@@ -110,7 +111,7 @@ public class TrLoginServiceImpl implements TrLoginService {
         }
         user.setPhone(phone);
         // 设置头像
-        user.setAvatar(avatar);
+        user.setAvatar(OssDBUtil.toDBUrl(avatar));
         user.setStatus(1);
         user.setSex(userObjectByToken.getString("sex"));
         user.setEmail(userObjectByToken.getString("email"));
@@ -259,7 +260,7 @@ public class TrLoginServiceImpl implements TrLoginService {
         // 自己创建
         userNew.setCreateUser(1L);
         // 头像优化
-        userNew.setAvatar(getUniAvatarToLocal(uniquekerLoginInfoBySocialUid.getFaceimg()));
+        userNew.setAvatar(OssDBUtil.toDBUrl(getUniAvatarToLocal(uniquekerLoginInfoBySocialUid.getFaceimg())));
         userNew.setEmail(thirdFirstLoginReq.getEmail().toLowerCase());
         userNew.setName(uniquekerLoginInfoBySocialUid.getNickname());
         userNew.setStatus(1);

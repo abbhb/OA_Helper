@@ -45,6 +45,10 @@ update 修改权限
 + 避坑：mysql8 key value不能作为字段名
 + 打印如需要接入，需要结合打印节点服务这个项目，或者根据打印的文档来手动实现打印的rocketmq端和打印机状态api注册等等
 
+### 需要清洗数据库
+- user_emoji
+- user:avatar
+
 ## 项目说明
 
 - 项目采用springboot2.2.6 + mybatis-plus + vue + mysql8.0.20 + redis8.0.20 + rabbitmq5.7.16 + minio最新版
