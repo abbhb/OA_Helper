@@ -56,8 +56,6 @@ public class PrintController {
      * 将管理员接口和用户接口分离 方便接入权限过滤器
      * 此处没必要校验token 后期通过权限注解标注1需要管理员权限即可
      *
-     * @param name     模糊查询 根据文件名筛选(user：id不为空就得带上user 的id)
-     * @param user     传回user的id只有管理员可以
      * @param pageNum  分页之当前页
      * @param pageSize 分页之页面最大
      * @return

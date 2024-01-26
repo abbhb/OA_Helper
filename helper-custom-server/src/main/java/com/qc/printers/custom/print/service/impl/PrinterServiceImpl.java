@@ -18,6 +18,7 @@ import com.qc.printers.common.common.service.ConsulService;
 import com.qc.printers.common.common.utils.MinIoUtil;
 import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
+import com.qc.printers.common.common.utils.oss.OssDBUtil;
 import com.qc.printers.common.common.utils.oss.domain.OssReq;
 import com.qc.printers.common.common.utils.oss.domain.OssResp;
 import com.qc.printers.common.config.MinIoProperties;
@@ -135,7 +136,7 @@ public class PrinterServiceImpl implements PrinterService {
             printerResult.setContentHash(printerItem1.getContentHash());
             printerResult.setCreateTime(printerItem1.getCreateTime());
             printerResult.setIsDuplex(printerItem1.getIsDuplex());
-            printerResult.setUrl(minIoUtil.getUrlWithHttpByNoHttpKey(printerItem1.getUrl()));
+            printerResult.setUrl(OssDBUtil.toUseUrl(printerItem1.getUrl()));
             printerResult.setCopies(printerItem1.getCopies());
             printerResult.setNeedPrintPagesEndIndex(printerItem1.getNeedPrintPagesEndIndex());
             printerResult.setNeedPrintPagesIndex(printerItem1.getNeedPrintPagesIndex());
@@ -195,7 +196,7 @@ public class PrinterServiceImpl implements PrinterService {
             printerResult.setNeedPrintPagesIndex(printerItem1.getNeedPrintPagesIndex());
             printerResult.setSingleDocumentPaperUsage(printerItem1.getSingleDocumentPaperUsage());
             printerResult.setOriginFilePages(printerItem1.getOriginFilePages());
-            printerResult.setUrl(minIoProperties.getUrl()+"/"+minIoProperties.getBucketName()+"/"+printerItem1.getUrl());
+            printerResult.setUrl(OssDBUtil.toUseUrl(printerItem1.getUrl()));
             User user1 = userMapper.getUserIncludeDeleted(printerItem1.getCreateUser());
             if (user1==null){
                 printerResult.setCreateUser(String.valueOf(printerItem1.getCreateUser())+"(用户信息已丢失)");
@@ -320,13 +321,10 @@ public class PrinterServiceImpl implements PrinterService {
         if (StringUtils.isEmpty(fileUrl)) {
             throw new CustomException("上传异常");
         }
-        log.info("imageUrl={}", fileUrl);
-        String[] split = fileUrl.split("\\?");
-        String fileKey = split[0].split("/aistudio/")[1];
         //同步数据
         Printer printer = new Printer();
         printer.setIsPrint(0);
-        printer.setUrl(fileKey);
+        printer.setUrl(OssDBUtil.toDBUrl(fileUrl));
         printer.setIsPrint(0);
         printer.setName(file.getOriginalFilename());
         boolean save = iPrinterService.save(printer);
@@ -339,7 +337,7 @@ public class PrinterServiceImpl implements PrinterService {
         printerRedis.setNeedPrintPagesIndex(1);//从第一页开始
         printerRedis.setPageNums(0);
         //统一使用png
-        OssResp preSignedObjectUrl = minIoUtil.getPreSignedObjectUrl(new OssReq("temp-image", printer.getName() + ".png", printer.getId(), true));
+        OssResp preSignedObjectUrl = minIoUtil.getPreSignedObjectUrl(new OssReq("temp-image", printer.getName() + ".png", printer.getId(), false));
         printerRedis.setImageUploadUrl(preSignedObjectUrl.getUploadUrl());
         printerRedis.setImageDownloadUrl(preSignedObjectUrl.getDownloadUrl());
         printerRedis.setIsCanGetImage(0);
