@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.qc.printers.common.common.Code;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.domain.entity.Token;
+import com.qc.printers.common.common.utils.oss.OssDBUtil;
 import com.qc.printers.common.config.CASConfig;
 import com.qc.printers.common.user.domain.entity.User;
 import org.apache.commons.lang.StringUtils;
@@ -87,7 +88,7 @@ public class CASOauthUtil {
         if (!StringUtils.isEmpty(phone)) {
             user.setPhone(phone);
         }
-        user.setAvatar(userJSONObject.getString("avatar"));
+        user.setAvatar(OssDBUtil.toDBUrl(userJSONObject.getString("avatar")));
 //        if (!StringUtils.isEmpty(permission)){
 //            user.setPermission(Integer.valueOf(permission));
 //        }

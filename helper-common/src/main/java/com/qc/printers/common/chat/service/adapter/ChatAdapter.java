@@ -7,6 +7,7 @@ import com.qc.printers.common.chat.domain.entity.RoomGroup;
 import com.qc.printers.common.chat.domain.enums.HotFlagEnum;
 import com.qc.printers.common.chat.domain.enums.RoomTypeEnum;
 import com.qc.printers.common.common.domain.enums.NormalOrNoEnum;
+import com.qc.printers.common.common.utils.oss.OssDBUtil;
 import com.qc.printers.common.user.domain.entity.User;
 
 import java.util.Collection;
@@ -71,7 +72,7 @@ public class ChatAdapter {
     public static RoomGroup buildGroupRoom(User user, Long roomId) {
         RoomGroup roomGroup = new RoomGroup();
         roomGroup.setName(user.getName() + "的群组");
-        roomGroup.setAvatar(user.getAvatar());
+        roomGroup.setAvatar(OssDBUtil.toUseUrl(user.getAvatar()));
         roomGroup.setRoomId(roomId);
         return roomGroup;
     }

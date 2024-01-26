@@ -7,6 +7,7 @@ import com.qc.printers.common.common.MyString;
 import com.qc.printers.common.common.utils.JWTUtil;
 import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
+import com.qc.printers.common.common.utils.oss.OssDBUtil;
 import com.qc.printers.common.oauth.annotation.CheckScope;
 import com.qc.printers.common.oauth.dao.SysOauthDao;
 import com.qc.printers.common.oauth.dao.SysOauthOpenidDao;
@@ -393,7 +394,7 @@ public class OauthServiceImpl implements OauthService {
                 // 获取openid 👇
                 oauthUserInfoResp.setSex(one.getSex());
                 oauthUserInfoResp.setEmail(one.getEmail());
-                oauthUserInfoResp.setAvatar(one.getAvatar());
+                oauthUserInfoResp.setAvatar(OssDBUtil.toUseUrl(one.getAvatar()));
                 oauthUserInfoResp.setNickname(one.getName());
                 oauthUserInfoResp.setUsername(one.getUsername());
                 oauthUserInfoResp.setName(one.getName());

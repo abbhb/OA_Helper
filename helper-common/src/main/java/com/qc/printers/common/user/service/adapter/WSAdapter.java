@@ -7,6 +7,7 @@ import com.qc.printers.common.chat.domain.vo.response.ChatMemberStatisticResp;
 import com.qc.printers.common.chat.domain.vo.response.ChatMessageResp;
 import com.qc.printers.common.chat.service.ChatService;
 import com.qc.printers.common.common.utils.DateUtils;
+import com.qc.printers.common.common.utils.oss.OssDBUtil;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.domain.enums.ChatActiveStatusEnum;
 import com.qc.printers.common.user.domain.enums.WSBaseResp;
@@ -33,7 +34,7 @@ public class WSAdapter {
         WSBaseResp<WSLoginSuccess> wsBaseResp = new WSBaseResp<>();
         wsBaseResp.setType(WSRespTypeEnum.LOGIN_SUCCESS.getType());
         WSLoginSuccess wsLoginSuccess = WSLoginSuccess.builder()
-                .avatar(user.getAvatar())
+                .avatar(OssDBUtil.toUseUrl(user.getAvatar()))
                 .name(user.getName())
                 .token(token)
                 .uid(user.getId())

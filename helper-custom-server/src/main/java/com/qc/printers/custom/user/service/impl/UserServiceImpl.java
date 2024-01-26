@@ -12,6 +12,7 @@ import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.common.service.CommonService;
 import com.qc.printers.common.common.utils.*;
+import com.qc.printers.common.common.utils.oss.OssDBUtil;
 import com.qc.printers.common.email.service.EmailService;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.dto.SummeryInfoDTO;
@@ -318,7 +319,7 @@ public class UserServiceImpl implements UserService {
         lambdaUpdateWrapper.set(User::getDeptId, user.getDeptId());
         lambdaUpdateWrapper.set(User::getStatus, user.getStatus());
         lambdaUpdateWrapper.set(User::getPhone, user.getPhone());
-        lambdaUpdateWrapper.set(User::getAvatar, user.getAvatar());
+        lambdaUpdateWrapper.set(User::getAvatar, OssDBUtil.toDBUrl(user.getAvatar()));
         boolean update = userDao.update(lambdaUpdateWrapper);
         if (update) {
             return R.success("更新成功");
@@ -359,7 +360,7 @@ public class UserServiceImpl implements UserService {
         lambdaUpdateWrapper.set(User::getDeptId, user.getDeptId());
         lambdaUpdateWrapper.set(User::getStatus, user.getStatus());
         lambdaUpdateWrapper.set(User::getPhone, user.getPhone());
-        lambdaUpdateWrapper.set(User::getAvatar, user.getAvatar());
+        lambdaUpdateWrapper.set(User::getAvatar, OssDBUtil.toDBUrl(user.getAvatar()));
         boolean update = userDao.update(lambdaUpdateWrapper);
         if (update) {
             return R.success("更新成功");
@@ -450,10 +451,7 @@ public class UserServiceImpl implements UserService {
 
             String avatar = user1.getAvatar();
             if (StringUtils.isNotEmpty(avatar)) {
-                if (!avatar.contains("http")) {
-                    String imageUrl = commonService.getImageUrl(avatar);
-                    avatar = imageUrl;
-                }
+                avatar = OssDBUtil.toUseUrl(avatar);
             } else {
                 avatar = "";
             }
@@ -577,10 +575,7 @@ public class UserServiceImpl implements UserService {
 
         String avatar = currentUser.getAvatar();
         if (StringUtils.isNotEmpty(avatar)) {
-            if (!avatar.contains("http")) {
-                String imageUrl = commonService.getImageUrl(avatar);
-                avatar = imageUrl;
-            }
+            avatar = OssDBUtil.toUseUrl(avatar);
         } else {
             avatar = "";
         }
@@ -607,10 +602,7 @@ public class UserServiceImpl implements UserService {
         lambdaUpdateWrapper.set(User::getPhone, user.getPhone());
         //判空
         if (!StringUtils.isEmpty(user.getAvatar())) {
-            lambdaUpdateWrapper.set(User::getAvatar, user.getAvatar());
-            if (user.getAvatar().contains("http")) {
-                lambdaUpdateWrapper.set(User::getAvatar, user.getAvatar().split("aistudio/")[1]);
-            }
+            lambdaUpdateWrapper.set(User::getAvatar, OssDBUtil.toDBUrl(user.getAvatar()));
         }
         lambdaUpdateWrapper.set(User::getSex, user.getSex());
         lambdaUpdateWrapper.set(User::getStudentId, user.getStudentId());
@@ -685,7 +677,7 @@ public class UserServiceImpl implements UserService {
                 throw new CustomException("禁止未授权用户操作admin");
             }
             // admin
-            lambdaUpdateWrapper.set(User::getAvatar, user.getAvatar());
+            lambdaUpdateWrapper.set(User::getAvatar, OssDBUtil.toDBUrl(user.getAvatar()));
             lambdaUpdateWrapper.set(User::getPhone, user.getPhone());
             lambdaUpdateWrapper.set(User::getStudentId, user.getStudentId());
             lambdaUpdateWrapper.set(User::getSex, user.getSex());
@@ -710,7 +702,7 @@ public class UserServiceImpl implements UserService {
             //非admin
             lambdaUpdateWrapper.set(User::getEmail, user.getEmail());
             lambdaUpdateWrapper.set(User::getDeptId, user.getDeptId());
-            lambdaUpdateWrapper.set(User::getAvatar, user.getAvatar());
+            lambdaUpdateWrapper.set(User::getAvatar, OssDBUtil.toDBUrl(user.getAvatar()));
             lambdaUpdateWrapper.set(User::getPhone, user.getPhone());
             lambdaUpdateWrapper.set(User::getName, user.getName());
             lambdaUpdateWrapper.set(User::getStudentId, user.getStudentId());
@@ -746,7 +738,7 @@ public class UserServiceImpl implements UserService {
         Map<Long, UserInfo> userInfoBatch = userCache.getUserInfoBatch(uidList.stream().collect(Collectors.toSet()));
         return req.getReqList()
                 .stream()
-                .map(a -> userInfoBatch.containsKey(a.getUid()) ? new SummeryInfoDTO(a.getUid(), true, userInfoBatch.get(a.getUid()).getName(), userInfoBatch.get(a.getUid()).getAvatar(), "未知") : SummeryInfoDTO.skip(a.getUid()))
+                .map(a -> userInfoBatch.containsKey(a.getUid()) ? new SummeryInfoDTO(a.getUid(), true, userInfoBatch.get(a.getUid()).getName(),OssDBUtil.toUseUrl(userInfoBatch.get(a.getUid()).getAvatar()), "未知") : SummeryInfoDTO.skip(a.getUid()))
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
     }

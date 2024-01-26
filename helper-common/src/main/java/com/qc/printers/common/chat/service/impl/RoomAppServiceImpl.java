@@ -29,6 +29,7 @@ import com.qc.printers.common.common.domain.vo.request.CursorPageBaseReq;
 import com.qc.printers.common.common.domain.vo.response.CursorPageBaseResp;
 import com.qc.printers.common.common.event.GroupMemberAddEvent;
 import com.qc.printers.common.common.utils.AssertUtil;
+import com.qc.printers.common.common.utils.oss.OssDBUtil;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.User;
@@ -374,7 +375,7 @@ public class RoomAppServiceImpl implements RoomAppService {
             } else if (RoomTypeEnum.of(room.getType()) == RoomTypeEnum.FRIEND) {
                 User user = friendRoomMap.get(room.getId());
                 roomBaseInfo.setName(user.getName());
-                roomBaseInfo.setAvatar(user.getAvatar());
+                roomBaseInfo.setAvatar(OssDBUtil.toUseUrl(user.getAvatar()));
             }
             return roomBaseInfo;
         }).collect(Collectors.toMap(RoomBaseInfo::getRoomId, Function.identity()));
