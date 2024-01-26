@@ -3,6 +3,7 @@ package com.qc.printers.common.oauth.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.qc.printers.common.common.CustomException;
+import com.qc.printers.common.common.utils.oss.OssDBUtil;
 import com.qc.printers.common.oauth.dao.SysOauthDao;
 import com.qc.printers.common.oauth.dao.SysOauthUserDao;
 import com.qc.printers.common.oauth.domain.entity.SysOauth;
@@ -15,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 @Transactional
 @Service
@@ -45,6 +47,7 @@ public class OauthMangerServiceImpl implements OauthMangerService {
         }
         sysOauth.setClientId(UUID.randomUUID().toString().replace("-", ""));
         sysOauth.setClientSecret(UUID.randomUUID().toString().replace("-", ""));
+        sysOauth.setClientImage(OssDBUtil.toDBUrl(sysOauth.getClientImage()));
         sysOauthDao.save(sysOauth);
 
         return "添加成功";
@@ -88,6 +91,7 @@ public class OauthMangerServiceImpl implements OauthMangerService {
         if (sysOauth.getStatus() == null) {
             throw new CustomException("Status不能为空");
         }
+        sysOauth.setClientImage(OssDBUtil.toDBUrl(sysOauth.getClientImage()));
         sysOauthDao.updateById(sysOauth);
         return "更新成功";
     }
@@ -110,7 +114,7 @@ public class OauthMangerServiceImpl implements OauthMangerService {
 
     @Override
     public List<SysOauth> listOauth() {
-        return sysOauthDao.list();
+        return sysOauthDao.list().stream().peek(sysOauth -> sysOauth.setClientImage(OssDBUtil.toUseUrl(sysOauth.getClientImage()))).collect(Collectors.toList());
     }
 
     @Override
