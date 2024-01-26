@@ -4,6 +4,7 @@ import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.RedissonLock;
 import com.qc.printers.common.common.domain.vo.response.IdRespVO;
 import com.qc.printers.common.common.utils.AssertUtil;
+import com.qc.printers.common.common.utils.oss.OssDBUtil;
 import com.qc.printers.common.user.dao.UserEmojiDao;
 import com.qc.printers.common.user.domain.entity.UserEmoji;
 import com.qc.printers.common.user.domain.vo.request.user.UserEmojiReq;
@@ -35,7 +36,7 @@ public class UserEmojiServiceImpl implements UserEmojiService {
                 stream()
                 .map(a -> UserEmojiResp.builder()
                         .id(a.getId())
-                        .expressionUrl(a.getExpressionUrl())
+                        .expressionUrl(OssDBUtil.toUseUrl(a.getExpressionUrl()))
                         .build())
                 .collect(Collectors.toList());
     }
@@ -54,13 +55,14 @@ public class UserEmojiServiceImpl implements UserEmojiService {
         //校验表情数量是否超过30
         int count = userEmojiDao.countByUid(uid);
         AssertUtil.isFalse(count > 30, "最多只能添加30个表情哦~~");
+        String expressionUrlDB = OssDBUtil.toDBUrl(req.getExpressionUrl());
         //校验表情是否存在
         Integer existsCount = userEmojiDao.lambdaQuery()
-                .eq(UserEmoji::getExpressionUrl, req.getExpressionUrl())
+                .eq(UserEmoji::getExpressionUrl,expressionUrlDB)
                 .eq(UserEmoji::getUid, uid)
                 .count();
         AssertUtil.isFalse(existsCount > 0, "当前表情已存在哦~~");
-        UserEmoji insert = UserEmoji.builder().uid(uid).expressionUrl(req.getExpressionUrl()).build();
+        UserEmoji insert = UserEmoji.builder().uid(uid).expressionUrl(expressionUrlDB).build();
         userEmojiDao.save(insert);
         return R.success(IdRespVO.id(insert.getId()));
     }
