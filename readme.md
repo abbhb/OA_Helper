@@ -75,7 +75,7 @@ update 修改权限
 ### topic 详细配置
 
 #### 注意dev和prod用的是两套环境，具体请自己研究配置文件
-
+##### 这些topic必须手动创建
 topicname: writeQueueNums readQueueNums perm
 chat_send_msg:16 16 6
 print_filetopdf_send_msg:16 16 6
