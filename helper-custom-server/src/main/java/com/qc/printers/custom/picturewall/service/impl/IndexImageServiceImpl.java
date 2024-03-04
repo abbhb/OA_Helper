@@ -2,6 +2,7 @@ package com.qc.printers.custom.picturewall.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.qc.printers.common.common.utils.MinIoUtil;
+import com.qc.printers.common.common.utils.oss.OssDBUtil;
 import com.qc.printers.common.picturewall.domain.entity.IndexImage;
 import com.qc.printers.common.picturewall.service.IIndexImageService;
 import com.qc.printers.custom.picturewall.service.IndexImageService;
@@ -55,7 +56,7 @@ public class IndexImageServiceImpl implements IndexImageService {
         lambdaQueryWrapper.orderByAsc(IndexImage::getSort);
         List<IndexImage> list = iIndexImageService.list(lambdaQueryWrapper);
         for (IndexImage indexImage : list) {
-            indexImage.setImage(minIoUtil.getUrlWithHttpByNoHttpKey(indexImage.getImage()));
+            indexImage.setImage(OssDBUtil.toUseUrl(indexImage.getImage()));
         }
         return list;
     }
@@ -76,6 +77,7 @@ public class IndexImageServiceImpl implements IndexImageService {
         if (indexImage.getSort() == null) {
             throw new IllegalArgumentException("请输入排序");
         }
+        indexImage.setImage(OssDBUtil.toDBUrl(indexImage.getImage()));
         iIndexImageService.save(indexImage);
         return "添加成功";
     }
@@ -98,6 +100,7 @@ public class IndexImageServiceImpl implements IndexImageService {
         if (indexImage.getSort() == null) {
             throw new IllegalArgumentException("请输入排序");
         }
+        indexImage.setImage(OssDBUtil.toDBUrl(indexImage.getImage()));
         iIndexImageService.updateById(indexImage);
         return "更新成功";
     }
@@ -114,6 +117,6 @@ public class IndexImageServiceImpl implements IndexImageService {
 
     @Override
     public List<IndexImage> list() {
-        return iIndexImageService.list();
+        return iIndexImageService.list().stream().peek(indexImage -> indexImage.setImage(OssDBUtil.toUseUrl(indexImage.getImage()))).toList();
     }
 }

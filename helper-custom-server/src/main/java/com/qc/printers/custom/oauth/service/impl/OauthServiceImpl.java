@@ -208,6 +208,7 @@ public class OauthServiceImpl implements OauthService {
             SysOauth sysOauth = sysOauthDao.getOne(sysOauthLambdaQueryWrapper);
             LambdaQueryWrapper<SysOauthOpenid> sysOauthOpenidLambdaQueryWrapper = new LambdaQueryWrapper<>();
             sysOauthOpenidLambdaQueryWrapper.eq(SysOauthOpenid::getSysOauthId, sysOauth.getId());
+            sysOauthOpenidLambdaQueryWrapper.eq(SysOauthOpenid::getUserId, one.getId());
             SysOauthOpenid sysOauthOpenid = sysOauthOpenidDao.getOne(sysOauthOpenidLambdaQueryWrapper);
             meResp.setClientId(accessToken1.getClientId());
             meResp.setOpenId(String.valueOf(sysOauthOpenid.getOpenid()));
@@ -475,6 +476,7 @@ public class OauthServiceImpl implements OauthService {
         SysOauth sysOauth = sysOauthDao.getOne(sysOauthLambdaQueryWrapper);
         LambdaQueryWrapper<SysOauthOpenid> sysOauthOpenidLambdaQueryWrapper = new LambdaQueryWrapper<>();
         sysOauthOpenidLambdaQueryWrapper.eq(SysOauthOpenid::getSysOauthId, sysOauth.getId());
+        sysOauthOpenidLambdaQueryWrapper.eq(SysOauthOpenid::getUserId, userId);
         SysOauthOpenid sysOauthOpenid = sysOauthOpenidDao.getOne(sysOauthOpenidLambdaQueryWrapper);
         if (!sysOauthOpenid.getOpenid().equals(Integer.valueOf(openid))) {
             oauthUserInfoResp.setCode(10065);
