@@ -55,7 +55,7 @@ public class QuickNavigationController {
      * @return
      */
     @NeedToken
-    @PermissionCheck(role = {"superadmin"}, permission = "sys:nav:list")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:nav-c:list")
     @GetMapping("/listnavfenlei")
     @ApiOperation("导航分类管理系统")
     //后期可以传回token拿到用户信息
@@ -88,7 +88,7 @@ public class QuickNavigationController {
      */
     @ApiOperation("创建导航分类")
     @NeedToken
-    @PermissionCheck(role = {"superadmin"}, permission = "sys:nav:add")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:nav-c:add")
     @PostMapping("/createCategorize")
     public R<String> createCategorize(@RequestBody QuickNavigationCategorizeUpdateReq quickNavigationCategorize) {
 //        System.out.println("quickNavigationCategorize = " + quickNavigationCategorize);
@@ -104,6 +104,7 @@ public class QuickNavigationController {
      */
     @NeedToken
     @ApiOperation("返回导航分类item")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:nav-item:list")
     @GetMapping("/listnavfenleiitem")
     //后期可以传回token拿到用户信息
     public R<PageData<QuickNavigationItemResult>> listNavFenLeiItem(Integer pageNum, Integer pageSize, String name, String selectCate) {
@@ -125,7 +126,7 @@ public class QuickNavigationController {
 
 
     @NeedToken
-    @PermissionCheck(role = {"superadmin"}, permission = "sys:nav:update")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:nav-c:update")
     @PutMapping("/updataforquicknavigationcategorize")
     public R<String> updataForQuickNavigationCategorize(@RequestBody QuickNavigationCategorizeUpdateReq quickNavigation) {
 
@@ -147,7 +148,7 @@ public class QuickNavigationController {
     }
 
     @NeedToken
-    @PermissionCheck(role = {"superadmin"}, permission = "sys:nav:update")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:nav-item:update")
     @PutMapping("/updataforquicknavigationitem")
     public R<String> updataForQuickNavigationItem(@RequestBody QuickNavigationItem quickNavigationItem){
 
@@ -175,7 +176,7 @@ public class QuickNavigationController {
     }
 
     @NeedToken
-    @PermissionCheck(role = {"superadmin"}, permission = "sys:nav:delete")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:nav-c:delete")
     @DeleteMapping("/deleteCategorize")
     public R<String> deleteNavigationCategorize(String id){
         log.info("id = {}",id);
@@ -187,7 +188,7 @@ public class QuickNavigationController {
     }
 
     @NeedToken
-    @PermissionCheck(role = {"superadmin"}, permission = "sys:nav:delete")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:nav-item:delete")
     @DeleteMapping("/deleteItem")
     public R<String> deleteNavigationItem(String id){
         log.info("id = {}",id);
