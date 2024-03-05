@@ -11,6 +11,8 @@ import com.qc.printers.common.navigation.domain.entity.QuickNavigationCategorize
 import com.qc.printers.common.navigation.domain.entity.QuickNavigationDept;
 import com.qc.printers.common.navigation.service.IQuickNavigationCategorizeService;
 import com.qc.printers.common.navigation.service.IQuickNavigationItemService;
+import com.qc.printers.common.user.domain.entity.SysDept;
+import com.qc.printers.common.user.service.ISysDeptService;
 import com.qc.printers.custom.navigation.domain.vo.QuickNavigationCategorizeResult;
 import com.qc.printers.custom.navigation.domain.vo.req.QuickNavigationCategorizeUpdateReq;
 import com.qc.printers.custom.navigation.service.QuickNavigationCategorizeService;
@@ -33,6 +35,8 @@ public class QuickNavigationCategorizeServiceImpl implements QuickNavigationCate
     private IQuickNavigationItemService iQuickNavigationItemService;
     @Autowired
     private QuickNavigationDeptDao quickNavigationDeptDao;
+    @Autowired
+    private ISysDeptService iSysDeptService;
 
 
     /**
@@ -64,6 +68,24 @@ public class QuickNavigationCategorizeServiceImpl implements QuickNavigationCate
             QuickNavigationCategorizeResult quickNavigationCategorizeResult = new QuickNavigationCategorizeResult();
             quickNavigationCategorizeResult.setName(quickNavigationCategorize1.getName());
             quickNavigationCategorizeResult.setId(String.valueOf(quickNavigationCategorize1.getId()));
+            quickNavigationCategorizeResult.setVisibility(quickNavigationCategorize1.getVisibility());
+            if (quickNavigationCategorize1.getVisibility().equals(1)) {
+                // 当仅部门可见
+                LambdaQueryWrapper<QuickNavigationDept> sysQuickNavigationDept = new LambdaQueryWrapper<>();
+                sysQuickNavigationDept.eq(QuickNavigationDept::getQuickNavCategorizeId, quickNavigationCategorize1.getId());
+                sysQuickNavigationDept.select(QuickNavigationDept::getDeptId);
+                List<Long> deptList = quickNavigationDeptDao.list(sysQuickNavigationDept).stream().map(quickNavigationDept -> quickNavigationDept.getDeptId()).toList();
+                LambdaQueryWrapper<SysDept> sysDeptLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                if (deptList.size() > 0) {
+                    // 当绑定了部门
+                    sysDeptLambdaQueryWrapper.in(SysDept::getId, deptList);
+                    sysDeptLambdaQueryWrapper.select(SysDept::getId, SysDept::getDeptName);
+                    List<SysDept> sysDeptList = iSysDeptService.list(sysDeptLambdaQueryWrapper);
+                    quickNavigationCategorizeResult.setDepts(sysDeptList);
+                }
+            }
+
+
             results.add(quickNavigationCategorizeResult);
         }
         pageData.setPages(pageInfo.getPages());
@@ -175,6 +197,12 @@ public class QuickNavigationCategorizeServiceImpl implements QuickNavigationCate
         if (StringUtils.isEmpty(quickNavigationCategorize.getQuickNavigationCategorize().getName())) {
             throw new CustomException("必参缺失");
         }
+        LambdaQueryWrapper<QuickNavigationCategorize> quickNavigationCategorizeLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        quickNavigationCategorizeLambdaQueryWrapper.eq(QuickNavigationCategorize::getName, quickNavigationCategorize.getQuickNavigationCategorize().getName());
+        int counted = iQuickNavigationCategorizeService.count(quickNavigationCategorizeLambdaQueryWrapper);
+        if (counted > 0) {
+            throw new CustomException("分类名不能重复");
+        }
         QuickNavigationCategorize quickNavigationCategorize1 = quickNavigationCategorize.getQuickNavigationCategorize();
         quickNavigationCategorize1.setId(null);
         quickNavigationCategorize1.setIsDeleted(null);
@@ -182,8 +210,12 @@ public class QuickNavigationCategorizeServiceImpl implements QuickNavigationCate
         LambdaQueryWrapper<QuickNavigationDept> quickNavigationDeptLambdaQueryWrapper = new LambdaQueryWrapper<>();
         quickNavigationDeptLambdaQueryWrapper.eq(QuickNavigationDept::getQuickNavCategorizeId, quickNavigationCategorize1.getId());
         if (quickNavigationCategorize.getQuickNavigationCategorize().getVisibility().equals(1)) {
+            if (quickNavigationCategorize.getVisDeptIds().size() < 1) {
+                throw new CustomException("最少绑定一个部门");
+            }
             // 仅部门可见
             int count = quickNavigationDeptDao.count(quickNavigationDeptLambdaQueryWrapper);
+
             if (count > 0) {
                 // 先删除当前分类的绑定
                 quickNavigationDeptDao.remove(quickNavigationDeptLambdaQueryWrapper);

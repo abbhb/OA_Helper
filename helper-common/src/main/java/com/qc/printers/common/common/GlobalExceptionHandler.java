@@ -77,7 +77,7 @@ public class GlobalExceptionHandler {
 //                log.info("{}",split);
 //                return R.error(msg);
 //            }
-            return R.error("请注意,用户名等数据不能重复");
+            return R.error("请注意,用户名等数据不能重复,有数据重复了");
         } else if (e.getCause() instanceof RuntimeException) {
             log.error(e.getMessage(),e.getClass());
             return R.error("运行异常");

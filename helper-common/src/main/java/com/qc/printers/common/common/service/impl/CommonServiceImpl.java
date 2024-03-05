@@ -7,6 +7,7 @@ import com.qc.printers.common.common.domain.entity.ToEmail;
 import com.qc.printers.common.common.service.CommonService;
 import com.qc.printers.common.common.utils.MinIoUtil;
 import com.qc.printers.common.common.utils.apiCount.ApiCount;
+import com.qc.printers.common.common.utils.oss.OssDBUtil;
 import com.qc.printers.common.config.MinIoProperties;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -24,9 +25,9 @@ public class CommonServiceImpl implements CommonService {
         try {
             String fileUrl = MinIoUtil.upload(minIoProperties.getBucketName(), file);
             log.info("imageUrl={}",fileUrl);
-            String[] split = fileUrl.split("\\?");
+//            String[] split = fileUrl.split("\\?");
 
-            return R.successOnlyObject(split[0].split("/aistudio/")[1]);
+            return R.successOnlyObject(OssDBUtil.toDBUrl(fileUrl));
         }catch (Exception e){
             e.printStackTrace();
             throw new CustomException(e.getMessage());
@@ -96,6 +97,7 @@ public class CommonServiceImpl implements CommonService {
 
     @Override
     public String getAllImageUrl(String key) {
-        return minIoProperties.getUrl() + "/" + minIoProperties.getBucketName() + "/" + key;
+
+        return OssDBUtil.toUseUrl(key);
     }
 }
