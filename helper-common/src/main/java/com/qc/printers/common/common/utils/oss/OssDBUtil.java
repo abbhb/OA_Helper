@@ -1,25 +1,46 @@
 package com.qc.printers.common.common.utils.oss;
 
+import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.config.MinioStaticConfiguration;
 import org.apache.commons.lang.StringUtils;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class OssDBUtil {
 
-    public static final String httpRegEx = "/^http:\\/\\/[^\\/]+\\//i";
-    public static final String httpsRegEx = "/^https:\\/\\/[^\\/]+\\//i";
-    public static String toDBUrl(String url){
-        if (StringUtils.isEmpty(url)){
+    public static final String regex = "https?://([^:/]+)(?::\\d+)?/([^/]+)/([^/?]+)";
+
+    public static String toDBUrl(String url) {
+        if (StringUtils.isEmpty(url)) {
             return url;
         }
-        Pattern pattern = Pattern.compile(httpRegEx);
+        Pattern pattern = Pattern.compile(regex);
         Matcher matcher = pattern.matcher(url);
-        String trim = matcher.replaceAll("").trim();
-        Pattern patterns = Pattern.compile(httpsRegEx);
-        Matcher matchers = patterns.matcher(trim);
-        return matchers.replaceAll("").trim();
+
+        // 提取匹配的结果
+        List<String[]> resultList = new ArrayList<>();
+        while (matcher.find()) {
+            String domain = matcher.group(1);
+            String bucketName = matcher.group(2);
+            String resourceName = matcher.group(3);
+            String[] result = {domain, bucketName, resourceName};
+            resultList.add(result);
+        }
+
+//        // 打印结果
+//        for (String[] result : resultList) {
+//            System.out.println("Domain: " + result[0]);
+//            System.out.println("Bucket Name: " + result[1]);
+//            System.out.println("Resource Name: " + result[2]);
+//        }
+        if (resultList.size() < 1) {
+            throw new CustomException("业务异常");
+        }
+
+        return resultList.get(0)[1] + "/" + resultList.get(0)[2];
 
     }
 

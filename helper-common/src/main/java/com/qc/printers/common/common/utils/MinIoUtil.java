@@ -4,6 +4,7 @@ import cn.hutool.core.date.DatePattern;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.io.file.FileNameUtil;
 import cn.hutool.core.util.StrUtil;
+import com.qc.printers.common.common.utils.oss.OssDBUtil;
 import com.qc.printers.common.common.utils.oss.domain.OssReq;
 import com.qc.printers.common.common.utils.oss.domain.OssResp;
 import com.qc.printers.common.config.MinIoProperties;
@@ -231,10 +232,11 @@ public class MinIoUtil {
     }
 
     public String getUrlWithHttpByNoHttpKey(String noHttpUrl) {
-        if (noHttpUrl.startsWith("http")) {
-            return noHttpUrl;
-        }
-        return minIoProperties.getUrl() + "/" + minIoProperties.getBucketName() + "/" + noHttpUrl;
+//        if (noHttpUrl.startsWith("http")) {
+//            return noHttpUrl;
+//        }
+//        return minIoProperties.getUrl() + "/" + minIoProperties.getBucketName() + "/" + noHttpUrl;
+        return OssDBUtil.toUseUrl(noHttpUrl);
     }
 
     /**
