@@ -70,4 +70,6 @@ public interface UserService {
     LoginRes loginByEmailCode(LoginByEmailCodeReq loginByEmailCodeReq);
 
     UserSelectListResp userSelectList(String name);
+
+    PageData<UserResult> getUserListForBpm(Integer pageNum, Integer pageSize, String name, Long deptId);
 }

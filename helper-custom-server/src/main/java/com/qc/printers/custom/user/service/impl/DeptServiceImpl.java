@@ -2,7 +2,9 @@ package com.qc.printers.custom.user.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qc.printers.common.common.CustomException;
+import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.entity.SysDept;
 import com.qc.printers.common.user.domain.entity.SysRole;
@@ -20,6 +22,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import java.util.HashSet;
 import java.util.List;
@@ -228,6 +231,30 @@ public class DeptServiceImpl implements DeptService {
         sortRecursion(deptMangers);
 
         return deptMangers;
+    }
+
+    @Override
+    public PageData<DeptManger> listForBPM(Integer pageNum, Integer pageSize, String name) {
+        Page<SysDept> pageInfo = new Page<>(pageNum, pageSize);
+
+        iSysDeptService.page(pageInfo);
+        PageData<DeptManger> pageData = new PageData<>();
+        pageData.setTotal(pageInfo.getTotal());
+        Set<SysRoleDept> sysRoleDepts = new HashSet<>(iSysRoleDeptService.list());
+        Set<SysRole> sysRoles = new HashSet<>(iSysRoleService.list());
+        pageInfo.getRecords().sort((m1, m2) -> {
+            Long order1 = m1.getId();
+            Long order2 = m2.getId();
+            return order1.compareTo(order2);
+        });
+        if (pageInfo.getRecords().size() < 1) {
+            throw new CustomException("系统异常，请添加根节点(id:0)");
+        }
+        DeptMangerHierarchyBuilder deptMangerHierarchyBuilder = new DeptMangerHierarchyBuilder(pageInfo.getRecords(), sysRoles, sysRoleDepts);
+        List<DeptManger> deptMangers = deptMangerHierarchyBuilder.buildHierarchy();
+        sortRecursion(deptMangers);
+        pageData.setRecords(deptMangers);
+        return pageData;
     }
 
 

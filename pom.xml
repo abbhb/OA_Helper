@@ -41,6 +41,7 @@
         <springfox.version>3.0.0</springfox.version>
         <hutool.version>5.8.18</hutool.version>
         <mysql.version>8.0.29</mysql.version>
+        <activiti.version>7.0.0.SR1</activiti.version>
     </properties>
 
 
@@ -105,6 +106,17 @@
                 <version>${minio.version}</version>
             </dependency>
 
+            <dependency>
+                <groupId>org.activiti</groupId>
+                <artifactId>activiti-spring-boot-starter</artifactId>
+                <version>${activiti.version}</version>
+                <exclusions>
+                    <exclusion>
+                        <artifactId>mybatis</artifactId>
+                        <groupId>org.mybatis</groupId>
+                    </exclusion>
+                </exclusions>
+            </dependency>
             <!-- 引入 redis 依赖 -->
             <dependency>
                 <groupId>org.springframework.boot</groupId>
