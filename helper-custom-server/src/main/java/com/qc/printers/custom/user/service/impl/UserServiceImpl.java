@@ -1033,5 +1033,60 @@ public class UserServiceImpl implements UserService {
         return userSelectListResp;
     }
 
+    @Override
+    public PageData<UserResult> getUserListForBpm(Integer pageNum, Integer pageSize, String name, Long deptId) {
+        if (pageNum == null) {
+            throw new IllegalArgumentException("传参错误");
+        }
+        if (pageSize == null) {
+            throw new IllegalArgumentException("传参错误");
+        }
+        Page<User> pageInfo = new Page<>(pageNum, pageSize);
+        LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        //添加过滤条件
+        lambdaQueryWrapper.like(StringUtils.isNotEmpty(name), User::getName, name);
+        if (deptId != null) {
+            lambdaQueryWrapper.eq(User::getDeptId, deptId);
+        }
+
+        //添加排序条件
+        lambdaQueryWrapper.orderByAsc(User::getCreateTime);//按照创建时间排序
+        userDao.page(pageInfo, lambdaQueryWrapper);
+        PageData<UserResult> pageData = new PageData<>();
+        List<UserResult> results = new ArrayList<>();
+        for (Object user : pageInfo.getRecords()) {
+            User user1 = (User) user;
+            //Todo:需要优化，将部门整个进缓存，在查询不到或者更改时更新单个缓存
+            SysDept sysDept = iSysDeptService.getById(user1.getDeptId());
+            //从部门继承的不能直接显示，或者需要却别开，不然很乱
+            LambdaQueryWrapper<SysUserRole> sysRoleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            sysRoleLambdaQueryWrapper.eq(SysUserRole::getUserId, user1.getId());
+            List<RoleResp> collect = new ArrayList<>();
+            List<SysUserRole> list = iSysUserRoleService.list(sysRoleLambdaQueryWrapper);
+            if (list != null && list.size() > 0) {
+                List<Long> rolesId = list.stream().map(SysUserRole::getRoleId).toList();
+                List<SysRole> sysRoles = iSysRoleService.listByIds(rolesId);
+                collect = sysRoles.stream().sorted(Comparator.comparing(SysRole::getRoleSort)).map(sysRole -> new RoleResp(String.valueOf(sysRole.getId()), sysRole.getRoleName(), sysRole.getRoleKey(), sysRole.getRoleSort())).collect(Collectors.toList());
+            }
+
+            String avatar = user1.getAvatar();
+            if (StringUtils.isNotEmpty(avatar)) {
+                avatar = OssDBUtil.toUseUrl(avatar);
+            } else {
+                avatar = "";
+            }
+            UserResult userResult = new UserResult(String.valueOf(user1.getId()), user1.getUsername(), user1.getName(), user1.getPhone(), user1.getSex(), String.valueOf(user1.getStudentId()), user1.getStatus(), user1.getCreateTime(), user1.getUpdateTime(), String.valueOf(user1.getDeptId()), sysDept.getDeptName(), user1.getEmail(), avatar, collect);
+            results.add(userResult);
+        }
+        pageData.setPages(pageInfo.getPages());
+        pageData.setTotal(pageInfo.getTotal());
+        pageData.setCountId(pageInfo.getCountId());
+        pageData.setCurrent(pageInfo.getCurrent());
+        pageData.setSize(pageInfo.getSize());
+        pageData.setRecords(results);
+        pageData.setMaxLimit(pageInfo.getMaxLimit());
+        return pageData;
+    }
+
 
 }

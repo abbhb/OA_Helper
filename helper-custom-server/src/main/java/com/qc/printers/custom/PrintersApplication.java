@@ -9,7 +9,7 @@ import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 //@EnableOpenApi//启动swaggerUI
-@SpringBootApplication(scanBasePackages = {"com.qc.printers"})
+@SpringBootApplication(scanBasePackages = {"com.qc.printers"}, exclude = {org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class})
 @MapperScan({"com.qc.printers.common.**.mapper"})
 @Slf4j
 public class PrintersApplication implements CommandLineRunner {

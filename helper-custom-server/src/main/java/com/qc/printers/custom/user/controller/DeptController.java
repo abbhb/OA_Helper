@@ -3,6 +3,7 @@ package com.qc.printers.custom.user.controller;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.annotation.PermissionCheck;
+import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.custom.user.domain.vo.response.dept.DeptManger;
 import com.qc.printers.custom.user.service.DeptService;
 import io.swagger.annotations.Api;
@@ -34,6 +35,15 @@ public class DeptController {
         List<DeptManger> deptList = deptService.getDeptList();
         log.info("userDept={}", deptList);
         return R.success(deptList);
+    }
+
+    @GetMapping("/listForBPM")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:bpm:add")
+    @NeedToken
+    @ApiOperation(value = "获取全部部门", notes = "")
+    public R<PageData<DeptManger>> listForBPM(Integer pageNum, Integer pageSize, @RequestParam(required = false) String name) {
+        log.info("获取部门");
+        return R.success(deptService.listForBPM(pageNum, pageSize, name));
     }
 
     @GetMapping("/list-only-tree")

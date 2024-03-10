@@ -208,6 +208,13 @@ public class UserController {
         return R.success(trLoginService.uniFirstLogin(thirdFirstLoginReq));
     }
 
+    @GetMapping("/listForBMPN")
+    @NeedToken
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:bpm:add")
+    public R<PageData<UserResult>> listForBMPN(Integer pageNum, Integer pageSize, @RequestParam(required = false) String name, @RequestParam(required = false) Long deptId) {
+        return R.success(userService.getUserListForBpm(pageNum, pageSize, name, deptId));
+    }
+
 
     @NeedToken
     @PutMapping("/update")
