@@ -74,7 +74,7 @@ public class ProcessTodoServiceImpl implements ProcessTodoService {
     public PageData queryPage(TodoListDto dto) {
         List<String> usersGroups = new ArrayList<>();
         UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
-//        usersGroups.add(String.valueOf(currentUser.getDeptId()));
+        usersGroups.add(String.valueOf(currentUser.getDeptId()));
         TaskQuery query = taskService.createTaskQuery()
                 .active()
                 .taskCandidateOrAssigned(String.valueOf(currentUser.getId()), usersGroups)

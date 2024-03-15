@@ -90,7 +90,7 @@ public class ProcessDefinitionController {
      * @param id 主键
      */
     @DeleteMapping("/delete")
-    public R<String> delete(@RequestBody String id) {
+    public R<String> delete(@RequestParam("deploymentId") String id) {
         processDefinitionService.delete(id);
         return R.success("删除成功");
     }
