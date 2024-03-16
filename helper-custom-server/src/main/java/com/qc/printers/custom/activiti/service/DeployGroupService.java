@@ -1,10 +1,13 @@
 package com.qc.printers.custom.activiti.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.qc.printers.common.activiti.dao.DeployExtDao;
 import com.qc.printers.common.activiti.dao.DeployGroupActDao;
 import com.qc.printers.common.activiti.dao.DeployGroupDao;
+import com.qc.printers.common.activiti.entity.DeployExt;
 import com.qc.printers.common.activiti.entity.DeployGroup;
 import com.qc.printers.common.activiti.entity.DeployGroupAct;
+import com.qc.printers.common.activiti.entity.SysDeployNodeEntity;
 import com.qc.printers.common.activiti.entity.vo.workflow.DefinitionListVo;
 import com.qc.printers.common.activiti.service.SysDeployNodeService;
 import com.qc.printers.common.common.CustomException;
@@ -36,6 +39,9 @@ public class DeployGroupService {
     @Autowired
     private SysDeployNodeService deployNodeService;
 
+
+    @Autowired
+    private DeployExtDao deployExtDao;
 
     public List<DeployGroup> getDeployGroupList() {
         List<DeployGroup> list = deployGroupDao.list();
@@ -113,7 +119,7 @@ public class DeployGroupService {
                 .orderByProcessDefinitionId()
                 .orderByProcessDefinitionKey().desc()
                 .orderByProcessDefinitionVersion().desc();
-
+        query.active();
         List<DeployGroup> list1 = deployGroupDao.list();
         HashMap<Long, List<DefinitionListVo>> jieguo = new HashMap<>();
         for (int i = list1.size() - 1; i >= 0; i--) {
@@ -131,6 +137,13 @@ public class DeployGroupService {
             DefinitionListVo vo = new DefinitionListVo();
 
             BeanUtils.copyProperties(item, vo);
+
+            DeployExt deployExt = deployExtDao.getById(item.getDeploymentId());
+            if (deployExt != null) {
+                vo.setIcon(deployExt.getIcon());
+            } else {
+                vo.setIcon("add");
+            }
             LambdaQueryWrapper<DeployGroupAct> deployGroupActLambdaQueryWrapper = new LambdaQueryWrapper<>();
             deployGroupActLambdaQueryWrapper.eq(DeployGroupAct::getDeployId, item.getDeploymentId());
             DeployGroupAct one = deployGroupActDao.getOne(deployGroupActLambdaQueryWrapper);
@@ -140,11 +153,11 @@ public class DeployGroupService {
                 // 不存在
                 resultListWeiFenZu.add(vo);
             }
-//            // 获取主表单
-//            SysDeployNodeEntity mainForm = deployNodeService.getOne(new LambdaQueryWrapper<SysDeployNodeEntity>()
-//                    .eq(SysDeployNodeEntity::getDeployId, item.getDeploymentId())
-//                    .eq(SysDeployNodeEntity::getIsMainFrom, 1));
-//            if (mainForm != null) vo.setFormJson(mainForm.getFormJson());
+            // 获取主表单
+            SysDeployNodeEntity mainForm = deployNodeService.getOne(new LambdaQueryWrapper<SysDeployNodeEntity>()
+                    .eq(SysDeployNodeEntity::getDeployId, item.getDeploymentId())
+                    .eq(SysDeployNodeEntity::getIsMainFrom, 1));
+            if (mainForm != null) vo.setFormJson(mainForm.getFormJson());
 //            resultList.add(vo);
         }
         deployGroupActDto.setDefinitionListVoList(resultListWeiFenZu);

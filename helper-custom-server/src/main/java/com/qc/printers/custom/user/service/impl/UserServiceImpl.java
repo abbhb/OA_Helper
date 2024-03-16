@@ -1089,4 +1089,55 @@ public class UserServiceImpl implements UserService {
     }
 
 
+    @Override
+    public UserSelectListResp userSelectOnlyXUserList(Long deptId) {
+        List<DeptManger> deptListOnlyTree = deptService.getDeptListOnlyTree();
+        UserSelectListResp userSelectListResp = new UserSelectListResp();
+        List<Long> ids = new ArrayList<>();
+        if (deptListOnlyTree.get(0) == null) {
+            throw new CustomException("根部门不能为空");
+        }
+        Queue<DeptManger> queue = new LinkedList<>();
+        queue.offer(deptListOnlyTree.get(0));
+        DeptManger zhaodao = null;
+
+        while (!queue.isEmpty()) {
+            DeptManger node = queue.poll();
+            if (node.getId().equals(deptId)) {
+                zhaodao = node;
+                break;
+            }
+            if (node.getChildren() != null) {
+                for (DeptManger child : node.getChildren()) {
+                    queue.offer(child);
+                }
+            }
+        }
+        if (zhaodao == null) {
+            userSelectListResp.setOptions(new ArrayList<>());
+            return userSelectListResp;
+        }
+        Queue<DeptManger> queue2 = new LinkedList<>();
+        queue2.offer(zhaodao);
+
+        while (!queue2.isEmpty()) {
+            DeptManger node = queue2.poll();
+            ids.add(node.getId());
+            if (node.getChildren() != null) {
+                for (DeptManger child : node.getChildren()) {
+                    queue2.offer(child);
+                }
+            }
+        }
+        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper.in(User::getDeptId, ids);
+        List<User> list = userDao.list(userLambdaQueryWrapper);
+        if (list == null) {
+            list = new ArrayList<>();
+        }
+        userSelectListResp.setOptions(list);
+        return userSelectListResp;
+    }
+
+
 }

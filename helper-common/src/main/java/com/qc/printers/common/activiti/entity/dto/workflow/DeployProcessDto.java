@@ -20,6 +20,9 @@ public class DeployProcessDto {
     @NotBlank(message = "bpmn不能为空")
     private String xml;
 
+    @NotBlank(message = "图标不能为空")
+    private String modelIcon;
+
     /**
      * 表单数据
      */

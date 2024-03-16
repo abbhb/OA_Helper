@@ -24,6 +24,8 @@ public class DefinitionListVo {
      */
     private String deploymentId;
 
+    private String icon;
+
     /**
      * 流程名称
      */

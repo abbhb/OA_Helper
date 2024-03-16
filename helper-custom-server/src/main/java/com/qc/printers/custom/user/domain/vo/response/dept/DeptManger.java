@@ -13,9 +13,21 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 @ToString(callSuper = true)
 public class DeptManger extends SysDept implements Serializable {
+    private String leader;
 
+
+    /**
+     * 联系电话
+     */
+    private String phone;
+
+    /**
+     * 邮箱
+     */
+    private String email;
     private List<SysRole> roles;
 
     private List<DeptManger> children;
+
 
 }

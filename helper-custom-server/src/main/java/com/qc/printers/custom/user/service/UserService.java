@@ -72,4 +72,6 @@ public interface UserService {
     UserSelectListResp userSelectList(String name);
 
     PageData<UserResult> getUserListForBpm(Integer pageNum, Integer pageSize, String name, Long deptId);
+
+    UserSelectListResp userSelectOnlyXUserList(Long deptId);
 }
