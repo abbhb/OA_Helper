@@ -1,8 +1,11 @@
 package com.qc.printers.custom.user.utils;
 
+import com.qc.printers.common.activiti.utils.SpringUtils;
+import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.entity.SysDept;
 import com.qc.printers.common.user.domain.entity.SysRole;
 import com.qc.printers.common.user.domain.entity.SysRoleDept;
+import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.custom.user.domain.vo.response.dept.DeptManger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -56,7 +59,9 @@ public class DeptMangerHierarchyBuilder {
         return sysRoles.stream().filter(sysRole -> collect.stream().anyMatch(sysRoleDept -> sysRoleDept.getRoleId().equals(sysRole.getId()))).collect(Collectors.toList());
     }
 
+
     public List<DeptManger> buildHierarchy() {
+        UserDao userDao = SpringUtils.getBean(UserDao.class);
         List<DeptManger> topLevelNodes = new ArrayList<>();
         log.info("{}", nodeList);
         for (SysDept node : nodeList) {
@@ -68,6 +73,17 @@ public class DeptMangerHierarchyBuilder {
             if (parentId.equals(0L)) {
                 DeptManger deptManger = new DeptManger();
                 BeanUtils.copyProperties(node, deptManger);
+                if (node.getLeaderId() != null) {
+                    User byId = userDao.getById(node.getLeaderId());
+                    if (byId != null) {
+                        deptManger.setLeaderId(node.getLeaderId());
+                        deptManger.setLeader(byId.getName());
+                        deptManger.setEmail(byId.getEmail());
+                        deptManger.setPhone(byId.getPhone());
+
+                    }
+                }
+
                 deptManger.setChildren(new ArrayList<>());
                 if (type == 1) {
                     deptManger.setRoles(includeSysRoleByDeptId);
@@ -77,6 +93,16 @@ public class DeptMangerHierarchyBuilder {
                 List<DeptManger> childList = childMap.getOrDefault(parentId, new ArrayList<>());
                 DeptManger deptManger = new DeptManger();
                 BeanUtils.copyProperties(node, deptManger);
+                if (node.getLeaderId() != null) {
+                    User byId = userDao.getById(node.getLeaderId());
+                    if (byId != null) {
+                        deptManger.setLeaderId(node.getLeaderId());
+                        deptManger.setLeader(byId.getName());
+                        deptManger.setEmail(byId.getEmail());
+                        deptManger.setPhone(byId.getPhone());
+
+                    }
+                }
                 deptManger.setChildren(new ArrayList<>());
                 if (type == 1) {
                     deptManger.setRoles(includeSysRoleByDeptId);

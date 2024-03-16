@@ -57,7 +57,6 @@ public class DeptServiceImpl implements DeptService {
         DeptMangerHierarchyBuilder deptMangerHierarchyBuilder = new DeptMangerHierarchyBuilder(list, sysRoles, sysRoleDepts);
         List<DeptManger> deptMangers = deptMangerHierarchyBuilder.buildHierarchy();
         sortRecursion(deptMangers);
-
         return deptMangers;
     }
 
@@ -93,6 +92,7 @@ public class DeptServiceImpl implements DeptService {
         }
         SysDept sysDept = new DeptManger();
         BeanUtils.copyProperties(deptManger, sysDept);
+        sysDept.setLeaderId(null);
         sysDept.setId(null);
         sysDept.setAncestors(getAncestrs(deptManger.getParentId()));
         iSysDeptService.save(sysDept);
@@ -151,14 +151,13 @@ public class DeptServiceImpl implements DeptService {
         LambdaUpdateWrapper<SysDept> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         lambdaUpdateWrapper.eq(SysDept::getId, deptManger.getId());
         lambdaUpdateWrapper.set(SysDept::getDeptName, deptManger.getDeptName());
-        lambdaUpdateWrapper.set(SysDept::getEmail, deptManger.getEmail());
         // 前面的级别逗号分隔，前端传入
         lambdaUpdateWrapper.set(SysDept::getAncestors, deptManger.getAncestors());
         lambdaUpdateWrapper.set(SysDept::getParentId, deptManger.getParentId());
-        lambdaUpdateWrapper.set(SysDept::getLeader, deptManger.getLeader());
+
+        lambdaUpdateWrapper.set(SysDept::getLeaderId, deptManger.getLeaderId());
         lambdaUpdateWrapper.set(SysDept::getOrderNum, deptManger.getOrderNum());
         lambdaUpdateWrapper.set(SysDept::getStatus, deptManger.getStatus());
-        lambdaUpdateWrapper.set(SysDept::getPhone, deptManger.getPhone());
         lambdaUpdateWrapper.set(SysDept::getAncestors, getAncestrs(deptManger.getParentId()));
         iSysDeptService.update(lambdaUpdateWrapper);
         //还得更新角色关联表 way:removeReBuild

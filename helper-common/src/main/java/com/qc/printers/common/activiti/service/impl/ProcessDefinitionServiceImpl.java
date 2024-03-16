@@ -2,6 +2,8 @@ package com.qc.printers.common.activiti.service.impl;
 
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.qc.printers.common.activiti.dao.DeployExtDao;
+import com.qc.printers.common.activiti.entity.DeployExt;
 import com.qc.printers.common.activiti.entity.SysDeployEntity;
 import com.qc.printers.common.activiti.entity.SysDeployNodeEntity;
 import com.qc.printers.common.activiti.entity.TableColumns;
@@ -50,6 +52,9 @@ public class ProcessDefinitionServiceImpl implements ProcessDefinitionService {
     @Autowired
     private TableService tableService;
 
+    @Autowired
+    private DeployExtDao deployExtDao;
+
     /**
      * 流程管理列表
      *
@@ -70,6 +75,13 @@ public class ProcessDefinitionServiceImpl implements ProcessDefinitionService {
         List<DefinitionListVo> resultList = new ArrayList<>();
         for (ProcessDefinition item : list) {
             DefinitionListVo vo = new DefinitionListVo();
+            DeployExt deployExt = deployExtDao.getById(item.getDeploymentId());
+            if (deployExt != null) {
+                vo.setIcon(deployExt.getIcon());
+            } else {
+                vo.setIcon("add");
+            }
+
             Deployment deployment = repositoryService.createDeploymentQuery()
                     .deploymentId(item.getDeploymentId())
                     .singleResult();
@@ -161,6 +173,16 @@ public class ProcessDefinitionServiceImpl implements ProcessDefinitionService {
                     .ifPresent(t -> deployNode.setColumns(t.getColumns()));
             list.add(deployNode);
         }
+        // 设置图标
+        String modelIcon = dto.getModelIcon();
+        DeployExt deployExt = deployExtDao.getById(deploy.getId());
+        if (deployExt != null) {
+            deployExtDao.removeById(deploy.getId());
+        }
+        DeployExt deployExt2 = new DeployExt();
+        deployExt2.setDeployId(deploy.getId());
+        deployExt2.setIcon(modelIcon);
+        deployExtDao.save(deployExt2);
         deployNodeService.saveBatch(list);
     }
 
@@ -193,6 +215,11 @@ public class ProcessDefinitionServiceImpl implements ProcessDefinitionService {
             formJsonList.add(formJsonsDto);
         }
         result.put("formJsonList", formJsonList);
+
+        DeployExt deployExt = deployExtDao.getById(deploymentId);
+        if (deployExt != null) {
+            result.put("icon", deployExt.getIcon());
+        }
 
         SysDeployEntity sysDeploy = deployService.getById(deploymentId);
         if (sysDeploy != null) {

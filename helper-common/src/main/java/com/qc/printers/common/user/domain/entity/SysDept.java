@@ -43,17 +43,17 @@ public class SysDept implements Serializable {
     /**
      * 负责人
      */
-    private String leader;
+    private Long leaderId;
 
-    /**
-     * 联系电话
-     */
-    private String phone;
-
-    /**
-     * 邮箱
-     */
-    private String email;
+//    /**
+//     * 联系电话
+//     */
+//    private String phone;
+//
+//    /**
+//     * 邮箱
+//     */
+//    private String email;
 
     /**
      * 部门状态:1正常,0停用

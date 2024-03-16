@@ -352,4 +352,15 @@ public class UserController {
         return R.successOnlyObject(userService.userSelectList(name));
     }
 
+
+    @NeedToken
+    @ApiOperation(value = "只返回所传部门id以及下级部门的所有用户", notes = "")
+    @GetMapping("/user_select_list_only_x_user")
+    public R<UserSelectListResp> userSelectOnlyXUserList(Long deptId) {
+        if (deptId == null) {
+            throw new CustomException("请传入部门id");
+        }
+        return R.successOnlyObject(userService.userSelectOnlyXUserList(deptId));
+    }
+
 }
