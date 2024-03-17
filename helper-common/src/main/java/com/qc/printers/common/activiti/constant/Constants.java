@@ -23,5 +23,8 @@ public class Constants {
      * 发起人key
      */
     public final static String PROCESS_INITIATOR = "initiator";
+    public final static String PROCESS_ASSIGNEELEADER_0 = "assigneeLeader0";
+    public final static String PROCESS_ASSIGNEELEADER_1 = "assigneeLeader1";
+    public final static String PROCESS_ASSIGNEELEADER_2 = "assigneeLeader2";
 
 }

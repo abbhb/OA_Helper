@@ -8,6 +8,7 @@ import com.qc.printers.common.activiti.entity.dto.workflow.StartProcessDto;
 import com.qc.printers.common.activiti.entity.vo.workflow.StartListVo;
 import com.qc.printers.common.activiti.service.ProcessStartService;
 import com.qc.printers.common.activiti.service.SysDeployService;
+import com.qc.printers.common.activiti.service.strategy.AssigneeLeaderHandelFactory;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.domain.entity.PageData;
 import org.activiti.engine.HistoryService;
@@ -51,6 +52,7 @@ public class ProcessStartServiceImpl implements ProcessStartService {
 
     @Autowired
     private TaskService taskService;
+
 
     @Autowired
     private SysDeployService deployService;
@@ -137,6 +139,7 @@ public class ProcessStartServiceImpl implements ProcessStartService {
         return pageData;
     }
 
+
     /**
      * 启动流程
      *
@@ -157,6 +160,9 @@ public class ProcessStartServiceImpl implements ProcessStartService {
         // 设置发起人用户id
         // 如果节点审批人,设置的是发起人,则审批节点的 assignee="${initiator}"
         variables.put(Constants.PROCESS_INITIATOR, userId);
+        AssigneeLeaderHandelFactory.getStrategyNoNull(Constants.PROCESS_ASSIGNEELEADER_0).addVariables(variables, userId);
+        AssigneeLeaderHandelFactory.getStrategyNoNull(Constants.PROCESS_ASSIGNEELEADER_1).addVariables(variables, userId);
+        AssigneeLeaderHandelFactory.getStrategyNoNull(Constants.PROCESS_ASSIGNEELEADER_2).addVariables(variables, userId);
         ProcessInstance instance = runtimeService.startProcessInstanceById(dto.getDefinitionId(), dto.getBusinessKey(), variables);
 
         // 获取开始事件

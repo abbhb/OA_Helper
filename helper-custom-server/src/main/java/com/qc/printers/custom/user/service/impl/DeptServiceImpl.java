@@ -114,16 +114,16 @@ public class DeptServiceImpl implements DeptService {
         if (thisParentId.equals(0L)) {
             return null;
         }
-        String s = String.valueOf(thisParentId);
         SysDept sysDept = iSysDeptService.getById(thisParentId);
-        ;
+        String sdept = "";
+
         while (sysDept != null && sysDept.getParentId() != null && sysDept.getParentId().equals(1L)) {
-            s = String.valueOf(sysDept.getId()) + "," + s;
+            sdept = String.valueOf(sysDept.getId()) + "," + sdept;
             sysDept = iSysDeptService.getById(sysDept.getParentId());
         }
-        s = "1" + "," + s;
+        sdept = "1" + "," + sdept;
         //最终最前面加上1
-        return s;
+        return sdept;
     }
 
     @Transactional
@@ -152,7 +152,7 @@ public class DeptServiceImpl implements DeptService {
         lambdaUpdateWrapper.eq(SysDept::getId, deptManger.getId());
         lambdaUpdateWrapper.set(SysDept::getDeptName, deptManger.getDeptName());
         // 前面的级别逗号分隔，前端传入
-        lambdaUpdateWrapper.set(SysDept::getAncestors, deptManger.getAncestors());
+//        lambdaUpdateWrapper.set(SysDept::getAncestors, deptManger.getAncestors());
         lambdaUpdateWrapper.set(SysDept::getParentId, deptManger.getParentId());
 
         lambdaUpdateWrapper.set(SysDept::getLeaderId, deptManger.getLeaderId());
