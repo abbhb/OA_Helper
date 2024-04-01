@@ -23,9 +23,9 @@ public class ConsulService {
     }
 
 
-    public List<HealthService> getRegisteredServices() {
+    public List<HealthService> getRegisteredServices(String serviceName, Boolean onluPassing) {
         // 使用 Consul 客户端获取已注册的服务
-        List<HealthService> healthyServices = consulClient.getHealthServices("打印机服务注册", true, QueryParams.DEFAULT).getValue();
+        List<HealthService> healthyServices = consulClient.getHealthServices(serviceName, onluPassing, QueryParams.DEFAULT).getValue();
         // 过滤出健康的服务实例
         return healthyServices;
     }
