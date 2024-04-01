@@ -377,7 +377,7 @@ public class PrinterServiceImpl implements PrinterService {
 
     @Override
     public List<PrintDeviceResp> printDevicePolling() {
-        List<HealthService> registeredServices = consulService.getRegisteredServices();
+        List<HealthService> registeredServices = consulService.getRegisteredServices("打印机服务注册", true);
         List<PrintDeviceResp> printDeviceResps = new ArrayList<>();
         for (HealthService registeredService : registeredServices) {
             PrintDeviceResp printDeviceResp = new PrintDeviceResp();
