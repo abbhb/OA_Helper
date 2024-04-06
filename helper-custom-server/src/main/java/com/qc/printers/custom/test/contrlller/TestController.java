@@ -14,6 +14,7 @@ import org.springframework.web.bind.annotation.RestController;
 import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 
@@ -62,6 +63,7 @@ public class TestController {
 //                userDao.updateById(user);
 //            }
 //        }
+        log.info("hour{},mi{},s：{}", LocalDateTime.now().getHour(), LocalDateTime.now().getMinute(), LocalDateTime.now().getSecond());
         return R.success("");
     }
 }

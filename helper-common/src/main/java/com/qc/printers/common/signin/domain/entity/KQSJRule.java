@@ -11,5 +11,8 @@ public class KQSJRule implements Serializable {
      */
     private String xq;
 
+    /**
+     * 班次id
+     */
     private Long bcId;
 }

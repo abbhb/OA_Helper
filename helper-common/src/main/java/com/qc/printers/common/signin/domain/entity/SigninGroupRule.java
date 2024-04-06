@@ -19,4 +19,6 @@ public class SigninGroupRule implements Serializable {
      * 考勤组详细规则json
      */
     private RulesInfo rulesInfo;
+
+    private Long groupId;
 }
