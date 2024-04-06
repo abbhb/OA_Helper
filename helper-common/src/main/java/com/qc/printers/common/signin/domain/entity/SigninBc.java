@@ -22,7 +22,7 @@ public class SigninBc implements Serializable {
     private Integer bak;
 
     /**
-     * 对象
+     * 对象,一天几次上下班的上下班时间规则数据
      */
     private List<BcRule> rules;
 }
