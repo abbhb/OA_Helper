@@ -5,6 +5,7 @@ import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.signin.dao.SigninGroupDao;
 import com.qc.printers.common.signin.dao.SigninGroupRuleDao;
 import com.qc.printers.common.signin.domain.dto.SigninGroupDto;
+import com.qc.printers.common.signin.domain.entity.KQSJRule;
 import com.qc.printers.common.signin.domain.entity.RulesInfo;
 import com.qc.printers.common.signin.domain.entity.SigninGroup;
 import com.qc.printers.common.signin.domain.entity.SigninGroupRule;
@@ -15,8 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 
 @Service
 public class SigninGroupServiceImpl implements SigninGroupService {
@@ -49,6 +49,22 @@ public class SigninGroupServiceImpl implements SigninGroupService {
         }
         if (signinGroupDto.getSigninGroupRule().getRulesInfo().getKqsj() == null || signinGroupDto.getSigninGroupRule().getRulesInfo().getKqsj().size() <= 0) {
             throw new CustomException("考勤最少包含一个时间段");
+        }
+        List<KQSJRule> kqsj = signinGroupDto.getSigninGroupRule().getRulesInfo().getKqsj();
+        for (KQSJRule kqsjRule : kqsj) {
+            Map<String, Objects> stringObjectsMap = new HashMap<>();
+            if (StringUtils.isEmpty(kqsjRule.getXq())) {
+                throw new CustomException("星期不能为空");
+            }
+            for (String s : kqsjRule.getXq().split(",")) {
+                if (!stringObjectsMap.containsKey(s)) {
+                    stringObjectsMap.put(s, null);
+                } else {
+                    throw new CustomException("星期重复!");
+                }
+
+            }
+
         }
 
     }
