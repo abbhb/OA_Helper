@@ -8,14 +8,15 @@ import java.io.Serializable;
 @Data
 public class SigninDevice implements Serializable {
 
-    @TableId
-    private String deviceId;
+    @TableId()
+    private String id;
 
     /**
      * 密钥
      */
     private String secret;
     private String name;
+    private String support;
     private String remark;
 
 }
