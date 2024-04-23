@@ -1,5 +1,6 @@
 package com.qc.printers.common.signin.domain.entity;
 
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -28,11 +29,11 @@ public class BcRule implements Serializable {
     /**
      * 上班前多少分钟打卡
      */
-    private String sbStartTime;
+    private Integer sbStartTime;
     /**
      * 上班后多少分钟
      */
-    private String sbEndTime;
+    private Integer sbEndTime;
 
     /**
      * 下班时间
@@ -43,16 +44,17 @@ public class BcRule implements Serializable {
     /**
      * 下班前多少分钟打卡
      */
-    private String xbStartTime;
+    private Integer xbStartTime;
 
     /**
      * 下班后多少分钟
      */
-    private String xbEndTime;
+    private Integer xbEndTime;
 
     /**
      * 最后一班下班时间是否是次日
      */
+    @ApiModelProperty("暂时不生效，该配置，不支持跨日")
     private Integer ciRi;
     /**
      * 下班是否需要打卡

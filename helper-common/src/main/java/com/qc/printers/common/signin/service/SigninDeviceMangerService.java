@@ -23,4 +23,5 @@ public interface SigninDeviceMangerService {
      */
     String addBindDevice(SigninDeviceDto signinDeviceDto);
 
+    boolean checkDevice(String signinDeviceId, String signinSecret);
 }

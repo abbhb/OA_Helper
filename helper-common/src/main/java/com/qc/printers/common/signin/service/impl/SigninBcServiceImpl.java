@@ -73,6 +73,12 @@ public class SigninBcServiceImpl implements SigninBcService {
         signinBc.setBak(0);
         signinBc.setId(null);
         this.check(signinBc);
+        LambdaQueryWrapper<SigninBc> signinBcLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        signinBcLambdaQueryWrapper.eq(SigninBc::getName, signinBc.getName());
+        signinBcLambdaQueryWrapper.eq(SigninBc::getBak, 0);
+        if (signinBcDao.count(signinBcLambdaQueryWrapper) > 0) {
+            throw new CustomException("名称重复");
+        }
         signinBcDao.save(signinBc);
         return "新建班次成功";
     }
@@ -99,9 +105,18 @@ public class SigninBcServiceImpl implements SigninBcService {
     @Transactional
     @Override
     public String updateSigninBc(SigninBc signinBc) {
+        if (signinBc.getId() == null) {
+            throw new CustomException("必须传入id");
+        }
         Long bakId = signinBc.getId();
         signinBc.setBak(0);
         signinBc.setId(null);
+
+        LambdaUpdateWrapper<SigninBc> signinBcLambdaUpdateWrapper1 = new LambdaUpdateWrapper<>();
+        signinBcLambdaUpdateWrapper1.eq(SigninBc::getId, bakId);
+        signinBcLambdaUpdateWrapper1.set(SigninBc::getBak, 1);
+        signinBcDao.update(signinBcLambdaUpdateWrapper1);
+
         this.check(signinBc);
         signinBcDao.save(signinBc);
         // 更新已绑定该规则的考勤组

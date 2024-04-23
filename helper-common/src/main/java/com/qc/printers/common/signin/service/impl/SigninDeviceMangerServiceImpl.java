@@ -1,5 +1,6 @@
 package com.qc.printers.common.signin.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.ecwid.consul.v1.health.model.HealthService;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.service.ConsulService;
@@ -37,13 +38,14 @@ public class SigninDeviceMangerServiceImpl implements SigninDeviceMangerService 
         for (int i = 0; i < list.size(); i++) {
             SigninDeviceDto signinDeviceDto = new SigninDeviceDto();
             signinDeviceDtos.add(signinDeviceDto);
-            signinDeviceDto.setDeviceId(list.get(i).getDeviceId());
+            signinDeviceDto.setDeviceId(list.get(i).getId());
             signinDeviceDto.setSecret(list.get(i).getSecret());
             signinDeviceDto.setRemark(list.get(i).getRemark());
             signinDeviceDto.setName(list.get(i).getName());
+            signinDeviceDto.setSupport(list.get(i).getSupport());
 
             int finalI = i;
-            Optional<HealthService> first = registeredServices.stream().filter(obj -> obj.getService().getId().equals(list.get(finalI).getDeviceId())).findFirst();
+            Optional<HealthService> first = registeredServices.stream().filter(obj -> obj.getService().getId().equals(list.get(finalI).getId())).findFirst();
             if (first.isEmpty()) {
                 signinDeviceDto.setOnline(false);
                 continue;
@@ -51,7 +53,6 @@ public class SigninDeviceMangerServiceImpl implements SigninDeviceMangerService 
             signinDeviceDto.setOnline(true);
             signinDeviceDto.setPort(first.get().getService().getPort());
             signinDeviceDto.setAddress(first.get().getService().getAddress());
-            signinDeviceDto.setSupport(first.get().getService().getMeta().get("zc"));
         }
         return signinDeviceDtos;
     }
@@ -63,7 +64,7 @@ public class SigninDeviceMangerServiceImpl implements SigninDeviceMangerService 
         List<HealthService> registeredServices = consulService.getRegisteredServices("signin", true);
         for (int i = 0; i < registeredServices.size(); i++) {
             int finalI = i;
-            Optional<SigninDevice> first = list.stream().filter(obj -> obj.getDeviceId().equals(registeredServices.get(finalI).getService().getId())).findFirst();
+            Optional<SigninDevice> first = list.stream().filter(obj -> obj.getId().equals(registeredServices.get(finalI).getService().getId())).findFirst();
             if (!first.isEmpty()) {
                 continue;
             }
@@ -95,8 +96,9 @@ public class SigninDeviceMangerServiceImpl implements SigninDeviceMangerService 
             throw new CustomException("请输入设备名称");
         }
         SigninDevice signinDevice = new SigninDevice();
-        signinDevice.setDeviceId(signinDeviceDto.getDeviceId());
+        signinDevice.setId(signinDeviceDto.getDeviceId());
         signinDevice.setSecret(signinDeviceDto.getSecret());
+        signinDevice.setSupport(signinDeviceDto.getSupport());
         signinDevice.setRemark(signinDeviceDto.getRemark());
         signinDevice.setName(signinDeviceDto.getName());
         // 校验密钥
@@ -113,5 +115,18 @@ public class SigninDeviceMangerServiceImpl implements SigninDeviceMangerService 
         }
         signinDeviceDao.save(signinDevice);
         return "绑定成功";
+    }
+
+    @Transactional
+    @Override
+    public boolean checkDevice(String signinDeviceId, String signinSecret) {
+        LambdaQueryWrapper<SigninDevice> signinDeviceLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        signinDeviceLambdaQueryWrapper.eq(SigninDevice::getId, signinDeviceId);
+        SigninDevice one = signinDeviceDao.getOne(signinDeviceLambdaQueryWrapper);
+        if (one == null) throw new CustomException("对象异常");
+        if (!one.getSecret().equals(signinSecret)) {
+            throw new CustomException("鉴权失败");
+        }
+        return true;
     }
 }

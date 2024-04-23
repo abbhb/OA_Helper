@@ -56,7 +56,9 @@ public class SigninBcController {
     @ApiOperation(value = "查询班次", notes = "")
     public R<List<SigninBc>> list() {
         log.info("查询班次");
-        return R.success(signinBcService.listSigninBc());
+        List<SigninBc> signinBcs = signinBcService.listSigninBc();
+        log.info("{}", signinBcs);
+        return R.success(signinBcs);
     }
 
 }

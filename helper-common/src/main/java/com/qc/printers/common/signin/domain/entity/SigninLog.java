@@ -7,7 +7,7 @@ import java.time.LocalDateTime;
 
 @Data
 public class SigninLog implements Serializable {
-    private Long id;
+    private String id;
 
     private Long userId;
 
@@ -16,4 +16,11 @@ public class SigninLog implements Serializable {
     private LocalDateTime signinTime;
 
     private String signinDeviceId;
+
+    private String signinWay;
+
+    private String signinImage;
+    private Long updateUser;
+    private String remark;
+
 }
