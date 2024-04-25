@@ -6,7 +6,6 @@ import javax.servlet.http.HttpServletRequest;
 
 public interface SigninLogService {
 
-    void addSigninlog(SigninLog signinLog);
 
     String addSigninlogByDevice(HttpServletRequest request, SigninLog signinLog);
 }

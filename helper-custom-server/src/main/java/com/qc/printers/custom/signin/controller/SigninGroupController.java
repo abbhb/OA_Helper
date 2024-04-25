@@ -60,4 +60,6 @@ public class SigninGroupController {
         log.info("获取考勤组规则信息");
         return R.success(signinGroupService.listSigninGroup());
     }
+
+
 }
