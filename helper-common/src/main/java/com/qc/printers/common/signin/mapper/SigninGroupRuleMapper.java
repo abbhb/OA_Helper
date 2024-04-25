@@ -15,4 +15,6 @@ public interface SigninGroupRuleMapper extends BaseMapper<SigninGroupRule> {
 
     @Select("SELECT * FROM signin_group_rule WHERE JSON_CONTAINS(rules_info->'$.kqsj[*].bcId', #{value})")
     List<SigninGroupRule> listSigninGroupByJsonKey(@Param("value") String value);
+
+    SigninGroupRule getSigninGroupByUserIdWithTime(@Param("time") String time, @Param("time2") String time2, @Param("userId") String userId);
 }
