@@ -24,6 +24,7 @@ import org.springframework.transaction.annotation.Transactional;
 import javax.servlet.http.HttpServletRequest;
 import java.time.DayOfWeek;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
@@ -79,6 +80,13 @@ public class SigninLogServiceImpl implements SigninLogService {
         signinLogDao.save(signinLog);
         this.addSigninLogCliByLog(signinLog);
         return "记录成功";
+    }
+
+    @Transactional
+    @Override
+    public List<SigninLogCli> getUserInDateAllLogCli(Long userId, LocalDate date) {
+        // 考勤组更新改为强制次日生效 然后规则粒度改为天，这样不会出现同一天，不同时段签到的人结果不同
+        return null;
     }
 
     @Transactional
