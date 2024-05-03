@@ -293,6 +293,7 @@ public class TrLoginServiceImpl implements TrLoginService {
             return "";
         }
         try {
+            //todo:图像处理bug java.nio.file.FileAlreadyExistsException: /tmp/temp7254514475269913076.jpg
             // 下载图片到临时文件
             URL url = new URL(avatar);
             Path tempFile = Files.createTempFile("temp", ".jpg");
