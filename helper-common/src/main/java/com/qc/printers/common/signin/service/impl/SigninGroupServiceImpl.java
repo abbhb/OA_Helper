@@ -15,7 +15,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.*;
 
 @Service
@@ -79,7 +79,7 @@ public class SigninGroupServiceImpl implements SigninGroupService {
         SigninGroupRule signinGroupRule = new SigninGroupRule();
         signinGroupRule.setGroupId(signinGroup.getId());
         signinGroupRule.setRev(1);
-        signinGroupRule.setStartTime(LocalDateTime.now());
+        signinGroupRule.setStartTime(LocalDate.now());
         RulesInfo rulesInfo = new RulesInfo();
         signinGroupRule.setRulesInfo(rulesInfo);
         rulesInfo.setSigninWays(signinGroupDto.getSigninGroupRule().getRulesInfo().getSigninWays());
@@ -129,36 +129,54 @@ public class SigninGroupServiceImpl implements SigninGroupService {
         if (signinGroupDto.getOnlyBasic()) {
             return "更新成功";
         }
+        LocalDate nowDate = LocalDate.now();
         this.check(signinGroupDto);
-        // 生成新的规则组
-        LambdaQueryWrapper<SigninGroupRule> signinGroupRuleLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        signinGroupRuleLambdaQueryWrapper.eq(SigninGroupRule::getGroupId, signinGroup.getId());
-        signinGroupRuleLambdaQueryWrapper.orderByDesc(SigninGroupRule::getRev); // 按照目标字段降序排列，以找到最大值
-        signinGroupRuleLambdaQueryWrapper.select(SigninGroupRule::getId, SigninGroupRule::getRev);
-        List<SigninGroupRule> list = signinGroupRuleDao.list(signinGroupRuleLambdaQueryWrapper);
-        int maxs = 1;
 
-        if (list.size() != 0) {
-            maxs = list.get(0).getRev() + 1;
-            SigninGroupRule byId = signinGroupRuleDao.getById(list.get(0).getId());
-            if (byId == null) {
-                throw new CustomException("异常err:15");
+        LambdaQueryWrapper<SigninGroupRule> signinGroupRuleLambdaQueryWrapperSS = new LambdaQueryWrapper<>();
+        signinGroupRuleLambdaQueryWrapperSS.eq(SigninGroupRule::getGroupId, signinGroup.getId());
+        signinGroupRuleLambdaQueryWrapperSS.eq(SigninGroupRule::getEndTime, nowDate.plusDays(1));
+        SigninGroupRule signinGroupRuleDaoOne = signinGroupRuleDao.getOne(signinGroupRuleLambdaQueryWrapperSS);
+        if (signinGroupRuleDaoOne == null) {
+            // 生成新的规则组,当今天没有做过更改，也就是没有从明天开始的规则的时候
+            LambdaQueryWrapper<SigninGroupRule> signinGroupRuleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            signinGroupRuleLambdaQueryWrapper.eq(SigninGroupRule::getGroupId, signinGroup.getId());
+            signinGroupRuleLambdaQueryWrapper.orderByDesc(SigninGroupRule::getRev); // 按照目标字段降序排列，以找到最大值
+            signinGroupRuleLambdaQueryWrapper.select(SigninGroupRule::getId, SigninGroupRule::getRev);
+            List<SigninGroupRule> list = signinGroupRuleDao.list(signinGroupRuleLambdaQueryWrapper);
+            int maxs = 1;
+
+            if (list.size() != 0) {
+                maxs = list.get(0).getRev() + 1;
+                SigninGroupRule byId = signinGroupRuleDao.getById(list.get(0).getId());
+                if (byId == null) {
+                    throw new CustomException("异常err:15");
+                }
+                byId.setEndTime(nowDate.plusDays(1));
+                signinGroupRuleDao.updateById(byId);
             }
-            byId.setEndTime(LocalDateTime.now());
-            signinGroupRuleDao.updateById(byId);
+            SigninGroupRule signinGroupRule = new SigninGroupRule();
+            signinGroupRule.setGroupId(signinGroup.getId());
+            signinGroupRule.setRev(maxs);
+            signinGroupRule.setStartTime(nowDate.plusDays(1));
+            RulesInfo rulesInfo = new RulesInfo();
+            signinGroupRule.setRulesInfo(rulesInfo);
+            rulesInfo.setSigninWays(signinGroupDto.getSigninGroupRule().getRulesInfo().getSigninWays());
+            rulesInfo.setSigninType(signinGroupDto.getSigninGroupRule().getRulesInfo().getSigninType());
+            rulesInfo.setKqsj(signinGroupDto.getSigninGroupRule().getRulesInfo().getKqsj());
+            rulesInfo.setUserIds(signinGroupDto.getSigninGroupRule().getRulesInfo().getUserIds());
+            signinGroupRuleDao.save(signinGroupRule);
+            return "更新成功";
         }
-        SigninGroupRule signinGroupRule = new SigninGroupRule();
-        signinGroupRule.setGroupId(signinGroup.getId());
-        signinGroupRule.setRev(maxs);
-        signinGroupRule.setStartTime(LocalDateTime.now());
+        // 否则就是更新规则，而不是直接生成了
         RulesInfo rulesInfo = new RulesInfo();
-        signinGroupRule.setRulesInfo(rulesInfo);
         rulesInfo.setSigninWays(signinGroupDto.getSigninGroupRule().getRulesInfo().getSigninWays());
         rulesInfo.setSigninType(signinGroupDto.getSigninGroupRule().getRulesInfo().getSigninType());
         rulesInfo.setKqsj(signinGroupDto.getSigninGroupRule().getRulesInfo().getKqsj());
         rulesInfo.setUserIds(signinGroupDto.getSigninGroupRule().getRulesInfo().getUserIds());
-        signinGroupRuleDao.save(signinGroupRule);
+        signinGroupRuleDaoOne.setRulesInfo(rulesInfo);
+        signinGroupRuleDao.updateById(signinGroupRuleDaoOne);
         return "更新成功";
+
     }
 
     @Override
