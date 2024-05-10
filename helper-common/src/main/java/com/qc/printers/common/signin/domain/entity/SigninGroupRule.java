@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 
 @Data
 @TableName(value = "signin_group_rule", autoResultMap = true)// 此处不加json为null
@@ -15,9 +15,9 @@ public class SigninGroupRule implements Serializable {
 
     private Integer rev;
 
-    private LocalDateTime startTime;
+    private LocalDate startTime;
 
-    private LocalDateTime endTime;
+    private LocalDate endTime;
 
     /**
      * 考勤组详细规则json

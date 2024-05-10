@@ -102,9 +102,9 @@ public class SigninLogServiceImpl implements SigninLogService {
         signinLogCli.setLogTime(formattedDateTimeasd);
         signinLogCli.setLogDatetime(signinLog.getSigninTime().toLocalDate());
         // 开始找与该用户匹配的规则
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
-        String formattedDateTime = signinLog.getSigninTime().format(formatter);
-        SigninGroupRule signinGroupByUserIdWithTime = signinGroupRuleMapper.getSigninGroupByUserIdWithTime(formattedDateTime, formattedDateTime, String.valueOf(signinLog.getUserId()));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        String format = signinLog.getSigninTime().toLocalDate().format(formatter);
+        SigninGroupRule signinGroupByUserIdWithTime = signinGroupRuleMapper.getSigninGroupByUserIdWithTime(format, format, String.valueOf(signinLog.getUserId()));
         if (signinGroupByUserIdWithTime == null) {
             return;
             // 表示无匹配的规则，这个人，这条为无效记录，只添加原始记录
