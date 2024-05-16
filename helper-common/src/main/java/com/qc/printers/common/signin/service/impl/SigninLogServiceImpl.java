@@ -228,7 +228,7 @@ public class SigninLogServiceImpl implements SigninLogService {
                     // 暂时只记录上班前最早的，后续的肯定没那么早
                     continue;
                 }
-                signinLogCli1.setStateTime(signinLogCli1.getState().equals(1) ? (int) ChronoUnit.MINUTES.between(timeOnlyCurrent, timeOnlySB) : 0);
+                signinLogCli1.setStateTime(signinLogCli1.getState().equals(1) ? Math.abs((int) ChronoUnit.MINUTES.between(timeOnlyCurrent, timeOnlySB)) : 0);
 
                 signinLogCliDao.save(signinLogCli1);
                 // 在之间，记录,同班次不可能出现上班和下班交叉，直接进入下一班此查找
@@ -295,13 +295,13 @@ public class SigninLogServiceImpl implements SigninLogService {
                         signinLogCliLambdaUpdateWrapper.set(SigninLogCli::getState, signinLogCli1.getState());
                         signinLogCliLambdaUpdateWrapper.set(SigninLogCli::getFromLog, signinLogCli1.getFromLog());
                         // 更新旷班时间，如果不早退就设置时间为0
-                        int fenzhong = ((int) ChronoUnit.MINUTES.between(timeOnlyCurrent, timeOnlydateTimeXBBB));
+                        int fenzhong = Math.abs(((int) ChronoUnit.MINUTES.between(timeOnlyCurrent, timeOnlydateTimeXBBB)));
                         signinLogCliLambdaUpdateWrapper.set(SigninLogCli::getStateTime, signinLogCli1.getState().equals(2) ? fenzhong == 0 ? 1 : fenzhong : 0);
                         signinLogCliDao.update(signinLogCliLambdaUpdateWrapper);
                     }
                     continue;
                 }
-                signinLogCli1.setStateTime(signinLogCli1.getState().equals(2) ? (int) ChronoUnit.MINUTES.between(currentDateTime, timeOnlydateTimeXBBB) : 0);
+                signinLogCli1.setStateTime(signinLogCli1.getState().equals(2) ? Math.abs((int) ChronoUnit.MINUTES.between(currentDateTime, timeOnlydateTimeXBBB)) : 0);
                 signinLogCliDao.save(signinLogCli1);
                 // 在之间，记录,同班次不可能出现上班和下班交叉，直接进入下一班此查找
                 continue;

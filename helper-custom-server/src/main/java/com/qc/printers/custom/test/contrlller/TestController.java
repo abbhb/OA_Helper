@@ -78,8 +78,9 @@ public class TestController {
     public R<SigninGroupRule> test3() {
         log.info("获取考勤组规则信息");
         LocalDateTime now = LocalDateTime.now();
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
         String formattedDateTime = now.format(formatter);
+        log.info("formattedDateTime = {}", formattedDateTime);
         return R.success(signinGroupRuleMapper.getSigninGroupByUserIdWithTime(formattedDateTime, formattedDateTime, "1659941852221624321"));
     }
 

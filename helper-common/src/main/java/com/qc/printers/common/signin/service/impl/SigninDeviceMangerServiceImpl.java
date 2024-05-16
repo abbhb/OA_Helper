@@ -1,6 +1,7 @@
 package com.qc.printers.common.signin.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.ecwid.consul.v1.health.model.HealthService;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.service.ConsulService;
@@ -128,5 +129,23 @@ public class SigninDeviceMangerServiceImpl implements SigninDeviceMangerService 
             throw new CustomException("鉴权失败");
         }
         return true;
+    }
+
+    @Transactional
+    @Override
+    public String updateBindDeviceBasic(SigninDeviceDto signinDeviceDto) {
+        if (StringUtils.isEmpty(signinDeviceDto.getDeviceId())) {
+            throw new CustomException("请提供设备id");
+        }
+        if (StringUtils.isEmpty(signinDeviceDto.getSecret())) {
+            throw new CustomException("请提供设备密钥");
+        }
+        // 已经通过的不允许修改密钥!
+        LambdaUpdateWrapper<SigninDevice> signinDeviceLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+        signinDeviceLambdaUpdateWrapper.set(SigninDevice::getRemark, signinDeviceDto.getRemark());
+//        signinDeviceLambdaUpdateWrapper.set(SigninDevice::getSecret,signinDeviceDto.getSecret());
+        signinDeviceLambdaUpdateWrapper.eq(SigninDevice::getId, signinDeviceDto.getDeviceId());
+        signinDeviceDao.update(signinDeviceLambdaUpdateWrapper);
+        return "更新已有设备成功";
     }
 }
