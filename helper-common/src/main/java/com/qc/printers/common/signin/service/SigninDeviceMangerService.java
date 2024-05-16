@@ -26,4 +26,6 @@ public interface SigninDeviceMangerService {
     boolean checkDevice(String signinDeviceId, String signinSecret);
 
     String updateBindDeviceBasic(SigninDeviceDto signinDeviceDto);
+
+    void deviceDevice(String deviceId);
 }
