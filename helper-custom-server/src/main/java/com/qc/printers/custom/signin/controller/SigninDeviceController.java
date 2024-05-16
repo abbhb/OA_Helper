@@ -8,10 +8,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -36,5 +33,33 @@ public class SigninDeviceController {
         return R.success(bindDeviceList);
     }
 
+    @GetMapping("/list-online")
+//    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin_group:add")
+    @NeedToken
+    @ApiOperation(value = "查询在线设备", notes = "")
+    public R<List<SigninDeviceDto>> listOnline() {
+        log.info("查询在线设备");
+        List<SigninDeviceDto> bindDeviceList = signinDeviceMangerService.getCanBindDeviceList();
+        log.info("{}", bindDeviceList);
+        return R.success(bindDeviceList);
+    }
 
+
+    @PostMapping("/add")
+//    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin_group:add")
+    @NeedToken
+    @ApiOperation(value = "添加绑定设备", notes = "")
+    public R<String> addDevice(@RequestBody SigninDeviceDto signinDeviceDto) {
+        log.info("添加绑定设备");
+        return R.successOnlyObject(signinDeviceMangerService.addBindDevice(signinDeviceDto));
+    }
+
+    @PutMapping("/update")
+//    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin_group:add")
+    @NeedToken
+    @ApiOperation(value = "更新绑定设备", notes = "")
+    public R<String> updateDevice(@RequestBody SigninDeviceDto signinDeviceDto) {
+        log.info("更新绑定设备");
+        return R.successOnlyObject(signinDeviceMangerService.updateBindDeviceBasic(signinDeviceDto));
+    }
 }
