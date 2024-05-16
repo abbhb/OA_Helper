@@ -148,4 +148,10 @@ public class SigninDeviceMangerServiceImpl implements SigninDeviceMangerService 
         signinDeviceDao.update(signinDeviceLambdaUpdateWrapper);
         return "更新已有设备成功";
     }
+
+    @Transactional
+    @Override
+    public void deviceDevice(String deviceId) {
+        signinDeviceDao.removeById(deviceId);
+    }
 }

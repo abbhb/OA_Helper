@@ -62,4 +62,14 @@ public class SigninDeviceController {
         log.info("更新绑定设备");
         return R.successOnlyObject(signinDeviceMangerService.updateBindDeviceBasic(signinDeviceDto));
     }
+
+    @DeleteMapping("/delete")
+//    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin_group:add")
+    @NeedToken
+    @ApiOperation(value = "删除在线设备", notes = "")
+    public R<String> deviceDevice(String deviceId) {
+        log.info("删除在线设备");
+        signinDeviceMangerService.deviceDevice(deviceId);
+        return R.successOnlyObject("删除成功");
+    }
 }
