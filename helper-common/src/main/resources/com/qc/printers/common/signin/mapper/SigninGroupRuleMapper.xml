@@ -14,6 +14,7 @@
     </resultMap>
 
     <select id="getSigninGroupByUserIdWithTime" resultMap="SigninGroupRuleResult">
+        -- git的格式化会导致异常 -> 容易多个空格
         SELECT *
         FROM signin_group_rule
         WHERE JSON_CONTAINS(rules_info -> '$.userIds', #{userId})
