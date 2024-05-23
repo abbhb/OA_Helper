@@ -41,5 +41,13 @@ public class SigninUserDataController {
         return R.success(signinUserDataService.uploadSigninFaceData(signinUserFaceDataReq));
     }
 
+    @PostMapping("/download_signin_face_data")
+//    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin_group:add")
+    @NeedToken
+    @ApiOperation(value = "同步人脸数据列表", notes = "")
+    public R<String> downloadSigninFaceData(@RequestBody SigninUserFaceDataReq signinUserFaceDataReq) {
+        log.info("从打卡机下载人脸列表");
+        return R.success(signinUserDataService.downloadSigninFaceData(signinUserFaceDataReq));
+    }
 
 }

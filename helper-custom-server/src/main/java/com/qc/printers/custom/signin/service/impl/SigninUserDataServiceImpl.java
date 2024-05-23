@@ -32,6 +32,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -191,5 +192,60 @@ public class SigninUserDataServiceImpl implements SigninUserDataService {
         signinDeviceDto.setAddress(service.getAddress());
         signinDeviceDto.setPort(service.getPort());
         return signinDeviceDto;
+    }
+
+    @Transactional
+    @Override
+    public String downloadSigninFaceData(SigninUserFaceDataReq signinUserFaceDataReq) {
+        SigninDeviceDto signinDevice = this.checkDeviceStatus(signinUserFaceDataReq.getDeviceId(), "face");
+
+        if (!signinDevice.getOnline()) {
+            throw new CustomException("设备掉线，同步失败");
+        }
+        // 设置请求头
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("secert_h", signinDevice.getSecret());
+
+        // 创建 HttpEntity，并传入请求头
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        String url = "http://" + signinDevice.getAddress() + ":" + signinDevice.getPort() + "/list_all_face";
+        ResponseEntity<List<SigninUserFaceDataDto>> exchange = restTemplate.exchange(url, HttpMethod.GET, entity, new ParameterizedTypeReference<List<SigninUserFaceDataDto>>() {
+        });
+        List<SigninUserFaceDataDto> body = exchange.getBody();
+        Map<String, SigninUserFaceDataDto> stringSigninUserFaceDataDtoMap = body.stream()
+                .collect(Collectors.toMap(SigninUserFaceDataDto::getStudentId, item -> item));
+
+        List<SigninUserFaceDataResp> data = signinUserFaceDataReq.getData();
+        for (SigninUserFaceDataResp datum : data) {
+            User byId = userDao.getById(datum.getUserId());
+            if (byId == null) {
+                throw new CustomException(datum.getUsername() + "用户不存在");
+            }
+            LambdaQueryWrapper<SigninUserData> objectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            objectLambdaQueryWrapper.eq(SigninUserData::getUserId, byId.getId());
+            SigninUserData one = signinUserDataDao.getOne(objectLambdaQueryWrapper);
+            if (datum.isDeviceExist()) {
+                // 更新本地
+                if (one == null) {
+                    //本地尚不存在，新建!
+                    one = new SigninUserData();
+                    one.setUserId(byId.getId());
+                    one.setUpdateTime(LocalDateTime.now());
+                    one.setFaceData(stringSigninUserFaceDataDtoMap.get(byId.getStudentId()).getFaceData());
+                    signinUserDataDao.save(one);
+                } else {
+                    one.setFaceData(stringSigninUserFaceDataDtoMap.get(byId.getStudentId()).getFaceData());
+                    signinUserDataDao.updateById(one);
+                }
+
+            } else {
+                if (one != null) {
+                    //本地存在远端不存在，删除
+                    one.setFaceData(null);
+                    signinUserDataDao.updateById(one);
+                }
+            }
+        }
+        return "同步成功";
     }
 }
