@@ -1,6 +1,7 @@
 package com.qc.printers.common.activiti.service.strategy;
 
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.entity.SysDept;
@@ -91,6 +92,17 @@ public abstract class AbstractAssigneeLeaderHandel {
             currentDeep += 1;
         }
         if (zhaoDao == null) {
+            // 再尝试根组织下有没有负责人，有就用!
+            LambdaQueryWrapper<SysDept> sysDeptLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            sysDeptLambdaQueryWrapper.eq(SysDept::getParentId, 0L);
+            SysDept sysDept1 = iSysDeptService.getOne(sysDeptLambdaQueryWrapper);
+            if (sysDept1 != null) {
+                User user = userDao.getById(sysDept1.getLeaderId());
+                if (user != null) {
+                    return user;
+                }
+
+            }
             throw new CustomException("无可用负责人--error:790");
         }
         return zhaoDao;

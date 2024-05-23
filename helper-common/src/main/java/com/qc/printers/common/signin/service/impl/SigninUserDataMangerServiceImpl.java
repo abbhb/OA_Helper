@@ -77,6 +77,7 @@ public class SigninUserDataMangerServiceImpl implements SigninUserDataMangerServ
         SigninUserData signinUserData = new SigninUserData();
         signinUserData.setFaceData(faceDataResp.getFaceData());
         signinUserData.setUserId(userId);
+        signinUserData.setUpdateTime(LocalDateTime.now());
         signinUserDataDao.save(signinUserData);
 
     }
