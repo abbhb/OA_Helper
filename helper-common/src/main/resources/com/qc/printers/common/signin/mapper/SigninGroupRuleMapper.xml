@@ -16,7 +16,7 @@
     <select id="getSigninGroupByUserIdWithTime" resultMap="SigninGroupRuleResult">
         SELECT *
         FROM signin_group_rule
-        WHERE JSON_CONTAINS(rules_info - > '$.userIds', #{userId})
+        WHERE JSON_CONTAINS(rules_info -> '$.userIds', #{userId})
           AND start_time <![CDATA[ <= ]]> #{time}
           AND (end_time <![CDATA[ >= ]]> #{time2} OR end_time IS NULL)
         ORDER BY start_time DESC LIMIT 1;
