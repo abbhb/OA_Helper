@@ -12,4 +12,6 @@ public interface SigninUserDataService {
     String uploadSigninFaceData(SigninUserFaceDataReq signinUserFaceDataReq);
 
     SigninDeviceDto checkDeviceStatus(String deviceId, String needType);
+
+    String downloadSigninFaceData(SigninUserFaceDataReq signinUserFaceDataReq);
 }
