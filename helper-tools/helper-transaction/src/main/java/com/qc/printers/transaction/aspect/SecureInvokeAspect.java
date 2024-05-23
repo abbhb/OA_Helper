@@ -42,6 +42,10 @@ public class SecureInvokeAspect {
         if (!inTransaction) {
             return joinPoint.proceed();
         }
+        /**
+         * 慎用
+         * MyMetaObjectHandler会失效
+         */
         Method method = ((MethodSignature) joinPoint.getSignature()).getMethod();
         List<String> parameters = Stream.of(method.getParameterTypes()).map(Class::getName).collect(Collectors.toList());
         SecureInvokeDTO dto = SecureInvokeDTO.builder()

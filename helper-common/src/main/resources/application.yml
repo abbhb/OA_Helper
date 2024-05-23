@@ -127,3 +127,5 @@ vail-code:
   imageVailUse: true
   # 邮箱验证码验证
   emailVailUse: true
+
+

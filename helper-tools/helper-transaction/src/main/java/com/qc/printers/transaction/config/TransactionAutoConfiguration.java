@@ -25,11 +25,6 @@ import java.util.concurrent.ForkJoinPool;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 
-/**
- * Description:
- * Author: <a href="https://github.com/zongzibinbin">abin</a>
- * Date: 2023-08-06
- */
 @Configuration
 @EnableScheduling
 @MapperScan(basePackageClasses = SecureInvokeRecordMapper.class)

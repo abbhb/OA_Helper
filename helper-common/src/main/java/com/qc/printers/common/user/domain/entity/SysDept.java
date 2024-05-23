@@ -36,6 +36,11 @@ public class SysDept implements Serializable {
     private String deptName;
 
     /**
+     * 完整部门名称[带父级]
+     */
+    private String deptNameAll;
+
+    /**
      * 显示顺序
      */
     private Integer orderNum;

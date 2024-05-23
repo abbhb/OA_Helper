@@ -19,6 +19,7 @@ import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.SysDept;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.service.ISysDeptService;
+import lombok.extern.slf4j.Slf4j;
 import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.FlowNode;
 import org.activiti.bpmn.model.SequenceFlow;
@@ -44,6 +45,7 @@ import java.util.stream.Collectors;
  * @author liuguofeng
  * @date 2023/11/24 09:40
  **/
+@Slf4j
 @Service("processHistoryService")
 public class ProcessHistoryServiceImpl implements ProcessHistoryService {
 

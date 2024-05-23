@@ -16,6 +16,7 @@ import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.User;
 import de.odysseus.el.tree.TreeBuilderException;
+import lombok.extern.slf4j.Slf4j;
 import org.activiti.bpmn.model.BpmnModel;
 import org.activiti.bpmn.model.FlowElement;
 import org.activiti.engine.ActivitiException;
@@ -43,6 +44,7 @@ import java.util.Map;
  * @author liuguofeng
  * @date 2023/11/04 12:09
  **/
+@Slf4j
 @Service("processTodoService")
 public class ProcessTodoServiceImpl implements ProcessTodoService {
 
@@ -186,11 +188,14 @@ public class ProcessTodoServiceImpl implements ProcessTodoService {
             deployService.saveData(task.getProcessInstanceId(), definition.getDeploymentId(),
                     activityInstance.getActivityId(), variables);
         } catch (TreeBuilderException ex) {
+            log.error("流程条件表达式错误,e:{}", ex.getMessage());
             throw new CustomException("流程条件表达式错误:" + ex.getMessage());
         } catch (ActivitiException ex) {
+            log.error("Activiti流程异常,e:{}", ex.getMessage());
             throw new CustomException("Activiti流程异常:" + ex.getMessage());
         } catch (Exception ex) {
             ex.printStackTrace();
+            log.error("流程提交未知异常,e:{}", ex.getMessage());
             throw new CustomException("流程提交未知异常!");
         }
     }

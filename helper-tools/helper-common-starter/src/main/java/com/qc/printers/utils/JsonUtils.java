@@ -64,6 +64,15 @@ public class JsonUtils {
         }
     }
 
+    public static <T> List<T> toList(String str, TypeReference<List<T>> typeReference) {
+        try {
+            return jsonMapper.readValue(str, typeReference);
+        } catch (JsonProcessingException e) {
+            throw new UnsupportedOperationException(e);
+        }
+    }
+
+
     public static JsonNode toJsonNode(String str) {
         try {
             return jsonMapper.readTree(str);
@@ -87,5 +96,6 @@ public class JsonUtils {
             throw new UnsupportedOperationException(e);
         }
     }
+
 
 }
