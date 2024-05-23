@@ -9,7 +9,7 @@
 - consul v1.15.4 [必须安装]
 - mysql8.0.20 [必须安装]
 - minio 最新版即可 [必须安装]
-
+- xxjob docker运行 [必须安装][详见docs文件夹里的[xx-job](docs%2Fxx-job)]
 
 - [Easy_OA服务平台主后端](https://github.com/abbhb/OA_Helper)
 - [Easy_OA前端](https://github.com/abbhb/OA_Helper-Vue)

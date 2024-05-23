@@ -95,6 +95,18 @@ public class DeptServiceImpl implements DeptService {
         sysDept.setLeaderId(null);
         sysDept.setId(null);
         sysDept.setAncestors(getAncestrs(deptManger.getParentId()));
+        String deptNameAll = "[" + sysDept.getDeptName() + "]";
+        Long parentIds = sysDept.getParentId();
+        while (!parentIds.equals(0L)) {
+
+            SysDept byId = iSysDeptService.getById(parentIds);
+            if (byId == null) {
+                break;
+            }
+            parentIds = byId.getParentId();
+            deptNameAll = "[" + byId.getDeptName() + "]-" + deptNameAll;
+        }
+        sysDept.setDeptNameAll(deptNameAll);
         iSysDeptService.save(sysDept);
         // 完善部门角色关系表
         if (deptManger.getRoles() != null && deptManger.getRoles().size() > 0) {
@@ -154,7 +166,18 @@ public class DeptServiceImpl implements DeptService {
         // 前面的级别逗号分隔，前端传入
 //        lambdaUpdateWrapper.set(SysDept::getAncestors, deptManger.getAncestors());
         lambdaUpdateWrapper.set(SysDept::getParentId, deptManger.getParentId());
+        String deptNameAll = "[" + deptManger.getDeptName() + "]";
+        Long parentIds = deptManger.getParentId();
+        while (!parentIds.equals(0L)) {
 
+            SysDept byId = iSysDeptService.getById(parentIds);
+            if (byId == null) {
+                break;
+            }
+            parentIds = byId.getParentId();
+            deptNameAll = "[" + byId.getDeptName() + "]-" + deptNameAll;
+        }
+        lambdaUpdateWrapper.set(SysDept::getDeptNameAll, deptNameAll);
         lambdaUpdateWrapper.set(SysDept::getLeaderId, deptManger.getLeaderId());
         lambdaUpdateWrapper.set(SysDept::getOrderNum, deptManger.getOrderNum());
         lambdaUpdateWrapper.set(SysDept::getStatus, deptManger.getStatus());

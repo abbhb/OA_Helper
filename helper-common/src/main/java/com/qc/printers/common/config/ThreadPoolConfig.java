@@ -23,7 +23,7 @@ public class ThreadPoolConfig implements AsyncConfigurer, SecureInvokeConfigurer
     /**
      * 项目共用线程池
      */
-    public static final String MALLCHAT_EXECUTOR = "mallchatExecutor";
+    public static final String EASYOA_EXECUTOR = "easyoaExecutor";
     /**
      * websocket通信线程池
      */
@@ -34,24 +34,31 @@ public class ThreadPoolConfig implements AsyncConfigurer, SecureInvokeConfigurer
 
     @Override
     public Executor getAsyncExecutor() {
-        return mallchatExecutor();
+        return easyoaExecutor();
     }
 
     @Override
     public Executor getSecureInvokeExecutor() {
-        return mallchatExecutor();
+        return easyoaExecutor();
     }
 
-    @Bean(MALLCHAT_EXECUTOR)
-    @Primary
-    public ThreadPoolTaskExecutor mallchatExecutor() {
+    @Bean(EASYOA_EXECUTOR)
+    @Primary // 该注解可以在很多相同类型的Bean提供优先级
+    public ThreadPoolTaskExecutor easyoaExecutor() {
         ThreadPoolTaskExecutor executor = new ThreadPoolTaskExecutor();
+        // 设置核心线程数
         executor.setCorePoolSize(10);
+        // 设置最大线程数
         executor.setMaxPoolSize(10);
+        // 设置队列容量
         executor.setQueueCapacity(200);
-        executor.setThreadNamePrefix("mallchat-executor-");
+        // 设置线程名称前缀
+        executor.setThreadNamePrefix("easyoa-executor-");
+        // 设置拒绝策略，当线程池满时，调用者线程来执行任务
         executor.setRejectedExecutionHandler(new ThreadPoolExecutor.CallerRunsPolicy());//满了调用线程执行，认为重要任务
+        // 设置线程工厂，这里是使用了一个自定义的 MyThreadFactory
         executor.setThreadFactory(new MyThreadFactory(executor));
+        // 初始化线程池
         executor.initialize();
         return executor;
     }

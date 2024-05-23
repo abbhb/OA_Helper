@@ -7,6 +7,7 @@ import com.qc.printers.common.common.utils.RSAUtil;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
 import com.qc.printers.common.config.SystemMessageConfig;
 import com.qc.printers.common.confirm.service.SysConfirmService;
+import com.qc.printers.custom.common.domain.entity.UploadFileResp;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -29,7 +30,7 @@ public class CommonController {
     @Autowired
     private SysConfirmService sysConfirmService;
 
-
+    // 历史遗留问题，此接口不再继续维护!
     @CrossOrigin("*")
     @NeedToken
     @PostMapping("/uploadimage")
@@ -39,11 +40,33 @@ public class CommonController {
 
     }
 
+    // 历史遗留问题，此接口不再继续维护!
+    @CrossOrigin("*")
+    @NeedToken
+    @PostMapping("/upload_Form_v1")
+    @ApiOperation("上传图像到minio上，返回url,name适配表单")
+    public R<UploadFileResp> uploadFileFormV1(MultipartFile file) {
+        UploadFileResp uploadFileResp = new UploadFileResp();
+        uploadFileResp.setUrl(commonService.uploadFileTOMinio(file).getData());
+        uploadFileResp.setName(file.getOriginalFilename());
+        return R.successOnlyObject(uploadFileResp);
+
+    }
+
+    @CrossOrigin("*")
+    @NeedToken
+    @PostMapping("/upload")
+    @ApiOperation("通用上传")
+    public R<String> upload(MultipartFile file) {
+        return commonService.uploadFileTOMinio(file);
+
+    }
+
     //此接口后期需要优化，存日志时顺便写一下redis，然后从redis中取
     @CrossOrigin("*")
     @GetMapping("/api_count")
-    @ApiOperation(value = "日总请求数",notes = "")
-    public R<Integer> userCount(){
+    @ApiOperation(value = "日总请求数", notes = "")
+    public R<Integer> userCount() {
         log.info("获取日总请求数");
         Integer integer = commonService.countApi();
         return R.success(integer);
