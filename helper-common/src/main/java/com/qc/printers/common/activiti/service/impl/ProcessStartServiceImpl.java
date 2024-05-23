@@ -160,6 +160,7 @@ public class ProcessStartServiceImpl implements ProcessStartService {
         // 设置发起人用户id
         // 如果节点审批人,设置的是发起人,则审批节点的 assignee="${initiator}"
         variables.put(Constants.PROCESS_INITIATOR, userId);
+        // todo:如果本来就没有这个，也不影响会导致无法发起
         AssigneeLeaderHandelFactory.getStrategyNoNull(Constants.PROCESS_ASSIGNEELEADER_0).addVariables(variables, userId);
         AssigneeLeaderHandelFactory.getStrategyNoNull(Constants.PROCESS_ASSIGNEELEADER_1).addVariables(variables, userId);
         AssigneeLeaderHandelFactory.getStrategyNoNull(Constants.PROCESS_ASSIGNEELEADER_2).addVariables(variables, userId);

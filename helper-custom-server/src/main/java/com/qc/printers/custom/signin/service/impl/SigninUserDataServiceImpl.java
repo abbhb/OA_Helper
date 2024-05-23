@@ -78,6 +78,7 @@ public class SigninUserDataServiceImpl implements SigninUserDataService {
         List<SigninUserFaceDataDto> body = exchange.getBody();
         List<User> userList = userDao.list();
         List<SigninUserFaceDataResp> signinUserFaceDataResps = new ArrayList<>();
+        log.info("device:{},face{}", deviceId, body);
         // 将 List<Item> 转换为 Map<Integer, Item>
         Map<String, SigninUserFaceDataDto> stringSigninUserFaceDataDtoMap = body.stream()
                 .collect(Collectors.toMap(SigninUserFaceDataDto::getStudentId, item -> item));
@@ -185,6 +186,8 @@ public class SigninUserDataServiceImpl implements SigninUserDataService {
         }
         SigninDeviceDto signinDeviceDto = new SigninDeviceDto();
         BeanUtils.copyProperties(signinDevice, signinDeviceDto);
+        signinDeviceDto.setOnline(true);
+
         signinDeviceDto.setAddress(service.getAddress());
         signinDeviceDto.setPort(service.getPort());
         return signinDeviceDto;
