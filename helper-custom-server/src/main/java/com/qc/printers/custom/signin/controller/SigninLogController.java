@@ -7,6 +7,7 @@ import com.qc.printers.common.signin.domain.resp.SigninGroupDateResp;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -39,7 +40,7 @@ public class SigninLogController {
      * @return
      */
     @GetMapping("/export_signin_group_date")
-    public R<SigninGroupDateResp> exportSigninGgroupDate(String groupId, LocalDate date) {
+    public R<SigninGroupDateResp> exportSigninGgroupDate(String groupId, @DateTimeFormat(pattern = "yyyy-MM-dd")LocalDate date) {
         log.info("groupId={},date = {}", groupId,date);
         return R.success(signinLogService.exportSigninGgroupDate(groupId, date));
     }

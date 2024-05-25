@@ -122,8 +122,8 @@ public class SigninLogServiceImpl implements SigninLogService {
         signinGroupDateResp.setAtendanceRequired(true);
         LambdaQueryWrapper<SigninGroupRule> signinGroupRuleLambdaQueryWrapper = new LambdaQueryWrapper<>();
         signinGroupRuleLambdaQueryWrapper.eq(SigninGroupRule::getGroupId,groupId);
-        signinGroupRuleLambdaQueryWrapper.le(SigninGroupRule::getStartTime,date);
-        signinGroupRuleLambdaQueryWrapper.gt(SigninGroupRule::getEndTime,date);
+        signinGroupRuleLambdaQueryWrapper.ge(SigninGroupRule::getStartTime,date);
+        signinGroupRuleLambdaQueryWrapper.and(QueryWrapper->QueryWrapper.le(SigninGroupRule::getEndTime,date).or().isNull(SigninGroupRule::getEndTime));
         SigninGroupRule one = signinGroupRuleDao.getOne(signinGroupRuleLambdaQueryWrapper);
         if (one==null){
             throw new CustomException("业务异常-9005");
@@ -310,6 +310,8 @@ public class SigninLogServiceImpl implements SigninLogService {
                 userErrorLogList.add(signinGroupDateUserDto);
             }
         }
+        signinGroupDateResp.setUserLogList(userLogList);
+        signinGroupDateResp.setUserErrorLogList(userErrorLogList);
         signinGroupDateResp.setNumberOfPeopleSupposedToCome(userLogList.size());
         signinGroupDateResp.setNumberOfError(userErrorLogList.size());
         signinGroupDateResp.setNumberOfFullAttendance(signinGroupDateResp.getNumberOfPeopleSupposedToCome()-signinGroupDateResp.getNumberOfError());
