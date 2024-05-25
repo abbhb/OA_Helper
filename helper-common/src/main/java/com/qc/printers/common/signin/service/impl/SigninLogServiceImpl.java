@@ -9,6 +9,7 @@ import com.qc.printers.common.signin.dao.*;
 import com.qc.printers.common.signin.domain.dto.SigninGroupDateUserDto;
 import com.qc.printers.common.signin.domain.dto.SigninLogCliBcDto;
 import com.qc.printers.common.signin.domain.entity.*;
+import com.qc.printers.common.signin.domain.resp.SigninGroupDateRealResp;
 import com.qc.printers.common.signin.domain.resp.SigninGroupDateResp;
 import com.qc.printers.common.signin.mapper.SigninGroupRuleMapper;
 import com.qc.printers.common.signin.service.SigninDeviceMangerService;
@@ -317,6 +318,83 @@ public class SigninLogServiceImpl implements SigninLogService {
         signinGroupDateResp.setNumberOfFullAttendance(signinGroupDateResp.getNumberOfPeopleSupposedToCome()-signinGroupDateResp.getNumberOfError());
         return signinGroupDateResp;
     }
+
+    /**
+     * 实时大屏结果
+     * @param groupId
+     * @return
+     */
+    @Override
+    public SigninGroupDateRealResp exportSigninGroupRealTime(String groupId) {
+        SigninGroupDateRealResp signinGroupDateRealResp = new SigninGroupDateRealResp();
+        LocalDate now = LocalDate.now();
+        LambdaQueryWrapper<SigninGroupRule> signinGroupRuleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        signinGroupRuleLambdaQueryWrapper.eq(SigninGroupRule::getGroupId,groupId);
+        signinGroupRuleLambdaQueryWrapper.ge(SigninGroupRule::getStartTime,now);
+        signinGroupRuleLambdaQueryWrapper.and(QueryWrapper->QueryWrapper.le(SigninGroupRule::getEndTime,now).or().isNull(SigninGroupRule::getEndTime));
+        SigninGroupRule one = signinGroupRuleDao.getOne(signinGroupRuleLambdaQueryWrapper);
+        if (one==null){
+            throw new CustomException("业务异常-9005");
+        }
+        RulesInfo rulesInfo = one.getRulesInfo();
+        List<KQSJRule> kqsj = rulesInfo.getKqsj();
+        HashMap<String,Long> xqToId = new HashMap<>();
+        for (KQSJRule kqsjRule : kqsj) {
+            for (String s : kqsjRule.getXq().split(",")) {
+                xqToId.put(s,kqsjRule.getBcId());
+            }
+        }
+//        if (!xqToId.containsKey(String.valueOf(now.getDayOfWeek().getValue()))){
+//            // 今日无需考勤
+//            signinGroupDateRealResp.setKaoqingString("今日无考勤任务!");
+//        }
+        // 昨日考勤信息直接调方法拿,但是昨日会不会也无考勤
+        String zuorixingqiji = String.valueOf(now.getDayOfWeek().getValue());
+        if (!zuorixingqiji.equals("1")){
+            zuorixingqiji =String.valueOf(now.getDayOfWeek().getValue()-1);
+        }else {
+            zuorixingqiji = "7";
+        }
+        if ((!xqToId.containsKey(zuorixingqiji))&&(!xqToId.containsKey(String.valueOf(now.getDayOfWeek().getValue())))){
+            // 昨日也无需考勤
+            signinGroupDateRealResp.setKaoqingString("今日无考勤任务!");
+
+            signinGroupDateRealResp.setNumberOfChiDao(0);
+            signinGroupDateRealResp.setNumberOfActualArrival(0);
+            signinGroupDateRealResp.setNumberOfLeave(0);
+            signinGroupDateRealResp.setNumberOfZaoTUi(0);
+            signinGroupDateRealResp.setWeiQianDao(new ArrayList<>());
+            signinGroupDateRealResp.setYiQianDao(new ArrayList<>());
+            signinGroupDateRealResp.setNumberOfPeopleSupposedToCome(0);
+            signinGroupDateRealResp.setZuoRiChuQingLv("100");
+            signinGroupDateRealResp.setZuoRiQueQing(new ArrayList<>());
+            return signinGroupDateRealResp;
+        }
+        // 今天这个考勤组的的班次id
+        Long bcId = xqToId.get(String.valueOf(now.getDayOfWeek().getValue()));
+        if ((xqToId.containsKey(zuorixingqiji))&&(!xqToId.containsKey(String.valueOf(now.getDayOfWeek().getValue())))){
+            // 昨日有考勤任务&&今日无
+            signinGroupDateRealResp.setKaoqingString("今日无考勤任务!");
+            // 需要把昨日的数据填上
+            return signinGroupDateRealResp;
+        }
+        if ((!xqToId.containsKey(zuorixingqiji))&&(xqToId.containsKey(String.valueOf(now.getDayOfWeek().getValue())))){
+            // 昨日无考勤任务&&今日有
+            signinGroupDateRealResp.setKaoqingString("当前处于xx上班阶段");//或者当前不在打卡时段
+            // 需要把昨日的数据填上
+            return signinGroupDateRealResp;
+        }
+        if ((xqToId.containsKey(zuorixingqiji))&&(xqToId.containsKey(String.valueOf(now.getDayOfWeek().getValue())))){
+            // 昨日有考勤任务&&今日也有
+            signinGroupDateRealResp.setKaoqingString("今日无考勤任务!");
+            // 需要把昨日的数据填上
+            return signinGroupDateRealResp;
+        }
+
+
+        return null;
+    }
+
 
     @Transactional
     public void addSigninLogCliByLog(SigninLog signinLog) {

@@ -2,6 +2,7 @@ package com.qc.printers.common.signin.service;
 
 import com.qc.printers.common.signin.domain.entity.SigninLog;
 import com.qc.printers.common.signin.domain.entity.SigninLogCli;
+import com.qc.printers.common.signin.domain.resp.SigninGroupDateRealResp;
 import com.qc.printers.common.signin.domain.resp.SigninGroupDateResp;
 
 import javax.servlet.http.HttpServletRequest;
@@ -36,4 +37,6 @@ public interface SigninLogService {
     boolean getUserAskForLeave(Long userId, LocalDate date,Long bcId,Integer bcCount);
 
     SigninGroupDateResp exportSigninGgroupDate(String groupId, LocalDate date);
+
+    SigninGroupDateRealResp exportSigninGroupRealTime(String groupId);
 }
