@@ -16,7 +16,10 @@ public class SigninLogCli implements Serializable {
     private LocalDate logDatetime;
 
     /**
-     * 状态,0正常，1为迟到，2为早退，3为缺勤，记录不存在在查询的时候创建缺勤记录
+     * 状态,0正常，1为迟到，2为早退
+     * ext- 以下字段为库里没有，但是业务层使用
+     * 3 为缺勤，记录不存在在查询的时候创建缺勤记录
+     * 4 为请假的记录
      */
     private Integer state;
 

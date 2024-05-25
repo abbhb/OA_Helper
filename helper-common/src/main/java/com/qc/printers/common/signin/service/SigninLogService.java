@@ -2,10 +2,12 @@ package com.qc.printers.common.signin.service;
 
 import com.qc.printers.common.signin.domain.entity.SigninLog;
 import com.qc.printers.common.signin.domain.entity.SigninLogCli;
+import com.qc.printers.common.signin.domain.resp.SigninGroupDateResp;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 
 public interface SigninLogService {
 
@@ -21,4 +23,17 @@ public interface SigninLogService {
      * @return
      */
     List<SigninLogCli> getUserInDateAllLogCli(Long userId, LocalDate date);
+
+
+    /**
+     * 返回某天某用户某班次的某班次是否请假
+     * @param userId 用户id
+     * @param date 某天的date对象
+     * @param bcId 某班次id
+     * @param bcCount 第几个班次
+     * @return 返回一个布尔类型是否请假
+     */
+    boolean getUserAskForLeave(Long userId, LocalDate date,Long bcId,Integer bcCount);
+
+    SigninGroupDateResp exportSigninGgroupDate(String groupId, LocalDate date);
 }

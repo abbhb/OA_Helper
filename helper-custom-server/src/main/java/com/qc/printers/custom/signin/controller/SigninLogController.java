@@ -3,12 +3,14 @@ package com.qc.printers.custom.signin.controller;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.signin.domain.entity.SigninLog;
 import com.qc.printers.common.signin.service.SigninLogService;
+import com.qc.printers.common.signin.domain.resp.SigninGroupDateResp;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.time.LocalDate;
 
 @RestController
 @RequestMapping("/signin_log")
@@ -30,4 +32,16 @@ public class SigninLogController {
         log.info("signinLog={}", signinLog);
         return R.success(signinLogService.addSigninlogByDevice(request, signinLog));
     }
+
+    /**
+     * 查看某天某考勤组考勤数据报表
+     * 此接口用于查询改天全部，不是实时接口[配合班次时间查出当前实际应到]
+     * @return
+     */
+    @GetMapping("/export_signin_group_date")
+    public R<SigninGroupDateResp> exportSigninGgroupDate(String groupId, LocalDate date) {
+        log.info("groupId={},date = {}", groupId,date);
+        return R.success(signinLogService.exportSigninGgroupDate(groupId, date));
+    }
+
 }
