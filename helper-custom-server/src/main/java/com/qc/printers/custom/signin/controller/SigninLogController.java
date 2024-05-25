@@ -2,6 +2,7 @@ package com.qc.printers.custom.signin.controller;
 
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.signin.domain.entity.SigninLog;
+import com.qc.printers.common.signin.domain.resp.SigninGroupDateRealResp;
 import com.qc.printers.common.signin.service.SigninLogService;
 import com.qc.printers.common.signin.domain.resp.SigninGroupDateResp;
 import io.swagger.annotations.Api;
@@ -44,5 +45,23 @@ public class SigninLogController {
         log.info("groupId={},date = {}", groupId,date);
         return R.success(signinLogService.exportSigninGgroupDate(groupId, date));
     }
+
+
+    /**
+     * 查看实时某考勤组的情况，会结合当前已经激活几个班次
+     * 显示当前是否处于第几个班次里或者不在打卡时段
+     * 然后返回数据有所区别，
+     * 包含昨日缺勤迟到早退
+     * 最近班次的上班或者下班单次打卡情况，只显示有没有打卡，以及当前实时出勤人数，
+     * 不在打卡时段就显示上个打卡时间段的人数，不管是不是迟到，迟到早退也统计人数
+     * @param groupId
+     * @return
+     */
+    @GetMapping("/export_signin_group_real_time")
+    public R<SigninGroupDateRealResp> exportSigninGroupRealTime(String groupId) {
+        log.info("groupId={}", groupId);
+        return R.success(signinLogService.exportSigninGroupRealTime(groupId));
+    }
+
 
 }
