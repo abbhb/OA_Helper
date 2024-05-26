@@ -8,6 +8,7 @@ import com.qc.printers.common.common.MyString;
 import com.qc.printers.common.signin.dao.*;
 import com.qc.printers.common.signin.domain.dto.SigninGroupDateUserDto;
 import com.qc.printers.common.signin.domain.dto.SigninLogCliBcDto;
+import com.qc.printers.common.signin.domain.dto.SigninLogRealYiQianDaoDto;
 import com.qc.printers.common.signin.domain.entity.*;
 import com.qc.printers.common.signin.domain.resp.SigninGroupDateRealResp;
 import com.qc.printers.common.signin.domain.resp.SigninGroupDateResp;
@@ -300,16 +301,37 @@ public class SigninLogServiceImpl implements SigninLogService {
                 continue;
             }
             signinGroupDateUserDto.setLogList(logListT);
+
             boolean zhengchang = true;
+            int zuizhongzhuangtai = 0;
             for (SigninLogCliBcDto signinLogCliBcDto : logListT) {
+                // 0,4 << 5 <<3
                 if (!signinLogCliBcDto.getState().equals(0)&&!signinLogCliBcDto.getState().equals(4)){
                     zhengchang = false;
                 }
+                if (signinLogCliBcDto.getState().equals(4)){
+                    if (zuizhongzhuangtai==0){
+                        zuizhongzhuangtai = 4;
+                    }
+                }
+                if (signinLogCliBcDto.getState().equals(5)){
+                    if (zuizhongzhuangtai==0||zuizhongzhuangtai==4){
+                        zuizhongzhuangtai = 5;
+                    }
+                }
+                if (signinLogCliBcDto.getState().equals(3)){
+                    if (zuizhongzhuangtai==0||zuizhongzhuangtai==4||zuizhongzhuangtai==5){
+                        zuizhongzhuangtai = 3;
+                    }
+                }
             }
-            userLogList.add(signinGroupDateUserDto);
+            signinGroupDateUserDto.setState(zuizhongzhuangtai);
             if (!zhengchang){
+
                 userErrorLogList.add(signinGroupDateUserDto);
             }
+            userLogList.add(signinGroupDateUserDto);
+
         }
         signinGroupDateResp.setUserLogList(userLogList);
         signinGroupDateResp.setUserErrorLogList(userErrorLogList);
@@ -375,6 +397,55 @@ public class SigninLogServiceImpl implements SigninLogService {
         if ((xqToId.containsKey(zuorixingqiji))&&(!xqToId.containsKey(String.valueOf(now.getDayOfWeek().getValue())))){
             // 昨日有考勤任务&&今日无
             signinGroupDateRealResp.setKaoqingString("今日无考勤任务!");
+            signinGroupDateRealResp.setNumberOfZaoTUi(0);
+            signinGroupDateRealResp.setWeiQianDao(new ArrayList<>());
+            signinGroupDateRealResp.setYiQianDao(new ArrayList<>());
+            signinGroupDateRealResp.setNumberOfActualArrival(0);
+            signinGroupDateRealResp.setNumberOfLeave(0);
+            signinGroupDateRealResp.setNumberOfPeopleSupposedToCome(0);
+            signinGroupDateRealResp.setNumberOfChiDao(0);
+            signinGroupDateRealResp.setNumberOfZaoTUi(0);
+            // 昨日相关的就这两
+            // 需要把昨日的数据填上👇
+            boolean zuoriCunZai = true;
+
+            try {
+                SigninGroupDateResp zuoriData = this.exportSigninGgroupDate(groupId, now.minusDays(1L));
+                if (!zuoriData.getAtendanceRequired()){
+                    zuoriCunZai = false;
+                }
+                Integer numberOfPeopleSupposedToCome = zuoriData.getNumberOfPeopleSupposedToCome();
+                Integer numberOfError = zuoriData.getNumberOfError();
+                if (numberOfError.equals(0)){// 昨日无任何异常
+                    signinGroupDateRealResp.setZuoRiChuQingLv("100");
+                    // 昨日全部直接出勤
+                    signinGroupDateRealResp.setZuoRiQueQing(new ArrayList<>());
+                }else {
+                    List<SigninLogRealYiQianDaoDto> signinLogRealYiQianDaoDtos = new ArrayList<>();
+                    // 昨日有异常，但不一定是缺勤，可能是迟到早退，排除掉这种情况
+                    List<SigninGroupDateUserDto> userErrorLogList = zuoriData.getUserErrorLogList();
+                    for (SigninGroupDateUserDto signinGroupDateUserDto : userErrorLogList) {
+                        if (signinGroupDateUserDto.getState().equals(3)){
+                            SigninLogRealYiQianDaoDto signinLogRealYiQianDaoDto = new SigninLogRealYiQianDaoDto();
+                            signinLogRealYiQianDaoDto.setTag("缺勤");
+                            signinLogRealYiQianDaoDto.setName(signinGroupDateUserDto.getName());
+                            signinLogRealYiQianDaoDto.setDeptName(signinGroupDateUserDto.getDeptName());
+                            signinLogRealYiQianDaoDtos.add(signinLogRealYiQianDaoDto);
+                        }
+                    }
+                    signinGroupDateRealResp.setZuoRiQueQing(signinLogRealYiQianDaoDtos);
+                    signinGroupDateRealResp.setZuoRiChuQingLv(String.valueOf(100 * (((numberOfPeopleSupposedToCome - signinLogRealYiQianDaoDtos.size()) * 1.0) / numberOfPeopleSupposedToCome)));
+                }
+            }catch (Exception e){
+                // 昨日不存在
+                zuoriCunZai = false;
+            }
+            if (!zuoriCunZai){
+                signinGroupDateRealResp.setZuoRiQueQing(new ArrayList<>());
+                signinGroupDateRealResp.setZuoRiChuQingLv("100");
+            }
+            // 到此都是昨日数据填充
+
             // 需要把昨日的数据填上
             return signinGroupDateRealResp;
         }
@@ -387,7 +458,47 @@ public class SigninLogServiceImpl implements SigninLogService {
         if ((xqToId.containsKey(zuorixingqiji))&&(xqToId.containsKey(String.valueOf(now.getDayOfWeek().getValue())))){
             // 昨日有考勤任务&&今日也有
             signinGroupDateRealResp.setKaoqingString("今日无考勤任务!");
-            // 需要把昨日的数据填上
+            // 今日考勤数据
+
+            // 需要把昨日的数据填上👇
+            boolean zuoriCunZai = true;
+
+            try {
+                SigninGroupDateResp zuoriData = this.exportSigninGgroupDate(groupId, now.minusDays(1L));
+                if (!zuoriData.getAtendanceRequired()){
+                    zuoriCunZai = false;
+                }
+                Integer numberOfPeopleSupposedToCome = zuoriData.getNumberOfPeopleSupposedToCome();
+                Integer numberOfError = zuoriData.getNumberOfError();
+                if (numberOfError.equals(0)){// 昨日无任何异常
+                    signinGroupDateRealResp.setZuoRiChuQingLv("100");
+                    // 昨日全部直接出勤
+                    signinGroupDateRealResp.setZuoRiQueQing(new ArrayList<>());
+                }else {
+                    List<SigninLogRealYiQianDaoDto> signinLogRealYiQianDaoDtos = new ArrayList<>();
+                    // 昨日有异常，但不一定是缺勤，可能是迟到早退，排除掉这种情况
+                    List<SigninGroupDateUserDto> userErrorLogList = zuoriData.getUserErrorLogList();
+                    for (SigninGroupDateUserDto signinGroupDateUserDto : userErrorLogList) {
+                        if (signinGroupDateUserDto.getState().equals(3)){
+                            SigninLogRealYiQianDaoDto signinLogRealYiQianDaoDto = new SigninLogRealYiQianDaoDto();
+                            signinLogRealYiQianDaoDto.setTag("缺勤");
+                            signinLogRealYiQianDaoDto.setName(signinGroupDateUserDto.getName());
+                            signinLogRealYiQianDaoDto.setDeptName(signinGroupDateUserDto.getDeptName());
+                            signinLogRealYiQianDaoDtos.add(signinLogRealYiQianDaoDto);
+                        }
+                    }
+                    signinGroupDateRealResp.setZuoRiQueQing(signinLogRealYiQianDaoDtos);
+                    signinGroupDateRealResp.setZuoRiChuQingLv(String.valueOf(100 * (((numberOfPeopleSupposedToCome - signinLogRealYiQianDaoDtos.size()) * 1.0) / numberOfPeopleSupposedToCome)));
+                }
+            }catch (Exception e){
+                // 昨日不存在
+                zuoriCunZai = false;
+            }
+            if (!zuoriCunZai){
+                signinGroupDateRealResp.setZuoRiQueQing(new ArrayList<>());
+                signinGroupDateRealResp.setZuoRiChuQingLv("100");
+            }
+            // 到此都是昨日数据填充
             return signinGroupDateRealResp;
         }
 
