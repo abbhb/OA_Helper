@@ -37,12 +37,12 @@ public class SigninGroupDateRealResp implements Serializable {
     private Integer numberOfZaoTUi;
 
     /**
-     * 最近班次已签到的成员【请假返回tag请假】[迟到早退都返回tag]
+     * 最近班次已签到的成员[迟到早退都返回tag]
      */
     private List<SigninLogRealYiQianDaoDto> yiQianDao;
 
     /**
-     * 最近班次没签到的成员【没请假】
+     * 最近班次没签到的成员【请假返回tag请假】
      */
     private List<SigninLogRealYiQianDaoDto> weiQianDao;
 
