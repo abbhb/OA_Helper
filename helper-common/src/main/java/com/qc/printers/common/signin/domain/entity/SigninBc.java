@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.FastjsonTypeHandler;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -32,6 +33,7 @@ public class SigninBc implements Serializable {
 
     /**
      * 对象,一天几次上下班的上下班时间规则数据
+     * 返回的是JsonObject对象，必须手动处理！！
      */
     @TableField(value = "rules", typeHandler = FastjsonTypeHandler.class)
     private List<BcRule> rules;
