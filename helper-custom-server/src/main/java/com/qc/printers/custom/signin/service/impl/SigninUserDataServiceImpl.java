@@ -15,8 +15,11 @@ import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.entity.SysDept;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.service.ISysDeptService;
+import com.qc.printers.custom.signin.domain.dto.SigninUserCardDataDto;
 import com.qc.printers.custom.signin.domain.dto.SigninUserFaceDataDto;
+import com.qc.printers.custom.signin.domain.req.SigninUserCardDataReq;
 import com.qc.printers.custom.signin.domain.req.SigninUserFaceDataReq;
+import com.qc.printers.custom.signin.domain.vo.SigninUserCardDataResp;
 import com.qc.printers.custom.signin.domain.vo.SigninUserFaceDataResp;
 import com.qc.printers.custom.signin.service.SigninUserDataService;
 import lombok.extern.slf4j.Slf4j;
@@ -242,6 +245,164 @@ public class SigninUserDataServiceImpl implements SigninUserDataService {
                 if (one != null) {
                     //本地存在远端不存在，删除
                     one.setFaceData(null);
+                    signinUserDataDao.updateById(one);
+                }
+            }
+        }
+        return "同步成功";
+    }
+
+    @Override
+    public List<SigninUserCardDataResp> getSigninCardData(String deviceId) {
+        SigninDeviceDto signinDevice = this.checkDeviceStatus(deviceId, "card");
+        // 设置请求头
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("secert_h", signinDevice.getSecret());
+
+        // 创建 HttpEntity，并传入请求头
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        String url = "http://" + signinDevice.getAddress() + ":" + signinDevice.getPort() + "/list_all_card";
+        ResponseEntity<List<SigninUserCardDataDto>> exchange = restTemplate.exchange(url, HttpMethod.GET, entity, new ParameterizedTypeReference<List<SigninUserCardDataDto>>() {
+        });
+        List<SigninUserCardDataDto> body = exchange.getBody();
+        List<User> userList = userDao.list();
+        List<SigninUserCardDataResp> signinUserCardDataResps = new ArrayList<>();
+        log.info("device:{},face{}", deviceId, body);
+        // 将 List<Item> 转换为 Map<Integer, Item>
+        Map<String, SigninUserCardDataDto> stringSigninUserCardDataDtoMap = body.stream()
+                .collect(Collectors.toMap(SigninUserCardDataDto::getStudentId, item -> item));
+        for (User user1 : userList) {
+            SigninUserCardDataResp signinUserCardDataResp = new SigninUserCardDataResp();
+            SysDept sysDept = iSysDeptService.getById(user1.getDeptId());
+            //从部门继承的不能直接显示，或者需要却别开，不然很乱
+            LambdaQueryWrapper<SigninUserData> signinUserDataLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            signinUserDataLambdaQueryWrapper.eq(SigninUserData::getUserId, user1.getId());
+            SigninUserData one = signinUserDataDao.getOne(signinUserDataLambdaQueryWrapper);
+            signinUserCardDataResp.setLocalExist(true);
+            if (one == null || StringUtils.isEmpty(one.getCardId())) {
+                // cardId里面真的有数据就是存在,不存在都设置为NULL
+                signinUserCardDataResp.setLocalExist(false);
+            }
+            signinUserCardDataResp.setUserId(user1.getId());
+            signinUserCardDataResp.setName(user1.getName());
+            signinUserCardDataResp.setUsername(user1.getUsername());
+            signinUserCardDataResp.setDeptId(user1.getDeptId());
+            signinUserCardDataResp.setDeptName(sysDept.getDeptNameAll());
+            signinUserCardDataResp.setStudentId(user1.getStudentId());
+            signinUserCardDataResp.setDeviceExist(false);
+            if (stringSigninUserCardDataDtoMap.get(user1.getStudentId()) != null) {
+                signinUserCardDataResp.setDeviceExist(true);
+            }
+            signinUserCardDataResps.add(signinUserCardDataResp);
+        }
+        return signinUserCardDataResps;
+    }
+
+    @Transactional
+    @Override
+    public String uploadSigninCardData(SigninUserCardDataReq signinUserCardDataReq) {
+        SigninDeviceDto signinDevice = this.checkDeviceStatus(signinUserCardDataReq.getDeviceId(), "card");
+
+        if (!signinDevice.getOnline()) {
+            throw new CustomException("设备掉线，同步失败");
+        }
+
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("Content-Type", "application/json");
+
+        headers.set("secert_h", signinDevice.getSecret());
+        String url = "http://" + signinDevice.getAddress() + ":" + signinDevice.getPort() + "/sync_upload";
+        Map<String, Object> requestBody = new HashMap<>();
+
+        // data处理
+        List<Map<String, Object>> datas = new ArrayList<>();
+        List<SigninUserCardDataResp> data = signinUserCardDataReq.getData();
+        for (SigninUserCardDataResp datum : data) {
+            Map<String, Object> everyP = new HashMap<>();
+            User byId = userDao.getById(datum.getUserId());
+            if (byId == null) {
+                throw new CustomException(datum.getUsername() + "用户不存在");
+            }
+            everyP.put("username", byId.getName());
+            everyP.put("student_id", byId.getStudentId());
+            if (datum.isLocalExist()) {
+                LambdaQueryWrapper<SigninUserData> objectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                objectLambdaQueryWrapper.eq(SigninUserData::getUserId, byId.getId());
+                SigninUserData one = signinUserDataDao.getOne(objectLambdaQueryWrapper);
+                if (one == null) {
+                    throw new CustomException("请重试，系统数据发生了变更");
+                }
+                everyP.put("card_id", one.getCardId());
+                everyP.put("is_none", false);
+
+            } else {
+                everyP.put("is_none", true);
+            }
+            datas.add(everyP);
+
+        }
+        requestBody.put("model", signinUserCardDataReq.getSyncModel());
+        requestBody.put("data", datas);
+        // 将Headers和请求体封装到HttpEntity中
+        HttpEntity<Map<String, Object>> requestEntity = new HttpEntity<>(requestBody, headers);
+
+        PythonServerResp pythonServerResp = restTemplate.postForObject(url, requestEntity, PythonServerResp.class);
+        if (pythonServerResp == null) {
+            throw new CustomException("无响应");
+        }
+        if (!pythonServerResp.getCode().equals(1)) {
+            throw new CustomException(pythonServerResp.getMsg());
+        }
+        return "同步成功";
+    }
+
+    @Override
+    public String downloadSigninCardData(SigninUserCardDataReq signinUserCardDataReq) {
+        SigninDeviceDto signinDevice = this.checkDeviceStatus(signinUserCardDataReq.getDeviceId(), "card");
+
+        if (!signinDevice.getOnline()) {
+            throw new CustomException("设备掉线，同步失败");
+        }
+        // 设置请求头
+        HttpHeaders headers = new HttpHeaders();
+        headers.set("secert_h", signinDevice.getSecret());
+
+        // 创建 HttpEntity，并传入请求头
+        HttpEntity<String> entity = new HttpEntity<>(headers);
+        String url = "http://" + signinDevice.getAddress() + ":" + signinDevice.getPort() + "/list_all_card";
+        ResponseEntity<List<SigninUserCardDataDto>> exchange = restTemplate.exchange(url, HttpMethod.GET, entity, new ParameterizedTypeReference<List<SigninUserCardDataDto>>() {
+        });
+        List<SigninUserCardDataDto> body = exchange.getBody();
+        Map<String, SigninUserCardDataDto> stringSigninUserCardDataDtoMap = body.stream()
+                .collect(Collectors.toMap(SigninUserCardDataDto::getStudentId, item -> item));
+
+        List<SigninUserCardDataResp> data = signinUserCardDataReq.getData();
+        for (SigninUserCardDataResp datum : data) {
+            User byId = userDao.getById(datum.getUserId());
+            if (byId == null) {
+                throw new CustomException(datum.getUsername() + "用户不存在");
+            }
+            LambdaQueryWrapper<SigninUserData> objectLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            objectLambdaQueryWrapper.eq(SigninUserData::getUserId, byId.getId());
+            SigninUserData one = signinUserDataDao.getOne(objectLambdaQueryWrapper);
+            if (datum.isDeviceExist()) {
+                // 更新本地
+                if (one == null) {
+                    //本地尚不存在，新建!
+                    one = new SigninUserData();
+                    one.setUserId(byId.getId());
+                    one.setUpdateTime(LocalDateTime.now());
+                    one.setCardId(stringSigninUserCardDataDtoMap.get(byId.getStudentId()).getCardId());
+                    signinUserDataDao.save(one);
+                } else {
+                    one.setCardId(stringSigninUserCardDataDtoMap.get(byId.getStudentId()).getCardId());
+                    signinUserDataDao.updateById(one);
+                }
+
+            } else {
+                if (one != null) {
+                    //本地存在远端不存在，删除
+                    one.setCardId(null);
                     signinUserDataDao.updateById(one);
                 }
             }
