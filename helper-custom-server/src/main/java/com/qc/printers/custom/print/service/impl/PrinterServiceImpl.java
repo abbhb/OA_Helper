@@ -466,7 +466,7 @@ public class PrinterServiceImpl implements PrinterService {
         chatMessageReq.setRoomId(Long.valueOf(systemMessageConfig.getRoomId()));
         chatMessageReq.setMsgType(MessageTypeEnum.TEXT.getType());
         TextMsgReq textMsgReq = new TextMsgReq();
-        textMsgReq.setContent(currentUser.getName() + "[id：" + currentUser.getId() + "]取消了一次打印任务，请注意是否为误取消他人任务！");
+        textMsgReq.setContent("@"+currentUser.getName() + " 取消了一次打印任务，请注意是否为误取消他人任务！");
         List<Long> atUidList = new ArrayList<>();
         atUidList.add(currentUser.getId());
         textMsgReq.setAtUidList(atUidList);

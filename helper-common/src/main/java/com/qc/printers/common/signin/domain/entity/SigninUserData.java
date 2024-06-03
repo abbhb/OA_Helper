@@ -18,5 +18,10 @@ public class SigninUserData implements Serializable {
      */
     private String faceData;
 
+    /**
+     * 第二种 card
+     */
+    private String cardId;
+
     private LocalDateTime updateTime;
 }
