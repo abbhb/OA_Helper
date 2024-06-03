@@ -2,6 +2,7 @@ package com.qc.printers.common.signin.service;
 
 import com.qc.printers.common.signin.domain.entity.SigninLog;
 import com.qc.printers.common.signin.domain.entity.SigninLogCli;
+import com.qc.printers.common.signin.domain.resp.AddLogExtInfo;
 import com.qc.printers.common.signin.domain.resp.SigninGroupDateRealResp;
 import com.qc.printers.common.signin.domain.resp.SigninGroupDateResp;
 
@@ -39,4 +40,6 @@ public interface SigninLogService {
     SigninGroupDateResp exportSigninGgroupDate(String groupId, LocalDate date);
 
     SigninGroupDateRealResp exportSigninGroupRealTime(String groupId);
+
+    AddLogExtInfo addSigninlogByDevicePlus(HttpServletRequest request, SigninLog signinLog);
 }

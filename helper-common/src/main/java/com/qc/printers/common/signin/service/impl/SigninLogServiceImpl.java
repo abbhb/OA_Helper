@@ -5,12 +5,14 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.MyString;
+import com.qc.printers.common.common.utils.oss.OssDBUtil;
 import com.qc.printers.common.signin.dao.*;
 import com.qc.printers.common.signin.domain.dto.SigninBcTimeRuleDto;
 import com.qc.printers.common.signin.domain.dto.SigninGroupDateUserDto;
 import com.qc.printers.common.signin.domain.dto.SigninLogCliBcDto;
 import com.qc.printers.common.signin.domain.dto.SigninLogRealYiQianDaoDto;
 import com.qc.printers.common.signin.domain.entity.*;
+import com.qc.printers.common.signin.domain.resp.AddLogExtInfo;
 import com.qc.printers.common.signin.domain.resp.SigninGroupDateRealResp;
 import com.qc.printers.common.signin.domain.resp.SigninGroupDateResp;
 import com.qc.printers.common.signin.mapper.SigninGroupRuleMapper;
@@ -84,13 +86,14 @@ public class SigninLogServiceImpl implements SigninLogService {
             throw new CustomException("该学号暂未绑定用户!");
         }
         signinLog.setUserId(one.getId());
+        // todo:策略模式优化
         if (signinLog.getSigninWay().equals("face")) {
             if (StringUtils.isEmpty(signinLog.getSigninImage())) throw new CustomException("请上传原始签到图");
-
         }
         if (!signinLog.getSigninWay().equals("system")) {
             if (StringUtils.isEmpty(signinLog.getSigninDeviceId())) throw new CustomException("必须提供设备id");
         }
+
         signinLogDao.save(signinLog);
         this.addSigninLogCliByLog(signinLog);
         return "记录成功";
@@ -528,6 +531,41 @@ public class SigninLogServiceImpl implements SigninLogService {
 
             SigninBcTimeRuleDto bcTimeRule = this.getBcTimeRule(nowDateTime, bcRules);
 
+            if (bcTimeRule.getState().equals(2)){
+                // 当前不在打卡时段，且找不到任何班次已经过去了的，直接返回全部没到就行，不用查表了
+                signinGroupDateRealResp.setKaoqingString("今日还未上班!");
+                signinGroupDateRealResp.setNumberOfChiDao(0);// 还没开始打卡，迟什么到
+                signinGroupDateRealResp.setNumberOfLeave(0);
+                signinGroupDateRealResp.setNumberOfZaoTUi(0);
+                signinGroupDateRealResp.setNumberOfActualArrival(0);
+                List<SigninLogRealYiQianDaoDto> signinLogRealYiQianDaoDtos = new ArrayList<>();
+                for (Long kqUserId : kqUserIds) {
+                    SigninLogRealYiQianDaoDto signinLogRealYiQianDaoDto = new SigninLogRealYiQianDaoDto();
+                    User byId = userDao.getById(kqUserId);
+                    if (byId==null){
+                        continue;// 人都不存在了
+                    }
+                    signinLogRealYiQianDaoDto.setName(byId.getName());
+                    signinLogRealYiQianDaoDto.setTag("缺勤");
+                    SysDept deptServiceById = iSysDeptService.getById(byId.getDeptId());
+                    if (deptServiceById==null){
+                        signinLogRealYiQianDaoDto.setDeptName("部门不存在");
+                    }else {
+                        signinLogRealYiQianDaoDto.setDeptName(deptServiceById.getDeptNameAll());
+                    }
+                    signinLogRealYiQianDaoDtos.add(signinLogRealYiQianDaoDto);
+                }
+                signinGroupDateRealResp.setWeiQianDao(signinLogRealYiQianDaoDtos);// 所有人
+                signinGroupDateRealResp.setYiQianDao(new ArrayList<>());// 空
+                signinGroupDateRealResp.setNumberOfPeopleSupposedToCome(signinLogRealYiQianDaoDtos.size());//应到
+            }
+            if (bcTimeRule.getState().equals(1)){
+                // 不在打卡时间段，但是找得到最近的上下班（当前时间不在某日的第一个打卡班次之前）
+                // 找到最近的数据
+                // 这里本来就以某次上班或下班的数据作为是否到了的标准，所以下面的迟到和早退其实不会同时出现
+                signinGroupDateRealResp.setKaoqingString("当前不在打卡时段");
+                extracted(signinGroupDateRealResp, now, kqUserIds, signinBc, bcTimeRule);
+            }
             if (bcTimeRule.getState().equals(0)){
                 // 在打卡时段
                 if (bcTimeRule.getSxBState().equals(0)){
@@ -545,8 +583,8 @@ public class SigninLogServiceImpl implements SigninLogService {
 
                 }
 
-                return signinGroupDateRealResp;
             }
+            // 如果
 
             // 需要把昨日的数据填上👇
             boolean zuoriCunZai = true;
@@ -587,11 +625,28 @@ public class SigninLogServiceImpl implements SigninLogService {
                 signinGroupDateRealResp.setZuoRiChuQingLv("100");
             }
             // 到此都是昨日数据填充
-            return signinGroupDateRealResp;
         }
 
-
         return signinGroupDateRealResp;
+    }
+
+    @Transactional
+    @Override
+    public AddLogExtInfo addSigninlogByDevicePlus(HttpServletRequest request, SigninLog signinLog) {
+        this.addSigninlogByDevice(request, signinLog);
+        AddLogExtInfo addLogExtInfo = new AddLogExtInfo();
+        try {
+            LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            userLambdaQueryWrapper.eq(User::getStudentId, signinLog.getStudentId());
+            User one = userDao.getOne(userLambdaQueryWrapper);
+            addLogExtInfo.setAvatarUrl(OssDBUtil.toUseUrl(one.getAvatar()));
+            SysDept sysDept = iSysDeptService.getById(one.getDeptId());
+            addLogExtInfo.setDeptName(sysDept.getDeptNameAll());
+
+        }catch (Exception e){
+            log.error(e.getMessage());
+        }
+        return addLogExtInfo;
     }
 
     private void extracted(SigninGroupDateRealResp signinGroupDateRealResp, LocalDate now, List<Long> kqUserIds, SigninBc signinBc, SigninBcTimeRuleDto bcTimeRule) {

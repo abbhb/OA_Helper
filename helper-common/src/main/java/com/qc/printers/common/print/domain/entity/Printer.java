@@ -68,7 +68,7 @@ public class Printer implements Serializable {
 
     /**
      * 单双面
-     * false单面 true 双面
+     * false 1单面 true 2双面
      */
     private Integer isDuplex;
 
