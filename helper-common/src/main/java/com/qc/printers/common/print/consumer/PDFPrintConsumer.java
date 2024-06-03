@@ -47,7 +47,7 @@ public class PDFPrintConsumer implements RocketMQListener<PrintDataFromPrintResp
             lambdaUpdateWrapper.set(Printer::getOriginFilePages, printerRedis.getPageNums());
             lambdaUpdateWrapper.set(Printer::getNeedPrintPagesIndex, printerRedis.getNeedPrintPagesIndex());
             lambdaUpdateWrapper.set(Printer::getNeedPrintPagesEndIndex, printerRedis.getNeedPrintPagesEndIndex());
-            lambdaUpdateWrapper.set(Printer::getSingleDocumentPaperUsage, (printerRedis.getIsDuplex().equals(1) ? (int) Math.ceil((double) (printerRedis.getNeedPrintPagesEndIndex() - printerRedis.getNeedPrintPagesIndex() + 1) / 2.0) : (printerRedis.getNeedPrintPagesEndIndex() - printerRedis.getNeedPrintPagesIndex() + 1)));
+            lambdaUpdateWrapper.set(Printer::getSingleDocumentPaperUsage, (printerRedis.getIsDuplex().equals(2) ? (int) Math.ceil((double) (printerRedis.getNeedPrintPagesEndIndex() - printerRedis.getNeedPrintPagesIndex() + 1) / 2.0) : (printerRedis.getNeedPrintPagesEndIndex() - printerRedis.getNeedPrintPagesIndex() + 1)));
             iPrinterService.update(lambdaUpdateWrapper);
             printerRedis.setSTU(5);
             printerRedis.setIsPrint(1);

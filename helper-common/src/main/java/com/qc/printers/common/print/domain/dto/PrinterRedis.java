@@ -18,6 +18,8 @@ import java.io.Serializable;
 @ToString(callSuper = true)
 public class PrinterRedis extends Printer implements Serializable {
 
+
+
     /**
      * 0等待
      * 1成功
