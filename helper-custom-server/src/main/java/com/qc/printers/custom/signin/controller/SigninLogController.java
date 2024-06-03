@@ -2,6 +2,7 @@ package com.qc.printers.custom.signin.controller;
 
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.signin.domain.entity.SigninLog;
+import com.qc.printers.common.signin.domain.resp.AddLogExtInfo;
 import com.qc.printers.common.signin.domain.resp.SigninGroupDateRealResp;
 import com.qc.printers.common.signin.service.SigninLogService;
 import com.qc.printers.common.signin.domain.resp.SigninGroupDateResp;
@@ -33,6 +34,18 @@ public class SigninLogController {
     public R<String> addLogDevice(@RequestBody SigninLog signinLog, HttpServletRequest request) {
         log.info("signinLog={}", signinLog);
         return R.success(signinLogService.addSigninlogByDevice(request, signinLog));
+    }
+    /**
+     * 签到机记录接口
+     * 返回值带额外信息
+     *
+     * @return
+     */
+    @PostMapping("/add_log_device_plus")
+//    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin_group:add")
+    public R<AddLogExtInfo> addLogDevicePlus(@RequestBody SigninLog signinLog, HttpServletRequest request) {
+        log.info("signinLog={}", signinLog);
+        return R.success(signinLogService.addSigninlogByDevicePlus(request, signinLog));
     }
 
     /**

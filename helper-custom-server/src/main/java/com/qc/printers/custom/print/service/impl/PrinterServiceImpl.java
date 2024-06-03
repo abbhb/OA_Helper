@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ecwid.consul.v1.health.model.HealthService;
 import com.qc.printers.common.chat.domain.enums.MessageTypeEnum;
 import com.qc.printers.common.chat.domain.vo.request.ChatMessageReq;
+import com.qc.printers.common.chat.domain.vo.request.msg.TextMsgReq;
 import com.qc.printers.common.chat.service.ChatService;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.MyString;
@@ -285,7 +286,7 @@ public class PrinterServiceImpl implements PrinterService {
         printer.setCreateTime(LocalDateTime.now());
         printer.setCreateUser(one.getId());
         printer.setUrl(fileURL);
-        printer.setIsDuplex(isDuplex?1:0);
+        printer.setIsDuplex(isDuplex?2:1);
         printer.setCopies(copiesNum);
         printer.setNeedPrintPagesEndIndex(pageEnd);
         printer.setNeedPrintPagesIndex(pageStart);
@@ -464,7 +465,12 @@ public class PrinterServiceImpl implements PrinterService {
         ChatMessageReq chatMessageReq = new ChatMessageReq();
         chatMessageReq.setRoomId(Long.valueOf(systemMessageConfig.getRoomId()));
         chatMessageReq.setMsgType(MessageTypeEnum.TEXT.getType());
-        chatMessageReq.setBody(currentUser.getName() + "[id：" + currentUser.getId() + "]取消了一次打印任务，请注意是否为误取消他人任务！");
+        TextMsgReq textMsgReq = new TextMsgReq();
+        textMsgReq.setContent(currentUser.getName() + "[id：" + currentUser.getId() + "]取消了一次打印任务，请注意是否为误取消他人任务！");
+        List<Long> atUidList = new ArrayList<>();
+        atUidList.add(currentUser.getId());
+        textMsgReq.setAtUidList(atUidList);
+        chatMessageReq.setBody(textMsgReq);
         // 必须为系统用户发送的消息
         chatService.sendMsg(chatMessageReq, Long.valueOf(systemMessageConfig.getUserId()));
 
