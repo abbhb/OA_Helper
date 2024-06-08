@@ -1,6 +1,8 @@
 package com.qc.printers.custom.picturewall.service;
 
 import com.qc.printers.common.picturewall.domain.entity.IndexImage;
+import com.qc.printers.custom.picturewall.domain.vo.IndexImageAddReq;
+import com.qc.printers.custom.picturewall.domain.vo.IndexImageAddResp;
 
 import java.util.List;
 
@@ -9,13 +11,13 @@ public interface IndexImageService {
     List<String> allLabel();
 
 
-    List<IndexImage> labelImage(String label);
+    IndexImage labelImage(String label);
 
-    String addIndexImage(IndexImage indexImage);
+    String addIndexImage(IndexImageAddReq indexImageAddReq);
 
-    String updateIndexImage(IndexImage indexImage);
+    String updateIndexImage(IndexImageAddReq indexImageAddReq);
 
     String deleteIndexImage(Long id);
 
-    List<IndexImage> list();
+    List<IndexImageAddResp> list();
 }

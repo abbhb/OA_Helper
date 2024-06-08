@@ -42,7 +42,7 @@ public class MinIoUtil {
 
     /**
      * 初始化minio配置
-     *
+     * 用spring的自动注入会注入失败,手动注入
      * @param :
      * @return: void
      * @date : 2020/8/16 20:56
@@ -251,5 +251,10 @@ public class MinIoUtil {
         String yearAndMonth = DateUtil.format(new Date(), DatePattern.NORM_MONTH_PATTERN);
         return req.getFilePath() + StrUtil.SLASH + yearAndMonth + StrUtil.SLASH + uid + StrUtil.SLASH + uuid + StrUtil.DOT + suffix;
     }
+
+    /**
+     * 实现分块上传、断点续传接口
+     */
+
 
 }
