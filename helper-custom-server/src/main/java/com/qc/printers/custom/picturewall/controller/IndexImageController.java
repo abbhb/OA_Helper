@@ -4,6 +4,8 @@ import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.annotation.PermissionCheck;
 import com.qc.printers.common.picturewall.domain.entity.IndexImage;
+import com.qc.printers.custom.picturewall.domain.vo.IndexImageAddReq;
+import com.qc.printers.custom.picturewall.domain.vo.IndexImageAddResp;
 import com.qc.printers.custom.picturewall.service.IndexImageService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -35,9 +37,8 @@ public class IndexImageController {
 
     @GetMapping("/label_all")
     @NeedToken
-    @ApiOperation(value = "获取所有该标签的image", notes = "")
-    public R<List<IndexImage>> labelImage(String label) {
-        log.info("获取所有的不同标签");
+    @ApiOperation(value = "获取该标签的image", notes = "")
+    public R<IndexImage> labelImage(String label) {
         return R.success(indexImageService.labelImage(label));
     }
 
@@ -45,17 +46,18 @@ public class IndexImageController {
     @NeedToken
     @PermissionCheck(role = {"superadmin"}, permission = "sys:indeximage:add")
     @ApiOperation(value = "添加首页图片通知", notes = "")
-    public R<String> addIndexImage(@RequestBody IndexImage indexImage) {
+    public R<String> addIndexImage(@RequestBody IndexImageAddReq indexImage) {
+        log.info("indexImage{}",indexImage);
         if (indexImage == null) {
             return R.error("请检查");
         }
-        if (StringUtils.isEmpty(indexImage.getImage())) {
+        if (indexImage.getIndexImage().getData()==null||indexImage.getIndexImage().getData().size()==0) {
             return R.error("必须包含图片");
         }
-        if (StringUtils.isEmpty(indexImage.getLabel())) {
+        if (StringUtils.isEmpty(indexImage.getIndexImage().getLabel())) {
             return R.error("必须包含标签");
         }
-        if (indexImage.getSort() == null) {
+        if (indexImage.getIndexImage().getSort() == null) {
             return R.error("请输入排序");
         }
         return R.successOnlyObject(indexImageService.addIndexImage(indexImage));
@@ -65,21 +67,12 @@ public class IndexImageController {
     @NeedToken
     @PermissionCheck(role = {"superadmin"}, permission = "sys:indeximage:update")
     @ApiOperation(value = "更新首页图片通知", notes = "")
-    public R<String> updateIndexImage(@RequestBody IndexImage indexImage) {
+    public R<String> updateIndexImage(@RequestBody IndexImageAddReq indexImage) {
         if (indexImage == null) {
             return R.error("请检查");
         }
-        if (indexImage.getId() == null) {
-            return R.error("id不能为空");
-        }
-        if (StringUtils.isEmpty(indexImage.getImage())) {
-            return R.error("必须包含图片");
-        }
-        if (StringUtils.isEmpty(indexImage.getLabel())) {
-            return R.error("必须包含标签");
-        }
-        if (indexImage.getSort() == null) {
-            return R.error("请输入排序");
+        if (indexImage.getIndexImage()==null) {
+            return R.error("IndexImage不能为空");
         }
         return R.successOnlyObject(indexImageService.updateIndexImage(indexImage));
     }
@@ -96,7 +89,7 @@ public class IndexImageController {
     @NeedToken
     @PermissionCheck(role = {"superadmin"}, permission = "sys:indeximage:list")
     @ApiOperation(value = "首页图片通知列表", notes = "")
-    public R<List<IndexImage>> deleteIndexImage() {
+    public R<List<IndexImageAddResp>> deleteIndexImage() {
         return R.success(indexImageService.list());
     }
 }

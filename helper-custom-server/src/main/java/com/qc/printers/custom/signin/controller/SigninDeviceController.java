@@ -41,6 +41,7 @@ public class SigninDeviceController {
         log.info("查询在线设备");
         List<SigninDeviceDto> bindDeviceList = signinDeviceMangerService.getCanBindDeviceList();
         log.info("{}", bindDeviceList);
+
         return R.success(bindDeviceList);
     }
 
