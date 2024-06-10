@@ -408,6 +408,7 @@ public class NoticeServiceImpl implements NoticeService {
      */
     @Override
     public PageData<NoticeUserResp> getNoticeList(Integer urgency, Integer pageNum, Integer pageSize, String tag, Long deptId) {
+        log.info("urgency{},pageNum{},pageSize{},tag{},deptId{}",urgency,pageNum,pageSize,tag,deptId);
         Page<Notice> page = new Page<Notice>(pageNum, pageSize);
         LambdaQueryWrapper<Notice> noticeLambdaQueryWrapper = new LambdaQueryWrapper<>();
         if (!urgency.equals(0)) {
@@ -439,7 +440,7 @@ public class NoticeServiceImpl implements NoticeService {
             throw new CustomException("未鉴权！禁止查看通知");
         }
         // 只展示全部成员可见的或者自己有权限看到的
-        noticeLambdaQueryWrapper.eq(Notice::getVisibility, 1).or().exists("SELECT 1 FROM notice_dept nu WHERE nu.notice_id = notice.id AND nu.is_deleted = 0 AND nu.dept_id = " + String.valueOf(currentUserDeptId));
+        noticeLambdaQueryWrapper.and(noticeLambdaQueryWrapper1 ->noticeLambdaQueryWrapper1.eq(Notice::getVisibility, 1).or().exists("SELECT 1 FROM notice_dept nu WHERE nu.notice_id = notice.id AND nu.is_deleted = 0 AND nu.dept_id = " + String.valueOf(currentUserDeptId)));
         noticeLambdaQueryWrapper.orderByDesc(Notice::getReleaseTime);
         noticeDao.page(page, noticeLambdaQueryWrapper);
         List<Notice> records = page.getRecords();
