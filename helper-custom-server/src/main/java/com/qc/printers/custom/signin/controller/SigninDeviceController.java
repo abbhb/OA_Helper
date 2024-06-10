@@ -2,6 +2,7 @@ package com.qc.printers.custom.signin.controller;
 
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
+import com.qc.printers.common.common.annotation.PermissionCheck;
 import com.qc.printers.common.signin.domain.dto.SigninDeviceDto;
 import com.qc.printers.common.signin.service.SigninDeviceMangerService;
 import io.swagger.annotations.Api;
@@ -23,7 +24,7 @@ public class SigninDeviceController {
     private SigninDeviceMangerService signinDeviceMangerService;
 
     @GetMapping("/list")
-//    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin_group:add")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin-device:list")
     @NeedToken
     @ApiOperation(value = "查询已经绑定的设备", notes = "")
     public R<List<SigninDeviceDto>> list() {
@@ -34,7 +35,7 @@ public class SigninDeviceController {
     }
 
     @GetMapping("/list-online")
-//    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin_group:add")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin-device:list")
     @NeedToken
     @ApiOperation(value = "查询在线设备", notes = "")
     public R<List<SigninDeviceDto>> listOnline() {
@@ -47,7 +48,7 @@ public class SigninDeviceController {
 
 
     @PostMapping("/add")
-//    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin_group:add")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin-device:add")
     @NeedToken
     @ApiOperation(value = "添加绑定设备", notes = "")
     public R<String> addDevice(@RequestBody SigninDeviceDto signinDeviceDto) {
@@ -56,7 +57,7 @@ public class SigninDeviceController {
     }
 
     @PutMapping("/update")
-//    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin_group:add")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin-device:update")
     @NeedToken
     @ApiOperation(value = "更新绑定设备", notes = "")
     public R<String> updateDevice(@RequestBody SigninDeviceDto signinDeviceDto) {
@@ -65,7 +66,7 @@ public class SigninDeviceController {
     }
 
     @DeleteMapping("/delete")
-//    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin_group:add")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin-device:delete")
     @NeedToken
     @ApiOperation(value = "删除在线设备", notes = "")
     public R<String> deviceDevice(String deviceId) {

@@ -7,6 +7,7 @@ import com.qc.printers.common.activiti.entity.vo.workflow.DefinitionListVo;
 import com.qc.printers.common.activiti.service.ProcessDefinitionService;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
+import com.qc.printers.common.common.annotation.PermissionCheck;
 import com.qc.printers.common.common.domain.entity.PageData;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -35,6 +36,7 @@ public class ProcessDefinitionController {
      * @param dto 参数
      */
     @NeedToken
+    @PermissionCheck(role = {"admin"}, permission = "sys:bpm:list")
     @GetMapping(value = "/list")
     public R<PageData<DefinitionListVo>> list(DefinitionListDto dto) {
         return R.success(processDefinitionService.queryPage(dto));
@@ -45,6 +47,7 @@ public class ProcessDefinitionController {
      *
      * @param deploymentId 部署id
      */
+    @NeedToken
     @GetMapping("/getDefinitionXml")
     public R<String> getDefinitionXml(String deploymentId) {
         String xml = processDefinitionService.getDefinitionXml(deploymentId);
@@ -56,6 +59,7 @@ public class ProcessDefinitionController {
      *
      * @param deploymentId 部署id
      */
+    @NeedToken
     @GetMapping("/getDefinitionInfo")
     public R<Map<String, Object>> getDefinitionInfo(String deploymentId) {
         Map<String, Object> result = processDefinitionService.getDefinitionInfo(deploymentId);
@@ -68,6 +72,8 @@ public class ProcessDefinitionController {
      * @param deploymentId 部署id
      */
     @GetMapping("/updateState")
+    @NeedToken
+    @PermissionCheck(role = {"admin"}, permission = "sys:bpm:list")
     public R<String> updateState(String deploymentId) {
         processDefinitionService.updateState(deploymentId);
         return R.success("修改成功");
@@ -79,6 +85,8 @@ public class ProcessDefinitionController {
      * @param dto 参数
      */
     @PostMapping("/deployProcess")
+    @NeedToken
+    @PermissionCheck(role = {"admin"}, permission = "sys:bpm:list")
     public R<String> deployProcess(@Valid @RequestBody DeployProcessDto dto) {
         processDefinitionService.deployProcess(dto);
         return R.success("部署成功");
@@ -89,6 +97,8 @@ public class ProcessDefinitionController {
      *
      * @param id 主键
      */
+    @NeedToken
+    @PermissionCheck(role = {"admin"}, permission = "sys:bpm:list")
     @DeleteMapping("/delete")
     public R<String> delete(@RequestParam("deploymentId") String id) {
         processDefinitionService.delete(id);

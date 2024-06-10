@@ -4,6 +4,8 @@ import com.qc.printers.common.activiti.entity.TableColumns;
 import com.qc.printers.common.activiti.entity.TableInfo;
 import com.qc.printers.common.activiti.service.TableService;
 import com.qc.printers.common.common.R;
+import com.qc.printers.common.common.annotation.NeedToken;
+import com.qc.printers.common.common.annotation.PermissionCheck;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -36,6 +38,8 @@ public class TableController {
      * @return 结果
      */
     @GetMapping("list")
+    @NeedToken
+    @PermissionCheck(role = {"admin"}, permission = "sys:bpm:list")
     public R<List<TableInfo>> list(String tableName) {
         List<TableInfo> list = tableService.tableList(tableName);
         return R.success(list);
@@ -47,6 +51,8 @@ public class TableController {
      * @param tableName 表名称或表备注
      * @return 表结构信息
      */
+    @NeedToken
+    @PermissionCheck(role = {"admin"}, permission = "sys:bpm:list")
     @GetMapping("tableColumns")
     public R<List<TableColumns>> tableColumns(@RequestParam String tableName,
                                               @RequestParam(required = false) String columnKey) {

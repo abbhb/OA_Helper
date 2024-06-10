@@ -50,7 +50,7 @@ public class IndexImageServiceImpl implements IndexImageService {
         List<IndexImage> list = iIndexImageService.list(lambdaQueryWrapper);
         List<Long> idS = list.stream().map(IndexImage::getId).collect(Collectors.toSet()).stream().toList();
         LambdaQueryWrapper<IndexImageDept> lambdaQueryWrapper1 = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper1.in(IndexImageDept::getDeptId,idS);
+        lambdaQueryWrapper1.in((idS!=null&&idS.size()>0),IndexImageDept::getDeptId,idS);
         List<IndexImageDept> list1 = indexImageDeptDao.list(lambdaQueryWrapper1);
         if (list1==null){
             list1 = new ArrayList<>();
