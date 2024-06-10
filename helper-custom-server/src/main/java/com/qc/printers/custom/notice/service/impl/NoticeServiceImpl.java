@@ -24,6 +24,8 @@ import com.qc.printers.custom.notice.service.NoticeService;
 import com.qc.printers.custom.notice.service.strategy.noticeread.NoticeReadHandelFactory;
 import com.qc.printers.custom.notice.service.strategy.noticeupdate.NoticeUpdateHandelFactory;
 import com.qc.printers.custom.notice.utils.UpdateUserListUtil;
+import com.qc.printers.custom.user.domain.vo.response.dept.DeptManger;
+import com.qc.printers.custom.user.service.DeptService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -61,6 +63,9 @@ public class NoticeServiceImpl implements NoticeService {
 
     @Autowired
     private NoticeReadHandelFactory noticeReadHandelFactory;
+
+    @Autowired
+    private DeptService deptService;
 
     @Transactional
     @Override
@@ -409,7 +414,18 @@ public class NoticeServiceImpl implements NoticeService {
             noticeLambdaQueryWrapper.eq(Notice::getUrgency, urgency);
         }
         if (deptId != null) {
-            noticeLambdaQueryWrapper.eq(Notice::getReleaseDept, deptId);
+            // 包含子部门
+            List<DeptManger> deptListOnlyTree = deptService.getDeptListOnlyTree();
+            DeptManger deptManagerById = DeptManger.findDeptManagerById(deptListOnlyTree, deptId);
+            if (deptManagerById==null){
+                throw new CustomException("业务异常");
+            }
+            List<Long> idsWithDescendants = DeptManger.getIdsWithDescendants(deptManagerById);
+            if (idsWithDescendants.size()>1){
+                noticeLambdaQueryWrapper.in(Notice::getReleaseDept, idsWithDescendants);
+            }else {
+                noticeLambdaQueryWrapper.eq(Notice::getReleaseDept, deptId);
+            }
         }
         // 此列表只展示发布状态的通知
         noticeLambdaQueryWrapper.eq(Notice::getStatus, 2);
