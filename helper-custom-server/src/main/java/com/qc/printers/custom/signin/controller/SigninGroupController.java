@@ -2,6 +2,7 @@ package com.qc.printers.custom.signin.controller;
 
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
+import com.qc.printers.common.common.annotation.PermissionCheck;
 import com.qc.printers.common.signin.domain.dto.SigninGroupDto;
 import com.qc.printers.common.signin.service.SigninGroupService;
 import io.swagger.annotations.Api;
@@ -24,7 +25,7 @@ public class SigninGroupController {
     private SigninGroupService signinGroupService;
 
     @PostMapping("/add")
-//    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin_group:add")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin-group:add")
     @NeedToken
     @ApiOperation(value = "添加考勤组", notes = "")
     public R<String> add(@RequestBody SigninGroupDto signinGroupDto) {
@@ -35,7 +36,7 @@ public class SigninGroupController {
 
 
     @DeleteMapping("/delete")
-//    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin_group:add")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin-group:delete")
     @NeedToken
     @ApiOperation(value = "删除考勤组", notes = "")
     public R<String> delete(String id) {
@@ -44,7 +45,7 @@ public class SigninGroupController {
     }
 
     @PutMapping("/update")
-//    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin_group:add")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin-group:update")
     @NeedToken
     @ApiOperation(value = "更新考勤组规则信息", notes = "")
     public R<String> update(@RequestBody SigninGroupDto signinGroupDto) {
@@ -53,7 +54,7 @@ public class SigninGroupController {
     }
 
     @GetMapping("/list")
-//    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin_group:add")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin-group:list")
     @NeedToken
     @ApiOperation(value = "获取考勤组规则信息", notes = "")
     public R<List<SigninGroupDto>> list() {

@@ -2,6 +2,7 @@ package com.qc.printers.custom.signin.controller;
 
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
+import com.qc.printers.common.common.annotation.PermissionCheck;
 import com.qc.printers.common.signin.domain.entity.SigninBc;
 import com.qc.printers.common.signin.service.SigninBcService;
 import io.swagger.annotations.Api;
@@ -22,7 +23,7 @@ public class SigninBcController {
     private SigninBcService signinBcService;
 
     @PostMapping("/add")
-//    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin_group:add")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:bc:add")
     @NeedToken
     @ApiOperation(value = "添加班次", notes = "")
     public R<String> add(@RequestBody SigninBc signinBc) {
@@ -32,7 +33,7 @@ public class SigninBcController {
     }
 
     @DeleteMapping("/delete")
-//    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin_group:add")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:bc:delete")
     @NeedToken
     @ApiOperation(value = "删除班次", notes = "")
     public R<String> delete(String id) {
@@ -41,7 +42,7 @@ public class SigninBcController {
     }
 
     @PutMapping("/update")
-//    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin_group:add")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:bc:update")
     @NeedToken
     @ApiOperation(value = "更新班次", notes = "")
     public R<String> update(@RequestBody SigninBc signinBc) {
@@ -51,7 +52,7 @@ public class SigninBcController {
 
 
     @GetMapping("/list")
-//    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin_group:add")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:bc:list")
     @NeedToken
     @ApiOperation(value = "查询班次", notes = "")
     public R<List<SigninBc>> list() {
