@@ -7,6 +7,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.List;
 
 @Data
@@ -29,5 +30,39 @@ public class DeptManger extends SysDept implements Serializable {
 
     private List<DeptManger> children;
 
+    public static DeptManger findDeptManagerById(List<DeptManger> deptList, Long id) {
+        for (DeptManger deptManager : deptList) {
+            if (deptManager.getId().equals(id) ) {
+                return deptManager;
+            }
+            // 如果部门经理有子部门，递归地搜索子部门列表
+            if (deptManager.getChildren() != null && !deptManager.getChildren().isEmpty()) {
+                DeptManger foundInSubList = findDeptManagerById(deptManager.getChildren(), id);
+                if (foundInSubList != null) {
+                    return foundInSubList;
+                }
+            }
+        }
+        return null; // 如果没有找到，返回null
+    }
+    private static void addDescendantIds(List<DeptManger> children, List<Long> ids) {
+        if (children != null) {
+            for (DeptManger child : children) {
+                ids.add(child.getId());
+                // 递归地添加子部门的子部门 id
+                addDescendantIds(child.getChildren(), ids);
+            }
+        }
+    }
+    public static List<Long> getIdsWithDescendants(DeptManger deptManager) {
+        List<Long> ids = new ArrayList<>();
+        if (deptManager != null) {
+            // 添加当前部门的 id
+            ids.add(deptManager.getId());
+            // 递归地添加所有子部门的 id
+            addDescendantIds(deptManager.getChildren(), ids);
+        }
+        return ids;
+    }
 
 }

@@ -234,7 +234,7 @@ public class DeptServiceImpl implements DeptService {
     @Override
     public List<DeptManger> getDeptListOnlyTree() {
         LambdaQueryWrapper<SysDept> sysDeptLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        sysDeptLambdaQueryWrapper.select(SysDept::getDeptName, SysDept::getId, SysDept::getParentId, SysDept::getStatus, SysDept::getOrderNum);
+        sysDeptLambdaQueryWrapper.select(SysDept::getDeptName, SysDept::getId, SysDept::getParentId, SysDept::getStatus, SysDept::getOrderNum,SysDept::getDeptNameAll);
         List<SysDept> list = iSysDeptService.list(sysDeptLambdaQueryWrapper);
         list.sort((m1, m2) -> {
             Long order1 = m1.getId();
