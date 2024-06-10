@@ -47,13 +47,14 @@ public class IndexImageServiceImpl implements IndexImageService {
     public List<String> allLabel() {
         UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
         LambdaQueryWrapper<IndexImage> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.select(IndexImage::getLabel, IndexImage::getSort);
-
         List<IndexImage> list = iIndexImageService.list(lambdaQueryWrapper);
         List<Long> idS = list.stream().map(IndexImage::getId).collect(Collectors.toSet()).stream().toList();
         LambdaQueryWrapper<IndexImageDept> lambdaQueryWrapper1 = new LambdaQueryWrapper<>();
         lambdaQueryWrapper1.in(IndexImageDept::getDeptId,idS);
         List<IndexImageDept> list1 = indexImageDeptDao.list(lambdaQueryWrapper1);
+        if (list1==null){
+            list1 = new ArrayList<>();
+        }
         // 使用Stream API来创建Map
 
 // 使用Stream API来创建Map
