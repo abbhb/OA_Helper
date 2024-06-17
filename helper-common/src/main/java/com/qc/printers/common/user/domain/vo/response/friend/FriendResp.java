@@ -18,7 +18,11 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 public class FriendResp {
 
-    @ApiModelProperty("申请列表的未读数")
-    private Integer unReadCount;
+
+    @ApiModelProperty("好友uid")
+    private Long uid;
+
+    @ApiModelProperty("在线状态 1在线 2离线")
+    private Integer activeStatus;
 
 }

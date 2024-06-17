@@ -7,8 +7,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 //@EnableOpenApi//启动swaggerUI
+@EnableAspectJAutoProxy(exposeProxy = true)
 @SpringBootApplication(scanBasePackages = {"com.qc.printers"}, exclude = {org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration.class})
 @MapperScan({"com.qc.printers.common.**.mapper"})
 @Slf4j

@@ -9,7 +9,7 @@ spring:
       max-file-size: -1
       max-request-size: -1
   profiles:
-    active: prod
+    active: dev
   application:
     name: printes
   datasource:
@@ -107,7 +107,8 @@ chatai:
   chatgpt:
     use: true
     AIUserId: 10010
-    key: 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
+    key: sk-Ie3HooYekeQy9G678c4eDe13B18c42A8979927D8D21aF8Eb
+    proxyUrl: https://api.gpts.vin/v1/chat/completions
   chatglm2:
     use: false
 # 后期创建个initsql，这些默认是不用变的

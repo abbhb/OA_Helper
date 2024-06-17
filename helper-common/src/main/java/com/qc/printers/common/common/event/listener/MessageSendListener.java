@@ -1,16 +1,19 @@
 package com.qc.printers.common.common.event.listener;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.qc.printers.common.chat.dao.ContactDao;
 import com.qc.printers.common.chat.dao.MessageDao;
 import com.qc.printers.common.chat.dao.RoomDao;
 import com.qc.printers.common.chat.dao.RoomFriendDao;
 import com.qc.printers.common.chat.domain.entity.Message;
 import com.qc.printers.common.chat.domain.entity.Room;
+import com.qc.printers.common.chat.domain.entity.RoomFriend;
 import com.qc.printers.common.chat.domain.enums.HotFlagEnum;
 import com.qc.printers.common.chat.service.ChatService;
 import com.qc.printers.common.chat.service.cache.GroupMemberCache;
 import com.qc.printers.common.chat.service.cache.HotRoomCache;
 import com.qc.printers.common.chat.service.cache.RoomCache;
+import com.qc.printers.common.chatai.properties.ChatGPTProperties;
 import com.qc.printers.common.chatai.service.IChatAIService;
 import com.qc.printers.common.common.constant.MQConstant;
 import com.qc.printers.common.common.domain.dto.MsgSendMessageDTO;
@@ -64,6 +67,11 @@ public class MessageSendListener {
     @Autowired
     private MQProducer mqProducer;
 
+    @Autowired
+    private ChatGPTProperties chatGPTProperties;
+
+
+
     @TransactionalEventListener(phase = TransactionPhase.BEFORE_COMMIT, classes = MessageSendEvent.class, fallbackExecution = true)
     public void messageRoute(MessageSendEvent event) {
         Long msgId = event.getMsgId();
@@ -77,11 +85,27 @@ public class MessageSendListener {
         if (isHotRoom(room)) {
             openAIService.chat(message);
         }
+        if (isChatUser(room,message.getFromUid())){
+            openAIService.chatForFriendByChatGpt(message);
+        }
     }
 
     @Transactional
     public boolean isHotRoom(Room room) {
         return Objects.equals(HotFlagEnum.YES.getType(), room.getHotFlag());
+    }
+    @Transactional
+    public boolean isChatUser(Room room,Long fromUid) {
+        LambdaQueryWrapper<RoomFriend> roomFriendLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        roomFriendLambdaQueryWrapper.eq(RoomFriend::getRoomId,room.getId());
+        roomFriendLambdaQueryWrapper.eq(RoomFriend::getUid1,chatGPTProperties.getAIUserId());
+        roomFriendLambdaQueryWrapper.eq(RoomFriend::getUid2,fromUid);
+        int count = roomFriendDao.count(roomFriendLambdaQueryWrapper);
+
+        if (count!=0){
+            return true;
+        }
+        return false;
     }
 
 //    @TransactionalEventListener(classes = MessageSendEvent.class, fallbackExecution = true)

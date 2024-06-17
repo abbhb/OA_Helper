@@ -9,6 +9,7 @@ import com.qc.printers.common.chat.domain.enums.MessageTypeEnum;
 import com.qc.printers.common.common.event.MessageMarkEvent;
 import com.qc.printers.common.user.service.WebSocketService;
 import com.qc.printers.common.user.service.adapter.WSAdapter;
+import com.qc.printers.common.user.service.impl.PushService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.scheduling.annotation.Async;
@@ -30,8 +31,7 @@ public class MessageMarkListener {
     @Autowired
     private MessageDao messageDao;
     @Autowired
-    private WebSocketService webSocketService;
-
+    private PushService pushService;
     @Async
     @TransactionalEventListener(classes = MessageMarkEvent.class, fallbackExecution = true)
     public void changeMsgType(MessageMarkEvent event) {
@@ -53,7 +53,7 @@ public class MessageMarkListener {
     public void notifyAll(MessageMarkEvent event) {//后续可做合并查询，目前异步影响不大
         ChatMessageMarkDTO dto = event.getDto();
         Integer markCount = messageMarkDao.getMarkCount(dto.getMsgId(), dto.getMarkType());
-        webSocketService.sendToAllOnline(WSAdapter.buildMsgMarkSend(dto, markCount), dto.getUid());
+        pushService.sendPushMsg(WSAdapter.buildMsgMarkSend(dto, markCount));
     }
 
 }

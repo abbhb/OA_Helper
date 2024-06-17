@@ -8,8 +8,7 @@ import cn.hutool.core.lang.Pair;
 import com.qc.printers.common.chat.dao.*;
 import com.qc.printers.common.chat.domain.dto.MsgReadInfoDTO;
 import com.qc.printers.common.chat.domain.entity.*;
-import com.qc.printers.common.chat.domain.enums.MessageMarkActTypeEnum;
-import com.qc.printers.common.chat.domain.enums.MessageTypeEnum;
+import com.qc.printers.common.chat.domain.enums.*;
 import com.qc.printers.common.chat.domain.vo.request.*;
 import com.qc.printers.common.chat.domain.vo.response.ChatMemberListResp;
 import com.qc.printers.common.chat.domain.vo.response.ChatMemberStatisticResp;
@@ -17,6 +16,7 @@ import com.qc.printers.common.chat.domain.vo.response.ChatMessageReadResp;
 import com.qc.printers.common.chat.domain.vo.response.ChatMessageResp;
 import com.qc.printers.common.chat.service.ChatService;
 import com.qc.printers.common.chat.service.ContactService;
+import com.qc.printers.common.chat.service.IRoleService;
 import com.qc.printers.common.chat.service.adapter.MemberAdapter;
 import com.qc.printers.common.chat.service.adapter.MessageAdapter;
 import com.qc.printers.common.chat.service.adapter.RoomAdapter;
@@ -39,10 +39,12 @@ import com.qc.printers.common.config.SystemMessageConfig;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.domain.enums.ChatActiveStatusEnum;
+import com.qc.printers.common.user.domain.enums.RoleEnum;
 import com.qc.printers.common.user.domain.vo.response.ws.ChatMemberResp;
 import com.qc.printers.common.user.service.cache.UserCache;
 import com.qc.printers.transaction.service.MQProducer;
 import lombok.extern.slf4j.Slf4j;
+import org.aspectj.util.TypeSafeEnum;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cache.annotation.Cacheable;
@@ -95,6 +97,12 @@ public class ChatServiceImpl implements ChatService {
     private RoomGroupCache roomGroupCache;
     @Autowired
     private MQProducer mqProducer;
+
+    @Autowired
+    private RoomGroupDao roomGroupDao;
+
+    @Autowired
+    private IRoleService iRoleService;
 
     @Autowired
     private SystemMessageConfig systemMessageConfig;
@@ -154,7 +162,7 @@ public class ChatServiceImpl implements ChatService {
     }
 
     @Override
-    public CursorPageBaseResp<ChatMemberResp> getMemberPage(List<Long> memberUidList, CursorPageBaseReq request) {
+    public CursorPageBaseResp<ChatMemberResp> getMemberPage(List<Long> memberUidList, MemberReq request) {
         Pair<ChatActiveStatusEnum, String> pair = ChatMemberHelper.getCursorPair(request.getCursor());
         ChatActiveStatusEnum activeStatusEnum = pair.getKey();
         String timeCursor = pair.getValue();
@@ -178,6 +186,11 @@ public class ChatServiceImpl implements ChatService {
             timeCursor = cursorPage.getCursor();
             isLast = cursorPage.getIsLast();
         }
+        // 获取群成员角色ID
+        List<Long> uidList = resultList.stream().map(ChatMemberResp::getUid).collect(Collectors.toList());
+        RoomGroup roomGroup = roomGroupDao.getByRoomId(request.getRoomId());
+        Map<Long, Integer> uidMapRole = groupMemberDao.getMemberMapRole(roomGroup.getId(), uidList);
+        resultList.forEach(member -> member.setRoleId(uidMapRole.get(member.getUid())));
         //组装结果
         return new CursorPageBaseResp<>(ChatMemberHelper.generateCursor(activeStatusEnum, timeCursor), isLast, resultList);
     }
@@ -301,10 +314,38 @@ public class ChatServiceImpl implements ChatService {
     private void checkRecall(Long uid, Message message) {
         AssertUtil.isNotEmpty(message, "消息有误");
         AssertUtil.notEqual(message.getType(), MessageTypeEnum.RECALL.getType(), "消息无法撤回");
-//        boolean hasPower = iRoleService.hasPower(uid, RoleEnum.CHAT_MANAGER);
-        if (true) {
-            return;
+        // 超级管理员也不能在单聊行驶特权
+        Room room = roomCache.get(message.getRoomId());
+        AssertUtil.notEqual(room,null,"不能为空");
+        if (room.getHotFlag().equals(HotFlagEnum.YES.getType())){
+            // 只有热点群聊拥有此项
+            boolean hasPower = iRoleService.hasPower(uid, RoleEnum.CHAT_MANAGER);
+            if (hasPower) {
+                return;
+            }
+            throw new CustomException( "抱歉,您没有权限");
         }
+        // 群聊的话
+        if (room.getType().equals(RoomTypeEnum.GROUP.getType())) {
+            RoomGroup roomGroup = roomGroupCache.get(message.getRoomId());
+            AssertUtil.notEqual(roomGroup,null,"不能为空");
+            GroupMember member = groupMemberDao.getMember(roomGroup.getId(), uid);
+            AssertUtil.notEqual(member,null,"群组不存在或者用户不在群组!");
+            if (member.getRole().equals(GroupRoleAPPEnum.LEADER.getType())){
+                return;
+            }
+            if (member.getRole().equals(GroupRoleAPPEnum.MANAGER.getType())){
+                // 如果是管理员需要判断消息是不是群主和其他管理员的，不是就可以
+                GroupMember memberFromUid = groupMemberDao.getMember(roomGroup.getId(), message.getFromUid());
+                if (!memberFromUid.getRole().equals(GroupRoleAPPEnum.LEADER.getType())&&memberFromUid.getRole().equals(GroupRoleAPPEnum.MANAGER.getType())){
+                    return;
+                }else {
+                    throw new CustomException( "抱歉,您没有权限");
+                }
+            }
+            throw new CustomException( "抱歉,您没有权限");
+        }
+        // 单聊
         boolean self = Objects.equals(uid, message.getFromUid());
         AssertUtil.isTrue(self, "抱歉,您没有权限");
         long between = DateUtil.between(Date.from(message.getCreateTime().atZone(ZoneId.systemDefault()).toInstant()), new Date(), DateUnit.MINUTE);

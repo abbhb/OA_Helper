@@ -17,7 +17,7 @@ import java.util.stream.Collectors;
 @Getter
 public enum RoleEnum {
     ADMIN(1L, "超级管理员"),
-    CHAT_MANAGER(2L, "抹茶群聊管理"),
+    CHAT_MANAGER(10013L, "群聊管理"),// 必须存在此角色id的角色才被认为是管理员
     ;
 
     private static Map<Long, RoleEnum> cache;

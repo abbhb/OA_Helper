@@ -50,12 +50,14 @@ public class ContactController {
     }
 
     @GetMapping("/public/contact/detail")
+    @NeedToken
     @ApiOperation("会话详情")
     public R<ChatRoomResp> getContactDetail(@Valid IdReqVO request) {
         Long uid = RequestHolder.get().getUid();
         return R.success(roomService.getContactDetail(uid, request.getId()));
     }
 
+    @NeedToken
     @GetMapping("/public/contact/detail/friend")
     @ApiOperation("会话详情(联系人列表发消息用)")
     public R<ChatRoomResp> getContactDetailByFriend(@Valid ContactFriendReq request) {

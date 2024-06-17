@@ -4,6 +4,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -29,6 +30,9 @@ public enum GroupRoleEnum {
 
     private final Integer type;
     private final String desc;
+
+    public static final List<Integer> ADMIN_LIST = Arrays.asList(GroupRoleEnum.LEADER.getType(), GroupRoleEnum.MANAGER.getType());
+
 
     public static GroupRoleEnum of(Integer type) {
         return cache.get(type);

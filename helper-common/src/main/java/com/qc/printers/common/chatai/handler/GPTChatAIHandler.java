@@ -24,6 +24,9 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+import java.util.stream.Collectors;
 
 import static com.qc.printers.common.common.constant.RedisKey.USER_CHAT_CONTEXT;
 import static com.qc.printers.common.common.service.frequencycontrol.FrequencyControlStrategyFactory.TOTAL_COUNT_WITH_IN_FIX_TIME_FREQUENCY_CONTROLLER;
@@ -99,6 +102,7 @@ public class GPTChatAIHandler extends AbstractChatAIHandler {
                     .maxTokens(chatGPTProperties.getMaxTokens())
                     .message(context.getMsg())
                     .send();
+            log.info("gpt-{}",response);
             text = ChatGPTUtils.parseText(response);
             ChatGPTMsg chatGPTMsg = ChatGPTMsgBuilder.assistantMsg(text);
             context.addMsg(chatGPTMsg);
@@ -134,7 +138,8 @@ public class GPTChatAIHandler extends AbstractChatAIHandler {
     }
 
     private void saveContext(ChatGPTContext chatGPTContext) {
-        RedisUtils.set(RedisKey.getKey(USER_CHAT_CONTEXT, chatGPTContext.getUid(), chatGPTContext.getRoomId()), chatGPTContext, 5L, TimeUnit.MINUTES);
+        // 12个小时的上下文
+        RedisUtils.set(RedisKey.getKey(USER_CHAT_CONTEXT, chatGPTContext.getUid(), chatGPTContext.getRoomId()), chatGPTContext, 12L, TimeUnit.HOURS);
     }
 
 
@@ -160,17 +165,64 @@ public class GPTChatAIHandler extends AbstractChatAIHandler {
         if (extra == null) {
             return false;
         }
-        if (CollectionUtils.isEmpty(extra.getAtUidList())) {
-            return false;
-        }
-        if (!extra.getAtUidList().contains(String.valueOf(chatGPTProperties.getAIUserId()))) {
-            return false;
-        }
 
         if (StringUtils.isBlank(message.getContent())) {
             return false;
         }
-        return StringUtils.contains(message.getContent(), "@" + AI_NAME)
-                && StringUtils.isNotBlank(message.getContent().replace(AI_NAME, "").trim());
+        return true;
+    }
+
+    @Override
+    protected boolean menu(Message message) {
+        if (message.getContent().equals("清除上下文")){
+            // 清除redis里的上下文
+            RedisUtils.del(RedisKey.getKey(USER_CHAT_CONTEXT, message.getFromUid(), message.getRoomId()));
+            answerMsg("清除上下文成功~", message);
+            return true;
+        }
+        if (message.getContent().equals("查看当前上下文条数")){
+            // 返回redis当前上下文条数
+            ChatGPTContext chatGPTContext = RedisUtils.get(RedisKey.getKey(USER_CHAT_CONTEXT,  message.getFromUid(), message.getRoomId()), ChatGPTContext.class);
+            answerMsg("上下文从最后一条（不所有的命令和命令回复）开始有"+chatGPTContext.getMsg().size()+"条~", message);
+            return true;
+        }
+        Integer integer = checkAndExtractContext(message.getContent());
+        if (integer!=null){
+            // 仅保留后n条上下文 integer
+            ChatGPTContext chatGPTContext = RedisUtils.get(RedisKey.getKey(USER_CHAT_CONTEXT,  message.getFromUid(), message.getRoomId()), ChatGPTContext.class);
+            List<ChatGPTMsg> msg = chatGPTContext.getMsg();
+            if (msg.size()<=integer){
+                RedisUtils.del(RedisKey.getKey(USER_CHAT_CONTEXT, message.getFromUid(), message.getRoomId()));
+                answerMsg("清除全部上下文成功【保留的比总数都少】", message);
+                return true;
+            }
+            // 方法三：使用流操作保留后n条数据
+            List<ChatGPTMsg> lastNMsg = msg.stream()
+                    .skip(Math.max(0, msg.size() - integer))
+                    .collect(Collectors.toList());
+            chatGPTContext.setMsg(lastNMsg);
+            saveContext(chatGPTContext);
+            // 减一条
+            answerMsg("仅保留部分上下文成功", message);
+
+            return true;
+        }
+        return false;
+    }
+    private Integer checkAndExtractContext(String input) {
+        // 定义正则表达式，匹配格式 "仅保留后x条上下文"
+        String pattern = "仅保留后(\\d+)条上下文";
+        Pattern p = Pattern.compile(pattern);
+        Matcher m = p.matcher(input);
+
+        // 检查是否匹配
+        if (m.matches()) {
+            // 提取匹配的数字
+            String numberStr = m.group(1);
+            int x = Integer.parseInt(numberStr);
+            return x;
+        } else {
+            return null;
+        }
     }
 }

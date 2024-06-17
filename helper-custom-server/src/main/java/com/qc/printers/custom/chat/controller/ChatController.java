@@ -117,20 +117,24 @@ public class ChatController {
     }
 
     @GetMapping("/msg/read/page")
+    @NeedToken
     @ApiOperation("消息的已读未读列表")
     public R<CursorPageBaseResp<ChatMessageReadResp>> getReadPage(@Valid ChatMessageReadReq request) {
         Long uid = RequestHolder.get().getUid();
         return R.success(chatService.getReadPage(uid, request));
     }
 
-    @GetMapping("/msg/read")
+    @PostMapping("/msg/read")
+    @NeedToken
     @ApiOperation("获取消息的已读未读总数")
-    public R<Collection<MsgReadInfoDTO>> getReadInfo(@Valid ChatMessageReadInfoReq request) {
+    public R<Collection<MsgReadInfoDTO>> getReadInfo(@Valid @RequestBody ChatMessageReadInfoReq request) {
+        // todo: c.q.p.c.common.GlobalExceptionHandler    : nested exception is org.apache.ibatis.builder.BuilderException: The expression 'coll' evaluated to a null value.
         Long uid = RequestHolder.get().getUid();
         return R.success(chatService.getMsgReadInfo(uid, request));
     }
 
     @PutMapping("/msg/read")
+    @NeedToken
     @ApiOperation("消息阅读上报")
     public R<Void> msgRead(@Valid @RequestBody ChatMessageMemberReq request) {
         Long uid = RequestHolder.get().getUid();

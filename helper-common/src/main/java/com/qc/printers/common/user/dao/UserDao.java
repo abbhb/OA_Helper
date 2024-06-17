@@ -84,6 +84,14 @@ public class UserDao extends ServiceImpl<UserMapper, User> {
         return super.save(entity);
     }
 
+    public List<User> getFriendList(List<Long> uids) {
+        return lambdaQuery()
+                .in(User::getId, uids)
+                .select(User::getId, User::getActiveStatus, User::getName, User::getAvatar)
+                .list();
+
+    }
+
 
     @Transactional
     @Override

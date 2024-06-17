@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.util.ObjectUtil;
 import com.github.benmanes.caffeine.cache.Cache;
 import com.github.benmanes.caffeine.cache.Caffeine;
+import com.qc.printers.common.chat.service.IRoleService;
 import com.qc.printers.common.common.JacksonObjectMapper;
 import com.qc.printers.common.common.constant.RedisKey;
 import com.qc.printers.common.common.event.UserOfflineEvent;
@@ -14,6 +15,7 @@ import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.dto.WSChannelExtraDTO;
 import com.qc.printers.common.user.domain.entity.IpInfo;
 import com.qc.printers.common.user.domain.entity.User;
+import com.qc.printers.common.user.domain.enums.RoleEnum;
 import com.qc.printers.common.user.domain.enums.WSBaseResp;
 import com.qc.printers.common.user.domain.vo.request.ws.WSAuthorize;
 import com.qc.printers.common.user.service.WebSocketService;
@@ -81,6 +83,9 @@ public class WebSocketServiceImpl implements WebSocketService {
     @Autowired
     private MQProducer mqProducer;
 
+    @Autowired
+    private IRoleService iRoleService;
+
     public static ConcurrentHashMap<Channel, WSChannelExtraDTO> getOnlineMap() {
         return ONLINE_WS_MAP;
     }
@@ -145,8 +150,10 @@ public class WebSocketServiceImpl implements WebSocketService {
     private void loginSuccess(Channel channel, User user, String token) {
         //更新上线列表
         online(channel, user.getId());
+        //返回给用户登录成功
+        boolean hasPower = iRoleService.hasPower(user.getId(), RoleEnum.CHAT_MANAGER);
         //发送给对应的用户
-        sendMsg(channel, WSAdapter.buildLoginSuccessResp(user, token, true));
+        sendMsg(channel, WSAdapter.buildLoginSuccessResp(user, token, hasPower));
         //发送用户上线事件
         boolean online = userCache.isOnline(user.getId());
         if (!online) {
