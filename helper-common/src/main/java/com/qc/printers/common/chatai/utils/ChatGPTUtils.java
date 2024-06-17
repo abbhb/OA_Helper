@@ -33,7 +33,7 @@ public class ChatGPTUtils {
      * 参数用于指定生成文本的最大长度。
      * 它表示生成的文本中最多包含多少个 token。一个 token 可以是一个单词、一个标点符号或一个空格。
      */
-    private int maxTokens = 2048;
+    private int maxTokens = 3000;
     /**
      * 用于控制生成文本的多样性。
      * 较高的温度会导致更多的随机性和多样性，但可能会降低生成文本的质量。默认值为 1，建议在 0.7 到 1.3 之间调整。
@@ -79,7 +79,10 @@ public class ChatGPTUtils {
 
     @SneakyThrows
     public static String parseText(Response response) {
-        return parseText(response.body().string());
+        String s = parseText(response.body().string());
+
+
+        return s;
     }
 
 

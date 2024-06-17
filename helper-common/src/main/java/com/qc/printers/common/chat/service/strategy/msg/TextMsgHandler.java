@@ -10,6 +10,7 @@ import com.qc.printers.common.chat.domain.enums.MessageTypeEnum;
 import com.qc.printers.common.chat.domain.vo.request.ChatMessageReq;
 import com.qc.printers.common.chat.domain.vo.request.msg.TextMsgReq;
 import com.qc.printers.common.chat.domain.vo.response.msg.TextMsgResp;
+import com.qc.printers.common.chat.service.IRoleService;
 import com.qc.printers.common.chat.service.adapter.MessageAdapter;
 import com.qc.printers.common.chat.service.cache.MsgCache;
 import com.qc.printers.common.common.domain.enums.YesOrNoEnum;
@@ -19,6 +20,7 @@ import com.qc.printers.common.common.utils.discover.domain.UrlInfo;
 import com.qc.printers.common.common.utils.sensitiveWord.SensitiveWordBs;
 import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.User;
+import com.qc.printers.common.user.domain.enums.RoleEnum;
 import com.qc.printers.common.user.service.cache.UserCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -42,6 +44,8 @@ public class TextMsgHandler extends AbstractMsgHandler {
     private UserCache userCache;
     @Autowired
     private SensitiveWordBs sensitiveWordBs;
+    @Autowired
+    private IRoleService iRoleService;
 
     @Override
     MessageTypeEnum getMsgTypeEnum() {
@@ -67,8 +71,7 @@ public class TextMsgHandler extends AbstractMsgHandler {
             if (atAll) {
                 // @全体成员权限判断
                 // 后期升级群聊包含管理员,管理员权重1000，群主权重10000，按权重判断权限
-//                AssertUtil.isTrue(iRoleService.hasPower(uid, RoleEnum.CHAT_MANAGER), "没有权限");
-
+                AssertUtil.isTrue(iRoleService.hasPower(uid, RoleEnum.CHAT_MANAGER), "没有权限@全体");
             }
         }
     }

@@ -28,6 +28,7 @@ public class ChatMessageResp {
     public static class UserInfo {
         @ApiModelProperty("用户id")
         private String uid;
+
     }
 
     @Data

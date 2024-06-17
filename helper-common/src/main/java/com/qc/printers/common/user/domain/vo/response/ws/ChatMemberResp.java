@@ -26,4 +26,9 @@ public class ChatMemberResp {
     private Integer activeStatus;
     @ApiModelProperty("最后一次上下线时间")
     private Date lastOptTime;
+
+    /**
+     * 角色ID
+     */
+    private Integer roleId;
 }

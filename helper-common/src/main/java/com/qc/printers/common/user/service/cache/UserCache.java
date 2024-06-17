@@ -8,9 +8,11 @@ import com.qc.printers.common.common.domain.vo.response.CursorPageBaseResp;
 import com.qc.printers.common.common.utils.CursorUtils;
 import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.user.domain.dto.UserInfo;
+import com.qc.printers.common.user.domain.entity.SysRole;
 import com.qc.printers.common.user.service.UserInfoService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cache.annotation.Cacheable;
 import org.springframework.stereotype.Component;
 
 import java.util.*;
@@ -159,6 +161,12 @@ public class UserCache {
     public void delUserInfo(Long uid) {
         String key = RedisKey.getKey(RedisKey.USER_INFO_STRING, uid);
         RedisUtils.del(key);
+    }
+
+    @Cacheable(cacheNames = "user", key = "'roles'+#uid")
+    public Set<Long> getRoleSet(Long uid) {
+        Set<SysRole> userAllRole = userInfoService.getUserAllRole(uid);
+        return userAllRole.stream().map(SysRole::getId).collect(Collectors.toSet());
     }
 
 }

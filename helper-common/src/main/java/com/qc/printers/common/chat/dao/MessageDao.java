@@ -1,15 +1,20 @@
 package com.qc.printers.common.chat.dao;
 
+import cn.hutool.core.collection.CollectionUtil;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qc.printers.common.chat.domain.entity.Message;
 import com.qc.printers.common.chat.domain.enums.MessageStatusEnum;
 import com.qc.printers.common.chat.mapper.MessageMapper;
+import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.domain.vo.request.CursorPageBaseReq;
 import com.qc.printers.common.common.domain.vo.response.CursorPageBaseResp;
 import com.qc.printers.common.common.utils.CursorUtils;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Objects;
 
 /**
@@ -62,5 +67,23 @@ public class MessageDao extends ServiceImpl<MessageMapper, Message> {
                 .eq(Message::getRoomId, roomId)
                 .gt(Objects.nonNull(readTime), Message::getCreateTime, readTime)
                 .count();
+    }
+
+    /**
+     * 根据房间ID逻辑删除消息
+     *
+     * @param roomId  房间ID
+     * @param uidList 群成员列表
+     * @return 是否删除成功
+     */
+    public Boolean removeByRoomId(Long roomId, List<Long> uidList) {
+        if (uidList==null){
+            throw new CustomException("异常参数");
+        }
+        LambdaUpdateWrapper<Message> wrapper = new UpdateWrapper<Message>().lambda()
+                .eq(Message::getRoomId, roomId)
+                .in(uidList.size()>0,Message::getFromUid, uidList)
+                .set(Message::getStatus, MessageStatusEnum.DELETE.getStatus());
+        return this.update(wrapper);
     }
 }

@@ -92,28 +92,29 @@ public class RoomAppServiceImpl implements RoomAppService {
 
     @Override
     public CursorPageBaseResp<ChatRoomResp> getContactPage(CursorPageBaseReq request, Long uid) {
-        //查出用户要展示的会话列表
+        // 查出用户要展示的会话列表
         CursorPageBaseResp<Long> page;
         if (Objects.nonNull(uid)) {
             Double hotEnd = getCursorOrNull(request.getCursor());
             Double hotStart = null;
-            //用户基础会话
+            // 用户基础会话 如果会话存在，但是群聊已经删除就会异常
             CursorPageBaseResp<Contact> contactPage = contactDao.getContactPage(uid, request);
             List<Long> baseRoomIds = contactPage.getList().stream().map(Contact::getRoomId).collect(Collectors.toList());
             if (!contactPage.getIsLast()) {
                 hotStart = getCursorOrNull(contactPage.getCursor());
-            }            //热门房间
+            }
+            // 热门房间
             Set<ZSetOperations.TypedTuple<String>> typedTuples = hotRoomCache.getRoomRange(hotStart, hotEnd);
             List<Long> hotRoomIds = typedTuples.stream().map(ZSetOperations.TypedTuple::getValue).filter(Objects::nonNull).map(Long::parseLong).collect(Collectors.toList());
             baseRoomIds.addAll(hotRoomIds);
-            //基础会话和热门房间合并
+            // 基础会话和热门房间合并
             page = CursorPageBaseResp.init(contactPage, baseRoomIds);
-        } else {//用户未登录，只查全局房间
+        } else {// 用户未登录，只查全局房间
             CursorPageBaseResp<Pair<Long, Double>> roomCursorPage = hotRoomCache.getRoomCursorPage(request);
             List<Long> roomIds = roomCursorPage.getList().stream().map(Pair::getKey).collect(Collectors.toList());
             page = CursorPageBaseResp.init(roomCursorPage, roomIds);
         }
-        //最后组装会话信息（名称，头像，未读数等）
+        // 最后组装会话信息（名称，头像，未读数等）
         List<ChatRoomResp> result = buildContactResp(uid, page.getList());
         return CursorPageBaseResp.init(page, result);
     }
@@ -194,16 +195,26 @@ public class RoomAppServiceImpl implements RoomAppService {
         RoomGroup roomGroup = roomGroupCache.get(request.getRoomId());
         AssertUtil.isNotEmpty(roomGroup, "房间号有误");
         GroupMember self = groupMemberDao.getMember(roomGroup.getId(), uid);
-        AssertUtil.isNotEmpty(self, "您不是群管理");
-        AssertUtil.isTrue(hasPower(self), "您不是群管理");
-        GroupMember member = groupMemberDao.getMember(roomGroup.getId(), request.getUid());
-        AssertUtil.isNotEmpty(self, "用户已经移除");
+        AssertUtil.isNotEmpty(self, "您无权操作~");
+        // 1. 判断被移除的人是否是群主或者管理员  （群主不可以被移除，管理员只能被群主移除）
+        Long removedUid = request.getUid();
+        // 1.1 群主 非法操作
+        AssertUtil.isFalse(groupMemberDao.isLord(roomGroup.getId(), removedUid),"非法操作，你没有移除该成员的权限");
+        // 1.2 管理员 判断是否是群主操作
+        if (groupMemberDao.isManager(roomGroup.getId(), removedUid)) {
+            Boolean isLord = groupMemberDao.isLord(roomGroup.getId(), uid);
+            AssertUtil.isTrue(isLord, "非法操作，你没有移除该成员的权限");
+        }
+        // 1.3 普通成员 判断是否有权限操作
+        AssertUtil.isTrue(hasPower(self), "非法操作，你没有移除该成员的权限");
+        GroupMember member = groupMemberDao.getMember(roomGroup.getId(), removedUid);
+        AssertUtil.isNotEmpty(member, "用户已经移除");
         groupMemberDao.removeById(member.getId());
-        //发送移除事件告知群成员
+        // 发送移除事件告知群成员
         List<Long> memberUidList = groupMemberCache.getMemberUidList(roomGroup.getRoomId());
         WSBaseResp<WSMemberChange> ws = MemberAdapter.buildMemberRemoveWS(roomGroup.getRoomId(), member.getUid());
         pushService.sendPushMsg(ws, memberUidList);
-        groupMemberCache.evictMemberUidList(member.getId());
+        groupMemberCache.evictMemberUidList(room.getId());
     }
 
 

@@ -175,4 +175,9 @@ public class ChatGLM2Handler extends AbstractChatAIHandler {
         return StringUtils.contains(message.getContent(), "@" + AI_NAME)
                 && StringUtils.isNotBlank(message.getContent().replace(AI_NAME, "").trim());
     }
+
+    @Override
+    protected boolean menu(Message message) {
+        return false;
+    }
 }

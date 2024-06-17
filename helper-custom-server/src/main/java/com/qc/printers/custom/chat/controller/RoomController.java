@@ -2,10 +2,15 @@ package com.qc.printers.custom.chat.controller;
 
 
 import com.qc.printers.common.chat.domain.vo.request.*;
+import com.qc.printers.common.chat.domain.vo.request.admin.AdminAddReq;
+import com.qc.printers.common.chat.domain.vo.request.admin.AdminRevokeReq;
+import com.qc.printers.common.chat.domain.vo.request.member.MemberExitReq;
 import com.qc.printers.common.chat.domain.vo.response.ChatMemberListResp;
 import com.qc.printers.common.chat.domain.vo.response.MemberResp;
+import com.qc.printers.common.chat.service.IGroupMemberService;
 import com.qc.printers.common.chat.service.RoomAppService;
 import com.qc.printers.common.common.R;
+import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.domain.vo.request.IdReqVO;
 import com.qc.printers.common.common.domain.vo.response.CursorPageBaseResp;
 import com.qc.printers.common.common.domain.vo.response.IdRespVO;
@@ -37,7 +42,11 @@ public class RoomController {
     @Autowired
     private RoomAppService roomService;
 
+    @Autowired
+    private IGroupMemberService groupMemberService;
+
     @GetMapping("/public/group")
+    @NeedToken
     @ApiOperation("群组详情")
     public R<MemberResp> groupDetail(@Valid IdReqVO request) {
         Long uid = RequestHolder.get().getUid();
@@ -46,6 +55,7 @@ public class RoomController {
 
 
     @GetMapping("/public/group/member/page")
+    @NeedToken
     @ApiOperation("群成员列表")
     public R<CursorPageBaseResp<ChatMemberResp>> getMemberPage(@Valid MemberReq request) {
         return R.success(roomService.getMemberPage(request));
@@ -53,20 +63,32 @@ public class RoomController {
 
 
     @GetMapping("/group/member/list")
+    @NeedToken
     @ApiOperation("房间内的所有群成员列表-@专用")
     public R<List<ChatMemberListResp>> getMemberList(@Valid ChatMessageMemberReq request) {
         return R.success(roomService.getMemberList(request));
     }
 
     @DeleteMapping("/group/member")
+    @NeedToken
     @ApiOperation("移除成员")
-    public R<Void> delMember(@Valid @RequestBody MemberDelReq request) {
+    public R<String> delMember(@Valid MemberDelReq request) {
         Long uid = RequestHolder.get().getUid();
         roomService.delMember(uid, request);
-        return R.success("");
+        return R.success("移除成功");
+    }
+
+    @DeleteMapping("/group/member/exit")
+    @NeedToken
+    @ApiOperation("退出群聊")
+    public R<Boolean> exitGroup(@Valid MemberExitReq request) {
+        Long uid = RequestHolder.get().getUid();
+        groupMemberService.exitGroup(uid, request);
+        return R.success(true);
     }
 
     @PostMapping("/group")
+    @NeedToken
     @ApiOperation("新增群组")
     public R<IdRespVO> addGroup(@Valid @RequestBody GroupAddReq request) {
         Long uid = RequestHolder.get().getUid();
@@ -75,11 +97,29 @@ public class RoomController {
     }
 
     @PostMapping("/group/member")
+    @NeedToken
     @ApiOperation("邀请好友")
     public R<Void> addMember(@Valid @RequestBody MemberAddReq request) {
         Long uid = RequestHolder.get().getUid();
         roomService.addMember(uid, request);
         return R.success("");
+    }
+    @NeedToken
+    @PutMapping("/group/admin")
+    @ApiOperation("添加管理员")
+    public R<Boolean> addAdmin(@Valid @RequestBody AdminAddReq request) {
+        Long uid = RequestHolder.get().getUid();
+        groupMemberService.addAdmin(uid, request);
+        return R.success("");
+    }
+
+    @NeedToken
+    @DeleteMapping("/group/admin")
+    @ApiOperation("撤销管理员")
+    public R<Boolean> revokeAdmin(@Valid @RequestBody AdminRevokeReq request) {
+        Long uid = RequestHolder.get().getUid();
+        groupMemberService.revokeAdmin(uid, request);
+        return R.success(true);
     }
 }
 

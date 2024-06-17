@@ -44,5 +44,5 @@ public class ChatGPTProperties {
     /**
      * 最大令牌
      */
-    private Integer maxTokens = 2048;
+    private Integer maxTokens = 3000;
 }

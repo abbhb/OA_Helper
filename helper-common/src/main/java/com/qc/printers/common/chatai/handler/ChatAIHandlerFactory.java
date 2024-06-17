@@ -25,4 +25,14 @@ public class ChatAIHandlerFactory {
         }
         return null;
     }
+    public static AbstractChatAIHandler getChatAIHandlerById(Long userId) {
+        if (userId==null) {
+            return null;
+        }
+        AbstractChatAIHandler chatAIHandler = CHATAI_ID_MAP.get(userId);
+        if (chatAIHandler != null) {
+            return chatAIHandler;
+        }
+        return null;
+    }
 }

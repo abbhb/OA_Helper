@@ -56,6 +56,22 @@ public abstract class AbstractChatAIHandler {
         });
     }
 
+    public void chatForFriendByChatGpt(Message message) {
+        if (!supports(message)) {
+            return;
+        }
+        // 特殊菜单处理 处理了返回true
+        if (menu(message)){
+            return;
+        }
+        threadPoolTaskExecutor.execute(() -> {
+            String text = doChat(message);
+            if (StringUtils.isNotBlank(text)) {
+                answerMsgForFriendByChatGpt(text, message);
+            }
+        });
+    }
+
     /**
      * 支持
      *
@@ -63,6 +79,13 @@ public abstract class AbstractChatAIHandler {
      * @return boolean true 支持 false 不支持
      */
     protected abstract boolean supports(Message message);
+
+    /**
+     * 特殊菜单处理
+     * @param message
+     * @return boolean true 处理了 false 没有触发
+     */
+    protected abstract boolean menu(Message message);
 
     /**
      * 执行聊天
@@ -73,9 +96,30 @@ public abstract class AbstractChatAIHandler {
     protected abstract String doChat(Message message);
 
 
-    protected void answerMsg(String text, Message replyMessage) {
+    /**
+     * @param text
+     * @param replyMessage
+     */
+    public void answerMsg(String text, Message replyMessage) {
         User userInfo = userDao.getById(replyMessage.getFromUid());
         text = "@" + userInfo.getName() + " " + text;
+//        if (text.length() < 800) {
+//        } else {
+//            int maxLen = 800;
+//            int len = text.length();
+//            int count = (len + maxLen - 1) / maxLen;
+//
+//            for (int i = 0; i < count; i++) {
+//                int start = i * maxLen;
+//                int end = Math.min(start + maxLen, len);
+//                save(text.substring(start, end), replyMessage);
+//            }
+//        }
+        save(text, replyMessage);
+
+    }
+    protected void answerMsgForFriendByChatGpt(String text, Message replyMessage) {
+        User userInfo = userDao.getById(replyMessage.getFromUid());
 //        if (text.length() < 800) {
 //        } else {
 //            int maxLen = 800;

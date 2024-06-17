@@ -1,9 +1,13 @@
 package com.qc.printers.common.chat.dao;
 
+import cn.hutool.core.collection.CollectionUtil;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qc.printers.common.chat.domain.entity.Contact;
 import com.qc.printers.common.chat.domain.entity.Message;
 import com.qc.printers.common.chat.mapper.ContactMapper;
+import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.domain.vo.request.CursorPageBaseReq;
 import com.qc.printers.common.common.domain.vo.response.CursorPageBaseResp;
 import com.qc.printers.common.common.utils.CursorUtils;
@@ -88,5 +92,23 @@ public class ContactDao extends ServiceImpl<ContactMapper, Contact> {
      */
     public void refreshOrCreateActiveTime(Long roomId, List<Long> memberUidList, Long msgId, Date activeTime) {
         baseMapper.refreshOrCreateActiveTime(roomId, memberUidList, msgId, activeTime);
+    }
+
+    /**
+     * 根据房间ID删除会话
+     *
+     * @param roomId  房间ID
+     * @param uidList 群成员列表
+     * @return 是否删除成功
+     */
+    public Boolean removeByRoomId(Long roomId, List<Long> uidList) {
+        if (uidList==null){
+            throw new CustomException("异常参数");
+        }
+        LambdaQueryWrapper<Contact> wrapper = new QueryWrapper<Contact>().lambda()
+                .eq(Contact::getRoomId, roomId)
+                .in(uidList.size()>0,Contact::getUid, uidList);
+        return this.remove(wrapper);
+
     }
 }

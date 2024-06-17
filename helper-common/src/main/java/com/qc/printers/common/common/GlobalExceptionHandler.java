@@ -1,5 +1,6 @@
 package com.qc.printers.common.common;
 
+import com.qc.printers.common.common.exception.BusinessException;
 import com.qc.printers.common.common.exception.FrequencyControlException;
 import com.qc.printers.common.oauth.domain.dto.OauthBase;
 import com.qc.printers.common.oauth.exception.OauthException;
@@ -59,6 +60,10 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(FrequencyControlException.class)
     public R<String> frequencyControlExceptionHandler(FrequencyControlException e, HttpServletResponse response) {
+        return R.error(e.getErrorMsg());
+    }
+    @ExceptionHandler(BusinessException.class)
+    public R<String> businessExceptionHandler(BusinessException e, HttpServletResponse response) {
         return R.error(e.getErrorMsg());
     }
 
