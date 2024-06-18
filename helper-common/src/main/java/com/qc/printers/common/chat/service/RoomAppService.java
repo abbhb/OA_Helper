@@ -1,6 +1,8 @@
 package com.qc.printers.common.chat.service;
 
 import com.qc.printers.common.chat.domain.vo.request.*;
+import com.qc.printers.common.chat.domain.vo.request.groupbase.GroupAvatarReq;
+import com.qc.printers.common.chat.domain.vo.request.groupbase.GroupNameReq;
 import com.qc.printers.common.chat.domain.vo.response.ChatMemberListResp;
 import com.qc.printers.common.chat.domain.vo.response.ChatRoomResp;
 import com.qc.printers.common.chat.domain.vo.response.MemberResp;
@@ -39,4 +41,8 @@ public interface RoomAppService {
     ChatRoomResp getContactDetail(Long uid, Long roomId);
 
     ChatRoomResp getContactDetailByFriend(Long uid, Long friendUid);
+
+    void putName(Long uid, GroupNameReq request);
+
+    void putAvatar(Long uid, GroupAvatarReq request);
 }

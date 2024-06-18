@@ -2,9 +2,11 @@ package com.qc.printers.common.chat.service.impl;
 
 import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.lang.Pair;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.qc.printers.common.chat.dao.ContactDao;
 import com.qc.printers.common.chat.dao.GroupMemberDao;
 import com.qc.printers.common.chat.dao.MessageDao;
+import com.qc.printers.common.chat.dao.RoomGroupDao;
 import com.qc.printers.common.chat.domain.dto.RoomBaseInfo;
 import com.qc.printers.common.chat.domain.entity.*;
 import com.qc.printers.common.chat.domain.enums.GroupRoleAPPEnum;
@@ -12,10 +14,13 @@ import com.qc.printers.common.chat.domain.enums.GroupRoleEnum;
 import com.qc.printers.common.chat.domain.enums.HotFlagEnum;
 import com.qc.printers.common.chat.domain.enums.RoomTypeEnum;
 import com.qc.printers.common.chat.domain.vo.request.*;
+import com.qc.printers.common.chat.domain.vo.request.groupbase.GroupAvatarReq;
+import com.qc.printers.common.chat.domain.vo.request.groupbase.GroupNameReq;
 import com.qc.printers.common.chat.domain.vo.response.ChatMemberListResp;
 import com.qc.printers.common.chat.domain.vo.response.ChatRoomResp;
 import com.qc.printers.common.chat.domain.vo.response.MemberResp;
 import com.qc.printers.common.chat.service.ChatService;
+import com.qc.printers.common.chat.service.IRoleService;
 import com.qc.printers.common.chat.service.RoomAppService;
 import com.qc.printers.common.chat.service.RoomService;
 import com.qc.printers.common.chat.service.adapter.ChatAdapter;
@@ -24,6 +29,7 @@ import com.qc.printers.common.chat.service.adapter.RoomAdapter;
 import com.qc.printers.common.chat.service.cache.*;
 import com.qc.printers.common.chat.service.strategy.msg.AbstractMsgHandler;
 import com.qc.printers.common.chat.service.strategy.msg.MsgHandlerFactory;
+import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.annotation.RedissonLock;
 import com.qc.printers.common.common.domain.vo.request.CursorPageBaseReq;
 import com.qc.printers.common.common.domain.vo.response.CursorPageBaseResp;
@@ -33,6 +39,7 @@ import com.qc.printers.common.common.utils.oss.OssDBUtil;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.User;
+import com.qc.printers.common.user.domain.enums.RoleEnum;
 import com.qc.printers.common.user.domain.enums.WSBaseResp;
 import com.qc.printers.common.user.domain.vo.response.ws.ChatMemberResp;
 import com.qc.printers.common.user.domain.vo.response.ws.WSMemberChange;
@@ -77,6 +84,10 @@ public class RoomAppServiceImpl implements RoomAppService {
     private HotRoomCache hotRoomCache;
     @Autowired
     private GroupMemberDao groupMemberDao;
+
+    @Autowired
+    private IRoleService iRoleService;
+
     @Autowired
     private UserDao userDao;
     @Autowired
@@ -89,6 +100,9 @@ public class RoomAppServiceImpl implements RoomAppService {
     private GroupMemberCache groupMemberCache;
     @Autowired
     private PushService pushService;
+
+    @Autowired
+    private RoomGroupDao roomGroupDao;
 
     @Override
     public CursorPageBaseResp<ChatRoomResp> getContactPage(CursorPageBaseReq request, Long uid) {
@@ -133,6 +147,53 @@ public class RoomAppServiceImpl implements RoomAppService {
         return buildContactResp(uid, Collections.singletonList(friendRoom.getRoomId())).get(0);
     }
 
+
+
+    @Transactional
+    @Override
+    public void putName(Long uid, GroupNameReq request) {
+        Room room = roomCache.get(request.getRoomId());
+        AssertUtil.isNotEmpty(room, "房间号有误");
+        checkGroupPut(uid, room);
+        String needPutRoomName = request.getName();
+        LambdaUpdateWrapper<RoomGroup> roomGroupLambdaQueryWrapper = new LambdaUpdateWrapper<>();
+        roomGroupLambdaQueryWrapper.eq(RoomGroup::getRoomId,room.getId());
+        roomGroupLambdaQueryWrapper.set(RoomGroup::getName,needPutRoomName);
+        roomGroupDao.update(roomGroupLambdaQueryWrapper);
+        roomGroupCache.delete(room.getId());
+    }
+
+    @Transactional
+    @Override
+    public void putAvatar(Long uid, GroupAvatarReq request) {
+        Room room = roomCache.get(request.getRoomId());
+        AssertUtil.isNotEmpty(room, "房间号有误");
+        checkGroupPut(uid, room);
+        String needPutRoomAvatar = request.getAvatar();
+        LambdaUpdateWrapper<RoomGroup> roomGroupLambdaQueryWrapper = new LambdaUpdateWrapper<>();
+        roomGroupLambdaQueryWrapper.eq(RoomGroup::getRoomId,room.getId());
+        roomGroupLambdaQueryWrapper.set(RoomGroup::getAvatar,OssDBUtil.toDBUrl(needPutRoomAvatar));
+        roomGroupDao.update(roomGroupLambdaQueryWrapper);
+        roomGroupCache.delete(room.getId());
+    }
+
+    private void checkGroupPut(Long uid, Room room) {
+        //全员群的权限逻辑和普通群组不太一样
+        if (isHotGroup(room)) {
+            boolean hasPower = iRoleService.hasPower(uid, RoleEnum.CHAT_MANAGER);
+            if (hasPower) {
+                return;
+            }
+            throw new CustomException("没有权限");
+        }
+        RoomGroup roomGroup = roomGroupCache.get(room.getId());
+        Long groupId = roomGroup.getId();
+        if (groupMemberDao.isManager(groupId, uid)||groupMemberDao.isLord(groupId, uid)){
+            return;
+        }
+        throw new CustomException("没有权限");
+    }
+
     @Override
     public MemberResp getGroupDetail(Long uid, long roomId) {
         RoomGroup roomGroup = roomGroupCache.get(roomId);
@@ -147,7 +208,7 @@ public class RoomAppServiceImpl implements RoomAppService {
         }
         GroupRoleAPPEnum groupRole = getGroupRole(uid, roomGroup, room);
         return MemberResp.builder()
-                .avatar(roomGroup.getAvatar())
+                .avatar(OssDBUtil.toUseUrl(roomGroup.getAvatar()))
                 .roomId(roomId)
                 .groupName(roomGroup.getName())
                 .onlineNum(onlineNum)
