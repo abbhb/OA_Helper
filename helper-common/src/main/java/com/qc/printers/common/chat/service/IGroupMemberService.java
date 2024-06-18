@@ -36,4 +36,5 @@ public interface IGroupMemberService {
      * @param request 请求信息
      */
     void exitGroup(Long uid, MemberExitReq request);
+
 }

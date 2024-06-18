@@ -168,4 +168,5 @@ public class GroupMemberServiceImpl implements IGroupMemberService {
             groupMemberCache.evictMemberUidList(room.getId());
         }
     }
+
 }

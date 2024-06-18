@@ -4,6 +4,8 @@ package com.qc.printers.custom.chat.controller;
 import com.qc.printers.common.chat.domain.vo.request.*;
 import com.qc.printers.common.chat.domain.vo.request.admin.AdminAddReq;
 import com.qc.printers.common.chat.domain.vo.request.admin.AdminRevokeReq;
+import com.qc.printers.common.chat.domain.vo.request.groupbase.GroupAvatarReq;
+import com.qc.printers.common.chat.domain.vo.request.groupbase.GroupNameReq;
 import com.qc.printers.common.chat.domain.vo.request.member.MemberExitReq;
 import com.qc.printers.common.chat.domain.vo.response.ChatMemberListResp;
 import com.qc.printers.common.chat.domain.vo.response.MemberResp;
@@ -120,6 +122,23 @@ public class RoomController {
         Long uid = RequestHolder.get().getUid();
         groupMemberService.revokeAdmin(uid, request);
         return R.success(true);
+    }
+
+    @NeedToken
+    @PutMapping("/group/name")
+    @ApiOperation("修改群聊name")
+    public R<Boolean> putName(@Valid @RequestBody GroupNameReq request) {
+        Long uid = RequestHolder.get().getUid();
+        roomService.putName(uid, request);
+        return R.success("设置成功");
+    }
+    @NeedToken
+    @PutMapping("/group/avatar")
+    @ApiOperation("修改群聊avatar")
+    public R<Boolean> putAvatar(@Valid @RequestBody GroupAvatarReq request) {
+        Long uid = RequestHolder.get().getUid();
+        roomService.putAvatar(uid, request);
+        return R.success("设置成功");
     }
 }
 
