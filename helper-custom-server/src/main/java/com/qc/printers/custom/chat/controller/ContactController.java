@@ -2,8 +2,10 @@ package com.qc.printers.custom.chat.controller;
 
 
 import com.qc.printers.common.chat.domain.vo.request.ContactFriendReq;
+import com.qc.printers.common.chat.domain.vo.request.ContactRemovedReq;
 import com.qc.printers.common.chat.domain.vo.response.ChatRoomResp;
 import com.qc.printers.common.chat.service.ChatService;
+import com.qc.printers.common.chat.service.ContactService;
 import com.qc.printers.common.chat.service.RoomAppService;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
@@ -15,10 +17,7 @@ import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.CrossOrigin;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.validation.Valid;
 
@@ -36,6 +35,8 @@ import javax.validation.Valid;
 @Api(tags = "聊天室相关接口")
 @Slf4j
 public class ContactController {
+    @Autowired
+    private ContactService contactService;
     @Autowired
     private ChatService chatService;
     @Autowired
@@ -64,5 +65,15 @@ public class ContactController {
         Long uid = RequestHolder.get().getUid();
         return R.success(roomService.getContactDetailByFriend(uid, request.getUid()));
     }
+
+    @NeedToken
+    @DeleteMapping("/public/contact")
+    @ApiOperation("删除会话")
+    public R<Boolean> removedContact(@Valid ContactRemovedReq request) {
+        Long uid = RequestHolder.get().getUid();
+        contactService.removeContact(uid,request.getRoomId());
+        return R.success(true);
+    }
+
 }
 

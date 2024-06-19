@@ -10,7 +10,9 @@ import com.qc.printers.common.chat.service.adapter.ChatAdapter;
 import com.qc.printers.common.common.utils.AssertUtil;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -64,5 +66,12 @@ public class ContactServiceImpl implements ContactService {
             readInfoDTO.setUnReadCount(totalCount - readCount - 1);
             return readInfoDTO;
         }).collect(Collectors.toMap(MsgReadInfoDTO::getMsgId, Function.identity()));
+    }
+
+    @Transactional
+    @Override
+    public Boolean removeContact(Long uid, Long roomId) {
+        contactDao.removeByRoomId(roomId, Collections.singletonList(uid));
+        return true;
     }
 }

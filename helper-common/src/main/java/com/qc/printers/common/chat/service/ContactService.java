@@ -26,4 +26,6 @@ public interface ContactService {
     Integer getMsgUnReadCount(Message message);
 
     Map<Long, MsgReadInfoDTO> getMsgReadInfo(List<Message> messages);
+
+    Boolean removeContact(Long uid,Long roomId);
 }

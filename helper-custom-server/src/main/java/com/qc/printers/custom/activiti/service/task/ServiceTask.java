@@ -46,7 +46,6 @@ public class ServiceTask {
                 faceFileResps.add(obj);
             }
             signinUserDataMangerService.UpdateUserFaceByUser(Long.valueOf(initiator), faceFileResps.get(0).getUrl());
-
         } catch (Exception e) {
             log.error("更新人脸任务执行失败:Exception:{},传入组件id:{}", e, needDataName);
         }

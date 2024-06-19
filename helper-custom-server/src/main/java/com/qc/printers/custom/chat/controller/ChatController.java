@@ -83,9 +83,9 @@ public class ChatController {
     @NeedToken
     @PostMapping("/msg")
     @ApiOperation("发送消息")
-    @FrequencyControl(time = 5, count = 3, target = FrequencyControl.Target.UID)
-    @FrequencyControl(time = 30, count = 5, target = FrequencyControl.Target.UID)
-    @FrequencyControl(time = 60, count = 10, target = FrequencyControl.Target.UID)
+//    @FrequencyControl(time = 5, count = 3, target = FrequencyControl.Target.UID)
+//    @FrequencyControl(time = 30, count = 5, target = FrequencyControl.Target.UID)
+//    @FrequencyControl(time = 60, count = 10, target = FrequencyControl.Target.UID)
     public R<ChatMessageResp> sendMsg(@Valid @RequestBody ChatMessageReq request) {//todo 发送给单聊
         Long msgId = chatService.sendMsg(request, RequestHolder.get().getUid());
         //返回完整消息格式，方便前端展示
@@ -110,7 +110,7 @@ public class ChatController {
     @NeedToken
     @PutMapping("/msg/recall")
     @ApiOperation("撤回消息")
-    @FrequencyControl(time = 20, count = 3, target = FrequencyControl.Target.UID)
+//    @FrequencyControl(time = 20, count = 3, target = FrequencyControl.Target.UID)
     public R<Void> recallMsg(@Valid @RequestBody ChatMessageBaseReq request) {
         chatService.recallMsg(RequestHolder.get().getUid(), request);
         return R.success("撤回成功");
