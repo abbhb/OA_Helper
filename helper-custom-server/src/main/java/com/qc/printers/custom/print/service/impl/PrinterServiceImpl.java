@@ -324,7 +324,6 @@ public class PrinterServiceImpl implements PrinterService {
         }
         //同步数据
         Printer printer = new Printer();
-        printer.setIsPrint(0);
         printer.setUrl(OssDBUtil.toDBUrl(fileUrl));
         printer.setIsPrint(0);
         printer.setName(file.getOriginalFilename());
@@ -347,6 +346,72 @@ public class PrinterServiceImpl implements PrinterService {
         //如果不是pdf开始转换，修改为统一进入该事件，是不是pdf处理端区分
         applicationEventPublisher.publishEvent(new FileToPDFEvent(this, printer.getId()));
         return String.valueOf(printer.getId());
+
+    }
+    @Transactional
+    @Override
+    public String uploadPrintFileForWin(MultipartFile file, PrintFileReq printFileReq,Integer total) {
+        if (printFileReq.getCopies() == null) {
+            printFileReq.setCopies(1);//不填份数就强制1份
+        }
+        if (StringUtils.isEmpty(printFileReq.getId())) {
+            throw new IllegalArgumentException("无法定位任务");
+        }
+        if (printFileReq.getIsDuplex() == null) {
+            throw new IllegalArgumentException("王子(公主)殿下，您是要横着还是竖着呢？");
+        }
+        if (printFileReq.getStartNum() == null) {
+            throw new IllegalArgumentException("王子(公主)殿下，您要从哪里打印到哪里呢？");
+        }
+        if (printFileReq.getEndNum() == null) {
+            throw new IllegalArgumentException("王子(公主)殿下，您要从哪里打印到哪里呢？");
+        }
+
+        String originalFilename = file.getOriginalFilename();
+        if (originalFilename.contains("\\?") || originalFilename.contains("？")) {
+            throw new CustomException("文件名里不允许包含？请修改后在打印");
+        }
+        String supportFileExt = "pdf,doc,docx,xls,xlsx,ppt,pptx,txt,jpg,jpeg,png,bmp";
+        // 判断文件拓展名是否再支持的列表里
+        if (!supportFileExt.contains(originalFilename.substring(originalFilename.lastIndexOf(".") + 1))) {
+            throw new CustomException(file.getOriginalFilename() + ",不支持该文件，请先转成pdf!");
+        }
+
+        if (file.isEmpty()) {
+            throw new CustomException("文件为空");
+        }
+        //先将文件上传到minio，这一步失败直接返回错误
+        String fileUrl = MinIoUtil.upload(minIoProperties.getBucketName(), file);
+        if (StringUtils.isEmpty(fileUrl)) {
+            throw new CustomException("上传异常");
+        }
+        //同步数据
+        Printer printer = new Printer();
+        printer.setIsPrint(1);
+        printer.setUrl(OssDBUtil.toDBUrl(fileUrl));
+        printer.setCopies(printFileReq.getCopies());
+        printer.setPrintingDirection(printFileReq.getLandscape());
+        printer.setName(file.getOriginalFilename());
+
+        boolean save = iPrinterService.save(printer);
+        if (!save) {
+            throw new CustomException("数据同步异常");
+        }
+        PrinterRedis printerRedis = new PrinterRedis();
+        printerRedis.setId(printer.getId());
+        printerRedis.setCopies(printFileReq.getCopies());
+        printerRedis.setIsDuplex(printFileReq.getIsDuplex());
+        printerRedis.setPageNums(total);
+        printerRedis.setPrintingDirection(printFileReq.getLandscape());
+        printerRedis.setNeedPrintPagesIndex(printFileReq.getStartNum());
+        printerRedis.setNeedPrintPagesEndIndex(printFileReq.getEndNum());
+        printerRedis.setSTU(4);//开始打印了
+        printerRedis.setPdfUrl(fileUrl);
+        printerRedis.setDeviceId(printFileReq.getDeviceId());
+        //任务发送事务消息，保证成功
+        RedisUtils.set(MyString.print + printFileReq.getId(), printerRedis);
+        applicationEventPublisher.publishEvent(new PrintPDFEvent(this, Long.valueOf(printFileReq.getId())));
+        return "已添加任务到打印队列";
 
     }
 

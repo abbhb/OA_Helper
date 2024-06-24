@@ -32,6 +32,9 @@ public interface PrinterService {
 
     String uploadPrintFile(MultipartFile file);
 
+    String uploadPrintFileForWin(MultipartFile file, PrintFileReq printFileReq,Integer total);
+
+
     PrinterBaseResp<PrintImageResp> thumbnailPolling(Long id);
 
     PrinterBaseResp<PrintFileConfigResp> fileConfigurationPolling(Long id);
@@ -43,4 +46,5 @@ public interface PrinterService {
     PrintDeviceInfoResp printDeviceInfoPolling(String id);
 
     void cancelPrint(String id, String deviceId);
+
 }

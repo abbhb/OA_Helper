@@ -134,6 +134,29 @@ public class PrintController {
         return R.successOnlyObject(printerService.uploadPrintFile(file));
     }
 
+
+    @CrossOrigin("*")
+    @NeedToken
+    @PostMapping("/uploadPrintFileForWindows")
+    @ApiOperation("已经确保为pdf格式了，直接到第五步打印")
+    public R<String> uploadPrintFileForWindows(  @RequestParam("file") MultipartFile file,
+                                                 @RequestParam("copies") Integer copies,
+                                                 @RequestParam("duplex") Integer duplex,
+                                                 @RequestParam("start_num") Integer startNum,
+                                                 @RequestParam("end_num") Integer endNum,
+                                                 @RequestParam("landscape") Integer landscape,
+                                                 @RequestParam("total") Integer total,
+                                                 @RequestParam("device_id") String deviceId) {
+        PrintFileReq printFileReq = new PrintFileReq();
+        printFileReq.setCopies(copies);
+        printFileReq.setLandscape(landscape);
+        printFileReq.setDeviceId(deviceId);
+        printFileReq.setEndNum(endNum);
+        printFileReq.setStartNum(startNum);
+        printFileReq.setIsDuplex(duplex);
+        return R.successOnlyObject(printerService.uploadPrintFileForWin(file,printFileReq,total));
+    }
+
     @CrossOrigin("*")
     @NeedToken
     @PostMapping("/print_file")
