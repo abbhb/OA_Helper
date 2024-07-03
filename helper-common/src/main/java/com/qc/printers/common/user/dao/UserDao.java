@@ -6,11 +6,13 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.qc.printers.common.common.CustomException;
+import com.qc.printers.common.common.annotation.DataScope;
 import com.qc.printers.common.common.domain.enums.NormalOrNoEnum;
 import com.qc.printers.common.common.domain.vo.request.CursorPageBaseReq;
 import com.qc.printers.common.common.domain.vo.response.CursorPageBaseResp;
 import com.qc.printers.common.common.utils.CursorUtils;
 import com.qc.printers.common.common.utils.oss.OssDBUtil;
+import com.qc.printers.common.user.domain.entity.SysDept;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.domain.enums.ChatActiveStatusEnum;
 import com.qc.printers.common.user.mapper.UserMapper;
@@ -31,6 +33,14 @@ import java.util.stream.Collectors;
 public class UserDao extends ServiceImpl<UserMapper, User> {
     @Autowired
     private UserCache userCache;
+
+    @DataScope(userAlias = "user")
+    public List<User> listUserWithScope(User user){
+        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper.apply(com.qc.printers.common.common.utils.StringUtils.isNotEmpty(user.getExistSql()),user.getExistSql());
+        return this.list(userLambdaQueryWrapper);
+    }
+
 
     public CursorPageBaseResp<User> getCursorPage(List<Long> memberUidList, CursorPageBaseReq request, ChatActiveStatusEnum online) {
         return CursorUtils.getCursorPageByMysql(this, request, wrapper -> {

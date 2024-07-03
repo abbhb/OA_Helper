@@ -3,7 +3,7 @@ package com.qc.printers.custom.user.controller;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.annotation.PermissionCheck;
-import com.qc.printers.custom.user.domain.vo.response.dept.DeptManger;
+import com.qc.printers.common.user.domain.dto.DeptManger;
 import com.qc.printers.custom.user.service.DeptService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

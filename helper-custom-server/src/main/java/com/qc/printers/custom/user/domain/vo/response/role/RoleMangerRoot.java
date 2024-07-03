@@ -1,6 +1,6 @@
 package com.qc.printers.custom.user.domain.vo.response.role;
 
-import com.qc.printers.custom.user.domain.vo.response.menu.MenuManger;
+import com.qc.printers.common.user.domain.dto.MenuManger;
 import lombok.Data;
 
 import java.io.Serializable;

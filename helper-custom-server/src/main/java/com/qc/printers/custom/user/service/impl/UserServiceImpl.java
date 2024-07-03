@@ -9,6 +9,7 @@ import com.qc.printers.common.common.Code;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.MyString;
 import com.qc.printers.common.common.R;
+import com.qc.printers.common.common.annotation.DataScope;
 import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.common.service.CommonService;
 import com.qc.printers.common.common.utils.*;
@@ -29,7 +30,7 @@ import com.qc.printers.custom.user.domain.vo.request.LoginByEmailCodeReq;
 import com.qc.printers.custom.user.domain.vo.request.PasswordByOneTimeCodeReq;
 import com.qc.printers.custom.user.domain.vo.request.PasswordR;
 import com.qc.printers.custom.user.domain.vo.response.*;
-import com.qc.printers.custom.user.domain.vo.response.dept.DeptManger;
+import com.qc.printers.common.user.domain.dto.DeptManger;
 import com.qc.printers.custom.user.service.DeptService;
 import com.qc.printers.custom.user.service.UserService;
 import lombok.extern.slf4j.Slf4j;
@@ -373,8 +374,9 @@ public class UserServiceImpl implements UserService {
         return null;
     }
 
+    @DataScope(userAlias = "user")
     @Override
-    public PageData<UserResult> getUserList(Integer pageNum, Integer pageSize, String name, Integer cascade, Long deptId) {
+    public PageData<UserResult> getUserList(User ua,Integer pageNum, Integer pageSize, String name, Integer cascade, Long deptId) {
         if (pageNum == null) {
             throw new IllegalArgumentException("传参错误");
         }
@@ -431,6 +433,7 @@ public class UserServiceImpl implements UserService {
         }
         //添加排序条件
         lambdaQueryWrapper.orderByAsc(User::getCreateTime);//按照创建时间排序
+        lambdaQueryWrapper.apply(StringUtils.isNotEmpty(ua.getExistSql()),ua.getExistSql());
         userDao.page(pageInfo, lambdaQueryWrapper);
         PageData<UserResult> pageData = new PageData<>();
         List<UserResult> results = new ArrayList<>();

@@ -354,9 +354,6 @@ public class PrinterServiceImpl implements PrinterService {
         if (printFileReq.getCopies() == null) {
             printFileReq.setCopies(1);//不填份数就强制1份
         }
-        if (StringUtils.isEmpty(printFileReq.getId())) {
-            throw new IllegalArgumentException("无法定位任务");
-        }
         if (printFileReq.getIsDuplex() == null) {
             throw new IllegalArgumentException("王子(公主)殿下，您是要横着还是竖着呢？");
         }
@@ -392,16 +389,21 @@ public class PrinterServiceImpl implements PrinterService {
         printer.setCopies(printFileReq.getCopies());
         printer.setPrintingDirection(printFileReq.getLandscape());
         printer.setName(file.getOriginalFilename());
-
+        printer.setCreateTime(LocalDateTime.now());
+        printer.setCreateUser(ThreadLocalUtil.getCurrentUser().getId());
         boolean save = iPrinterService.save(printer);
+        printFileReq.setId(String.valueOf(printer.getId()));
+
         if (!save) {
             throw new CustomException("数据同步异常");
         }
         PrinterRedis printerRedis = new PrinterRedis();
+        BeanUtils.copyProperties(printer,printerRedis);
         printerRedis.setId(printer.getId());
         printerRedis.setCopies(printFileReq.getCopies());
         printerRedis.setIsDuplex(printFileReq.getIsDuplex());
         printerRedis.setPageNums(total);
+
         printerRedis.setPrintingDirection(printFileReq.getLandscape());
         printerRedis.setNeedPrintPagesIndex(printFileReq.getStartNum());
         printerRedis.setNeedPrintPagesEndIndex(printFileReq.getEndNum());
@@ -410,7 +412,7 @@ public class PrinterServiceImpl implements PrinterService {
         printerRedis.setDeviceId(printFileReq.getDeviceId());
         //任务发送事务消息，保证成功
         RedisUtils.set(MyString.print + printFileReq.getId(), printerRedis);
-        applicationEventPublisher.publishEvent(new PrintPDFEvent(this, Long.valueOf(printFileReq.getId())));
+        applicationEventPublisher.publishEvent(new PrintPDFEvent(this, printer.getId()));
         return "已添加任务到打印队列";
 
     }

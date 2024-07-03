@@ -1,4 +1,4 @@
-package com.qc.printers.custom.user.utils;
+package com.qc.printers.common.user.utils;
 
 import com.qc.printers.common.activiti.utils.SpringUtils;
 import com.qc.printers.common.user.dao.UserDao;
@@ -6,7 +6,7 @@ import com.qc.printers.common.user.domain.entity.SysDept;
 import com.qc.printers.common.user.domain.entity.SysRole;
 import com.qc.printers.common.user.domain.entity.SysRoleDept;
 import com.qc.printers.common.user.domain.entity.User;
-import com.qc.printers.custom.user.domain.vo.response.dept.DeptManger;
+import com.qc.printers.common.user.domain.dto.DeptManger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 

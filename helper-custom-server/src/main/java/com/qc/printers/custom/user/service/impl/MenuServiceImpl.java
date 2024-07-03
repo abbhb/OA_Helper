@@ -8,7 +8,7 @@ import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.SysMenu;
 import com.qc.printers.common.user.service.ISysMenuService;
-import com.qc.printers.custom.user.domain.vo.response.menu.MenuManger;
+import com.qc.printers.common.user.domain.dto.MenuManger;
 import com.qc.printers.custom.user.domain.vo.response.menu.MenuResult;
 import com.qc.printers.custom.user.domain.vo.response.menu.MenuResultNode;
 import com.qc.printers.custom.user.domain.vo.response.menu.MetaNode;

@@ -135,6 +135,18 @@ public class PrintController {
     }
 
 
+    /**
+     * 这个接口会直接开始打印，用于win客户端
+     * @param file
+     * @param copies
+     * @param duplex
+     * @param startNum
+     * @param endNum
+     * @param landscape
+     * @param total
+     * @param deviceId
+     * @return
+     */
     @CrossOrigin("*")
     @NeedToken
     @PostMapping("/uploadPrintFileForWindows")

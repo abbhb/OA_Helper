@@ -4,6 +4,8 @@ import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.annotation.PermissionCheck;
 import com.qc.printers.common.user.domain.entity.SysRole;
+import com.qc.printers.common.user.domain.enums.DataScopeEnum;
+import com.qc.printers.custom.user.domain.vo.response.DataScopeResp;
 import com.qc.printers.custom.user.domain.vo.response.role.RoleManger;
 import com.qc.printers.custom.user.domain.vo.response.role.RoleMangerRoot;
 import com.qc.printers.custom.user.service.RoleService;
@@ -14,7 +16,9 @@ import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 
 @RestController
@@ -46,6 +50,15 @@ public class RoleController {
         List<SysRole> sysRoles = roleService.list();
         log.info("sysRoles={}", sysRoles);
         return R.success(sysRoles);
+    }
+
+
+//    @NeedToken
+    @GetMapping("/data-scopes")
+    @ApiOperation(value = "获取全部角色用作选择器", notes = "不携带菜单")
+    public R<List<DataScopeResp>> listDataScopes() {
+        return R.success(Arrays.stream(DataScopeEnum.values()).map(scope -> new DataScopeResp(scope.getType(), scope.getName(), scope.getDesc()))
+                .collect(Collectors.toList()));
     }
 
     @PostMapping("/add")

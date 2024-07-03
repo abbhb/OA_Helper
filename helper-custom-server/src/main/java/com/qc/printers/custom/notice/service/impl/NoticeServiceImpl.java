@@ -24,7 +24,7 @@ import com.qc.printers.custom.notice.service.NoticeService;
 import com.qc.printers.custom.notice.service.strategy.noticeread.NoticeReadHandelFactory;
 import com.qc.printers.custom.notice.service.strategy.noticeupdate.NoticeUpdateHandelFactory;
 import com.qc.printers.custom.notice.utils.UpdateUserListUtil;
-import com.qc.printers.custom.user.domain.vo.response.dept.DeptManger;
+import com.qc.printers.common.user.domain.dto.DeptManger;
 import com.qc.printers.custom.user.service.DeptService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;

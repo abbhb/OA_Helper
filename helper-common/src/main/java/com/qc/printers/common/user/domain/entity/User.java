@@ -14,7 +14,6 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
-@AllArgsConstructor//不加这个是没有有参构造的
 @NoArgsConstructor
 public class User implements Serializable {
     public static final long serialVersionUID = 1L;
@@ -27,6 +26,28 @@ public class User implements Serializable {
     //value属性用于指定主键的字段
     //type属性用于设置主键生成策略，默认雪花算法
 
+
+    public User(LocalDateTime createTime, LocalDateTime updateTime, Integer isDeleted, Long id, String username, String name, String phone, String sex, String studentId, Integer status, Long deptId, String email, String avatar, String password, String salt, Long createUser, LocalDateTime loginDate, IpInfo loginIp, Integer activeStatus) {
+        this.createTime = createTime;
+        this.updateTime = updateTime;
+        this.isDeleted = isDeleted;
+        this.id = id;
+        this.username = username;
+        this.name = name;
+        this.phone = phone;
+        this.sex = sex;
+        this.studentId = studentId;
+        this.status = status;
+        this.deptId = deptId;
+        this.email = email;
+        this.avatar = avatar;
+        this.password = password;
+        this.salt = salt;
+        this.createUser = createUser;
+        this.loginDate = loginDate;
+        this.loginIp = loginIp;
+        this.activeStatus = activeStatus;
+    }
 
     @TableField(fill = FieldFill.INSERT)//只在插入时填充
     public LocalDateTime createTime;
@@ -88,5 +109,12 @@ public class User implements Serializable {
     public IpInfo loginIp;
 
     public Integer activeStatus;
+
+    /**
+     * 用于拼接数据权限等额外sql
+     */
+    @TableField(exist = false)
+    private String existSql;
+
 
 }

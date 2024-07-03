@@ -1,4 +1,4 @@
-package com.qc.printers.custom.user.domain.vo.response.dept;
+package com.qc.printers.common.user.domain.dto;
 
 import com.qc.printers.common.user.domain.entity.SysDept;
 import com.qc.printers.common.user.domain.entity.SysRole;
@@ -64,5 +64,23 @@ public class DeptManger extends SysDept implements Serializable {
         }
         return ids;
     }
+
+
+    public static void sortRecursion(List<DeptManger> deptMangers) {
+        deptMangers.sort((m1, m2) -> {
+            Integer order1 = m1.getOrderNum();
+            Integer order2 = m2.getOrderNum();
+            return order1.compareTo(order2);
+        });
+        for (DeptManger deptManger :
+                deptMangers) {
+            if (deptManger.getChildren() != null) {
+                if (deptManger.getChildren().size() > 0) {
+                    sortRecursion(deptManger.getChildren());
+                }
+            }
+        }
+    }
+
 
 }

@@ -1,7 +1,7 @@
-package com.qc.printers.custom.user.utils;
+package com.qc.printers.common.user.utils;
 
 import com.qc.printers.common.user.domain.entity.SysMenu;
-import com.qc.printers.custom.user.domain.vo.response.menu.MenuManger;
+import com.qc.printers.common.user.domain.dto.MenuManger;
 import org.springframework.beans.BeanUtils;
 
 import java.util.ArrayList;

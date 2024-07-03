@@ -3,6 +3,7 @@ package com.qc.printers.common.user.domain.entity;
 import com.baomidou.mybatisplus.annotation.FieldFill;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableLogic;
+import com.qc.printers.common.user.domain.enums.DataScopeEnum;
 import lombok.Data;
 
 import java.io.Serializable;
@@ -18,6 +19,10 @@ public class SysRole implements Serializable {
     private String roleName;
 
     private String roleKey;
+    /**
+     * @see DataScopeEnum
+     */
+    private Integer dataScope;
 
     private Integer roleSort;
 

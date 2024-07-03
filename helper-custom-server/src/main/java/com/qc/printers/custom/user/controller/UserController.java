@@ -319,7 +319,7 @@ public class UserController {
     @ApiOperation(value = "用户管理获取所有用户", notes = "")
     public R<PageData<UserResult>> userManger(Integer pageNum, Integer pageSize, @RequestParam(required = false, name = "name") String name, @RequestParam(required = false, name = "cascade", defaultValue = "0") Integer cascade, @RequestParam(required = false, name = "deptId") Long deptId) {
         log.info("用户管理获取所有用户");
-        return R.success(userService.getUserList(pageNum, pageSize, name, cascade, deptId));
+        return R.success(userService.getUserList(new User(),pageNum, pageSize, name, cascade, deptId));
     }
 
 

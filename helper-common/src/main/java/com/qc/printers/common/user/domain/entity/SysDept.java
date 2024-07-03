@@ -94,4 +94,10 @@ public class SysDept implements Serializable {
      */
     @TableField(fill = FieldFill.INSERT_UPDATE)
     private Long updateUser;
+
+    /**
+     * 用于拼接数据权限等额外sql
+     */
+    @TableField(exist = false)
+    private String existSql;
 }

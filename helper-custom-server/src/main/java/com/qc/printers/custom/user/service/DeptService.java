@@ -1,6 +1,6 @@
 package com.qc.printers.custom.user.service;
 
-import com.qc.printers.custom.user.domain.vo.response.dept.DeptManger;
+import com.qc.printers.common.user.domain.dto.DeptManger;
 
 import java.util.List;
 

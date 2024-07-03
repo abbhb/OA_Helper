@@ -46,5 +46,4 @@ public class UserInfo extends User implements Serializable {
     //不重复的菜单
     private Set<SysMenu> sysMenus;
 
-
 }

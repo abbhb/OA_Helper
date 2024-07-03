@@ -1,4 +1,4 @@
-package com.qc.printers.custom.user.domain.vo.response.menu;
+package com.qc.printers.common.user.domain.dto;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
