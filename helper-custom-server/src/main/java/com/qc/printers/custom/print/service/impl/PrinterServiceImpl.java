@@ -33,8 +33,10 @@ import com.qc.printers.common.print.mapper.PrinterMapper;
 import com.qc.printers.common.print.service.IPrinterService;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.dto.UserInfo;
+import com.qc.printers.common.user.domain.entity.SysDept;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.mapper.UserMapper;
+import com.qc.printers.common.user.service.ISysDeptService;
 import com.qc.printers.common.user.service.IUserService;
 import com.qc.printers.custom.print.domain.enums.PrintDataRespTypeEnum;
 import com.qc.printers.custom.print.domain.vo.PrinterResult;
@@ -43,6 +45,7 @@ import com.qc.printers.custom.print.domain.vo.response.*;
 import com.qc.printers.custom.print.service.PrinterService;
 import com.qc.printers.custom.print.service.strategy.AbstratePrintDataHandler;
 import com.qc.printers.custom.print.service.strategy.PrintDataHandlerFactory;
+import com.qc.printers.custom.user.service.DeptService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -93,6 +96,11 @@ public class PrinterServiceImpl implements PrinterService {
     private SystemMessageConfig systemMessageConfig;
 
     @Autowired
+    private ISysDeptService iSysDeptService;
+
+
+
+    @Autowired
     public PrinterServiceImpl(CommonService commonService, UserMapper userMapper, PrinterMapper printerMapper) {
         this.commonService = commonService;
         this.userMapper = userMapper;
@@ -113,6 +121,7 @@ public class PrinterServiceImpl implements PrinterService {
         if (currentUser == null) {
             return R.error("系统异常");
         }
+
         Page pageInfo = new Page(pageNum, pageSize);
         LambdaQueryWrapper<Printer> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.orderByDesc(Printer::getCreateTime);
@@ -122,6 +131,7 @@ public class PrinterServiceImpl implements PrinterService {
         //创建时间大于startTime
         lambdaQueryWrapper.ge(startDate != null, Printer::getCreateTime, startDate);
         lambdaQueryWrapper.le(endDate != null, Printer::getCreateTime, endDate);
+
         //暂时不支持通过日期模糊查询
         Page page = iPrinterService.page(pageInfo, lambdaQueryWrapper);
         if (page == null) {
@@ -167,6 +177,11 @@ public class PrinterServiceImpl implements PrinterService {
         if (pageSize == null) {
             return R.error("传参错误");
         }
+        List<Long> uidS = userDao.listUserIdsWithScope(new User());
+        if (uidS==null||uidS.size()==0){
+            throw new CustomException("无权看见");
+        }
+
 
         Page pageInfo = new Page(pageNum, pageSize);
         LambdaQueryWrapper<Printer> lambdaQueryWrapper = new LambdaQueryWrapper<>();
@@ -177,7 +192,9 @@ public class PrinterServiceImpl implements PrinterService {
         //创建时间大于startTime
         lambdaQueryWrapper.ge(startDate != null, Printer::getCreateTime, startDate);
         lambdaQueryWrapper.le(endDate != null, Printer::getCreateTime, endDate);
-
+        lambdaQueryWrapper.and(lambdaQueryWrapper1->{
+            lambdaQueryWrapper1.in(!uidS.isEmpty(),Printer::getCreateUser,uidS);
+        });
         //暂时不支持通过日期模糊查询
         Page page = iPrinterService.page(pageInfo, lambdaQueryWrapper);
         if (page == null) {
@@ -242,7 +259,7 @@ public class PrinterServiceImpl implements PrinterService {
     public R<List<CountTop10VO>> getUserPrintTopList(Integer type) {
         if (type.equals(1)){
             //需要优化 每天只统计一次
-            List<CountTop10VO> countTop10 = printerMapper.getCountTop10();
+            List<CountTop10VO> countTop10 = printerMapper.getCountTop10(new User());
             if (countTop10==null){
                 throw new CustomException("业务异常");
             }

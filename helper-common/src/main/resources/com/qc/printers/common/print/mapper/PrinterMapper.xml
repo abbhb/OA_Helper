@@ -4,7 +4,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.qc.printers.common.print.mapper.PrinterMapper">
 
-    <!-- public List<CountTop10VO> getCountTop10();-->
+    <!-- public List<CountTop10VO> getCountTop10(User userT);-->
     <select id="getCountTop10" resultType="com.qc.printers.common.print.domain.vo.CountTop10VO">
         SELECT *
         FROM (SELECT printer.create_user                       as id,
@@ -15,8 +15,11 @@
                    user
               WHERE printer.create_user = user.id
                 AND printer.is_print = 1
+                <if test="userT.existSql != null and userT.existSql != ''">
+                    AND ${userT.existSql}
+                </if>
               GROUP BY printer.create_user
-              ORDER BY total DESC) tables LIMIT 20
+              ORDER BY total DESC) tables LIMIT 30
     </select>
     <!-- public List<CountTop10VO> getCountTop10EveryDay();-->
     <select id="getCountTop10EveryDay" resultType="com.qc.printers.common.print.domain.vo.CountTop10VO">

@@ -6,6 +6,7 @@ import lombok.EqualsAndHashCode;
 import lombok.ToString;
 
 import java.io.Serializable;
+import java.util.List;
 import java.util.Set;
 
 @Data
@@ -13,4 +14,6 @@ import java.util.Set;
 @ToString(callSuper = true)
 public class RoleManger extends SysRole implements Serializable {
     private Set<Long> haveKey;//已授权哪些菜单
+
+    private List<Long> deptIds;// 授权哪些部门
 }

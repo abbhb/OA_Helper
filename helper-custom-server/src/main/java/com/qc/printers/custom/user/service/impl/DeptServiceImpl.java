@@ -3,6 +3,7 @@ package com.qc.printers.custom.user.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.qc.printers.common.common.CustomException;
+import com.qc.printers.common.common.annotation.DataScope;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.entity.SysDept;
 import com.qc.printers.common.user.domain.entity.SysRole;
@@ -41,9 +42,12 @@ public class DeptServiceImpl implements DeptService {
     @Autowired
     private ISysRoleService iSysRoleService;
 
+//    @DataScope(deptAlias = "sys_dept")
     @Override
-    public List<DeptManger> getDeptList() {
-        List<SysDept> list = iSysDeptService.list();
+    public List<DeptManger> getDeptList(SysDept sysDept) {
+        LambdaQueryWrapper<SysDept> sysDeptLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysDeptLambdaQueryWrapper.apply(StringUtils.isNotEmpty(sysDept.getExistSql()),sysDept.getExistSql());
+        List<SysDept> list = iSysDeptService.list(sysDeptLambdaQueryWrapper);
         Set<SysRoleDept> sysRoleDepts = new HashSet<>(iSysRoleDeptService.list());
         Set<SysRole> sysRoles = new HashSet<>(iSysRoleService.list());
         list.sort((m1, m2) -> {

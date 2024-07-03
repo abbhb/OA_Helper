@@ -3,9 +3,12 @@ package com.qc.printers.custom.user.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.qc.printers.common.common.CustomException;
+import com.qc.printers.common.user.dao.SysRoleDataScopeDeptDao;
 import com.qc.printers.common.user.domain.dto.RoleMenuDTO;
 import com.qc.printers.common.user.domain.entity.SysRole;
+import com.qc.printers.common.user.domain.entity.SysRoleDataScopeDept;
 import com.qc.printers.common.user.domain.entity.SysRoleMenu;
+import com.qc.printers.common.user.domain.enums.DataScopeEnum;
 import com.qc.printers.common.user.mapper.SysRoleMapper;
 import com.qc.printers.common.user.service.ISysRoleMenuService;
 import com.qc.printers.common.user.service.ISysRoleService;
@@ -38,6 +41,9 @@ public class RoleServiceImpl implements RoleService {
 
     @Autowired
     private MenuService menuService;
+
+    @Autowired
+    private SysRoleDataScopeDeptDao sysRoleDataScopeDeptDao;
 
     @Override
     public List<String> getroleNameByKey(String key) {
@@ -73,6 +79,14 @@ public class RoleServiceImpl implements RoleService {
             RoleManger roleManger = new RoleManger();
             BeanUtils.copyProperties(sysRoleMenu, roleManger);
             roleManger.setStatus(sysRoleMenu.getStatus());
+            roleManger.setDataScope(sysRoleMenu.getDataScope());
+            if (roleManger.getDataScope().equals(DataScopeEnum.CUSTOM_DATA_SCOPE.getType())){
+                LambdaQueryWrapper<SysRoleDataScopeDept> sysRoleDataScopeDeptLambdaQueryWrapper = new LambdaQueryWrapper<>();
+                sysRoleDataScopeDeptLambdaQueryWrapper.eq(SysRoleDataScopeDept::getRoleId,roleManger.getId());
+                List<Long> longs = sysRoleDataScopeDeptDao.list(sysRoleDataScopeDeptLambdaQueryWrapper).stream().map(SysRoleDataScopeDept::getDeptId).toList();
+                roleManger.setDeptIds(longs);
+            }
+
             roleManger.setHaveKey(collect);
             mangers.add(roleManger);
         }
@@ -88,11 +102,19 @@ public class RoleServiceImpl implements RoleService {
         if (StringUtils.isEmpty(roleManger.getRoleKey())) {
             throw new CustomException("角色标识字符不能为空");
         }
+        if (roleManger.getDataScope()==null) {
+            throw new CustomException("必须绑定一个数据标识");
+        }
         if (roleManger.getRoleSort() == null) {
             throw new CustomException("角色排序不能为空");
         }
         if (roleManger.getStatus() == null) {
             throw new CustomException("角色状态不能为空");
+        }
+        if (roleManger.getDataScope().equals(DataScopeEnum.CUSTOM_DATA_SCOPE.getType())){
+            if (roleManger.getDeptIds()==null||roleManger.getDeptIds().isEmpty()){
+                throw new CustomException("最少选中一个权限!");
+            }
         }
     }
 
@@ -116,6 +138,16 @@ public class RoleServiceImpl implements RoleService {
 
         BeanUtils.copyProperties(roleManger, sysRole);
         boolean save = iSysRoleService.save(sysRole);
+        if (sysRole.getDataScope().equals(DataScopeEnum.CUSTOM_DATA_SCOPE.getType())){
+            List<SysRoleDataScopeDept> sysRoleDataScopeDepts = new ArrayList<>();
+            for (Long deptId : roleManger.getDeptIds()) {
+                SysRoleDataScopeDept sysRoleDataScopeDept = new SysRoleDataScopeDept();
+                sysRoleDataScopeDept.setRoleId(sysRole.getId());
+                sysRoleDataScopeDept.setDeptId(deptId);
+                sysRoleDataScopeDepts.add(sysRoleDataScopeDept);
+            }
+            sysRoleDataScopeDeptDao.saveBatch(sysRoleDataScopeDepts);
+        }
         Set<Long> haveKey = roleManger.getHaveKey();
         iSysRoleMenuService.addListByRoleAndMenuIds(sysRole.getId(), new ArrayList<>(haveKey));
         return "添加成功";
@@ -132,7 +164,21 @@ public class RoleServiceImpl implements RoleService {
         lambdaUpdateWrapper.set(SysRole::getRoleName, roleManger.getRoleName());
         lambdaUpdateWrapper.set(SysRole::getStatus, roleManger.getStatus());
         lambdaUpdateWrapper.set(SysRole::getRoleKey, roleManger.getRoleKey());
+        lambdaUpdateWrapper.set(SysRole::getDataScope, roleManger.getDataScope());
         iSysRoleService.update(lambdaUpdateWrapper);
+        LambdaQueryWrapper<SysRoleDataScopeDept> sysRoleDataScopeDeptLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysRoleDataScopeDeptLambdaQueryWrapper.eq(SysRoleDataScopeDept::getRoleId,roleManger.getId());
+        sysRoleDataScopeDeptDao.remove(sysRoleDataScopeDeptLambdaQueryWrapper);
+        if (roleManger.getDataScope().equals(DataScopeEnum.CUSTOM_DATA_SCOPE.getType())){
+            List<SysRoleDataScopeDept> sysRoleDataScopeDepts = new ArrayList<>();
+            for (Long deptId : roleManger.getDeptIds()) {
+                SysRoleDataScopeDept sysRoleDataScopeDept = new SysRoleDataScopeDept();
+                sysRoleDataScopeDept.setRoleId(roleManger.getId());
+                sysRoleDataScopeDept.setDeptId(deptId);
+                sysRoleDataScopeDepts.add(sysRoleDataScopeDept);
+            }
+            sysRoleDataScopeDeptDao.saveBatch(sysRoleDataScopeDepts);
+        }
         //删除原来的menu绑定
         LambdaQueryWrapper<SysRoleMenu> sysRoleMenuLambdaQueryWrapper = new LambdaQueryWrapper<>();
         sysRoleMenuLambdaQueryWrapper.eq(SysRoleMenu::getRoleId, roleManger.getId());

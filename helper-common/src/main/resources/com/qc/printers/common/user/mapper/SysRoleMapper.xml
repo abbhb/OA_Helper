@@ -10,6 +10,7 @@
         <result column="role_key" property="roleKey"/>
         <result column="role_sort" property="roleSort"/>
         <result column="status" property="status"/>
+        <result column="data_scope" property="dataScope"/>
         <result column="is_deleted" property="isDeleted"/>
         <result column="create_user" property="createUser"/>
         <result column="create_time" property="createTime"/>

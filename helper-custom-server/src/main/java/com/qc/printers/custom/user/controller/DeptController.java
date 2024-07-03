@@ -4,6 +4,7 @@ import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.annotation.PermissionCheck;
 import com.qc.printers.common.user.domain.dto.DeptManger;
+import com.qc.printers.common.user.domain.entity.SysDept;
 import com.qc.printers.custom.user.service.DeptService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -31,13 +32,12 @@ public class DeptController {
     @ApiOperation(value = "获取全部部门", notes = "")
     public R<List<DeptManger>> list() {
         log.info("获取部门");
-        List<DeptManger> deptList = deptService.getDeptList();
+        List<DeptManger> deptList = deptService.getDeptList(new SysDept());
         log.info("userDept={}", deptList);
         return R.success(deptList);
     }
 
     @GetMapping("/listForBPM")
-    @PermissionCheck(role = {"superadmin"}, permission = "sys:bpm:add")
     @NeedToken
     @ApiOperation(value = "获取全部部门", notes = "")
     public R<List<DeptManger>> listForBPM(@RequestParam(required = false) String name) {

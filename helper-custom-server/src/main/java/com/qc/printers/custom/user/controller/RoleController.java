@@ -53,7 +53,7 @@ public class RoleController {
     }
 
 
-//    @NeedToken
+    @NeedToken
     @GetMapping("/data-scopes")
     @ApiOperation(value = "获取全部角色用作选择器", notes = "不携带菜单")
     public R<List<DataScopeResp>> listDataScopes() {

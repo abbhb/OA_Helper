@@ -41,6 +41,14 @@ public class UserDao extends ServiceImpl<UserMapper, User> {
         return this.list(userLambdaQueryWrapper);
     }
 
+   @DataScope(userAlias = "user")
+    public List<Long> listUserIdsWithScope(User user){
+        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper.select(User::getId);
+        userLambdaQueryWrapper.apply(com.qc.printers.common.common.utils.StringUtils.isNotEmpty(user.getExistSql()),user.getExistSql());
+        return this.list(userLambdaQueryWrapper).stream().map(User::getId).toList();
+    }
+
 
     public CursorPageBaseResp<User> getCursorPage(List<Long> memberUidList, CursorPageBaseReq request, ChatActiveStatusEnum online) {
         return CursorUtils.getCursorPageByMysql(this, request, wrapper -> {
