@@ -27,6 +27,7 @@ public class DeptManger extends SysDept implements Serializable {
      */
     private String email;
     private List<SysRole> roles;
+    private List<SysRole> leaderRoles;
 
     private List<DeptManger> children;
 

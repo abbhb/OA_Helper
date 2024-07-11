@@ -71,7 +71,7 @@ public class QuickNavigationController {
      */
     @ApiOperation("创建导航内容")
     @NeedToken
-    @PermissionCheck(role = {"superadmin"}, permission = "sys:nav:add")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:nav-item:add")
     @PostMapping("/createItem")
     public R<String> createItem(@RequestBody QuickNavigationItem quickNavigationItem){
 //        System.out.println("quickNavigationItem = " + quickNavigationItem);

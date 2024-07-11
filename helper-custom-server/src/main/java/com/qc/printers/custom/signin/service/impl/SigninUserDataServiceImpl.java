@@ -1,27 +1,42 @@
 package com.qc.printers.custom.signin.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ecwid.consul.v1.health.model.HealthService;
 import com.qc.printers.common.common.CustomException;
+import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.common.service.ConsulService;
+import com.qc.printers.common.common.utils.AssertUtil;
+import com.qc.printers.common.common.utils.oss.OssDBUtil;
+import com.qc.printers.common.common.utils.poi.ExcelUtil;
+import com.qc.printers.common.config.MinIoProperties;
 import com.qc.printers.common.signin.dao.SigninDeviceDao;
 import com.qc.printers.common.signin.dao.SigninUserDataDao;
 import com.qc.printers.common.signin.domain.dto.SigninDeviceDto;
+import com.qc.printers.common.signin.domain.dto.SigninUserCardDataImportErrorDto;
+import com.qc.printers.common.signin.domain.dto.SigninUserDataExcelDto;
 import com.qc.printers.common.signin.domain.entity.SigninDevice;
 import com.qc.printers.common.signin.domain.entity.SigninUserData;
 import com.qc.printers.common.signin.domain.resp.PythonServerResp;
 import com.qc.printers.common.signin.service.SigninUserDataMangerService;
 import com.qc.printers.common.user.dao.UserDao;
+import com.qc.printers.common.user.domain.dto.DeptManger;
 import com.qc.printers.common.user.domain.entity.SysDept;
+import com.qc.printers.common.user.domain.entity.SysRole;
+import com.qc.printers.common.user.domain.entity.SysUserRole;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.service.ISysDeptService;
 import com.qc.printers.custom.signin.domain.dto.SigninUserCardDataDto;
 import com.qc.printers.custom.signin.domain.dto.SigninUserFaceDataDto;
 import com.qc.printers.custom.signin.domain.req.SigninUserCardDataReq;
 import com.qc.printers.custom.signin.domain.req.SigninUserFaceDataReq;
+import com.qc.printers.custom.signin.domain.vo.SigninDataResp;
 import com.qc.printers.custom.signin.domain.vo.SigninUserCardDataResp;
 import com.qc.printers.custom.signin.domain.vo.SigninUserFaceDataResp;
 import com.qc.printers.custom.signin.service.SigninUserDataService;
+import com.qc.printers.custom.user.domain.vo.response.RoleResp;
+import com.qc.printers.custom.user.domain.vo.response.UserResult;
+import com.qc.printers.custom.user.service.DeptService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -37,6 +52,7 @@ import org.springframework.web.client.RestTemplate;
 
 import java.time.LocalDateTime;
 import java.util.*;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
@@ -51,10 +67,16 @@ public class SigninUserDataServiceImpl implements SigninUserDataService {
     private UserDao userDao;
 
     @Autowired
+    private DeptService deptService;
+
+    @Autowired
     private SigninUserDataMangerService signinUserDataMangerService;
 
     @Autowired
     private ISysDeptService iSysDeptService;
+
+    @Autowired
+    private MinIoProperties minIoProperties;
 
     @Autowired
     private SigninUserDataDao signinUserDataDao;
@@ -195,6 +217,197 @@ public class SigninUserDataServiceImpl implements SigninUserDataService {
         signinDeviceDto.setAddress(service.getAddress());
         signinDeviceDto.setPort(service.getPort());
         return signinDeviceDto;
+    }
+
+    @Override
+    public PageData<SigninDataResp> getDataMangerList(Integer pageNum, Integer pageSize, String name, Integer cascade, Long deptId) {
+        if (pageNum == null) {
+            throw new IllegalArgumentException("传参错误");
+        }
+        if (pageSize == null) {
+            throw new IllegalArgumentException("传参错误");
+        }
+        if (cascade == null) {
+            cascade = 0;// 0为不级联，1为级联
+        }
+        Page<User> pageInfo = new Page<>(pageNum, pageSize);
+        LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        //添加过滤条件
+        lambdaQueryWrapper.like(StringUtils.isNotEmpty(name), User::getName, name);
+        AssertUtil.notEqual(deptId, null, "请指定查询");
+        if (!cascade.equals(1)) {
+            lambdaQueryWrapper.eq(User::getDeptId, deptId);
+        } else {
+            List<DeptManger> deptMangers = deptService.getDeptListOnlyTree();
+            Set<DeptManger> childTemp = new HashSet<>();
+            Set<Long> childId = new HashSet<>();
+            int isDeptIdOrChild = 0;
+            while (deptMangers != null && deptMangers.size() > 0) {
+                for (DeptManger det :
+                        deptMangers) {
+                    if (det == null) {
+                        continue;
+                    }
+                    if (det.getChildren() != null && det.getChildren().size() > 0) {
+                        childTemp.addAll(det.getChildren());
+                    }
+                    if (det.getId().equals(deptId)) {
+                        if (det.getChildren() != null) {
+                            childTemp = new HashSet<>(det.getChildren());
+                        }
+                        isDeptIdOrChild = 1;
+                        childId.add(det.getId());
+                        break;
+                    }
+                    if (isDeptIdOrChild == 1) {
+                        childId.add(det.getId());
+                    }
+                }
+                if (childTemp.size() == 0) {
+                    break;
+                }
+                deptMangers = new ArrayList<>(childTemp);
+
+                childTemp = new HashSet<>();
+            }
+            if (childId.size() > 0) {
+                log.info("childId={}", childId);
+                lambdaQueryWrapper.in(User::getDeptId, childId);
+            }
+        }
+        //添加排序条件
+        lambdaQueryWrapper.orderByAsc(User::getCreateTime);//按照创建时间排序
+        userDao.page(pageInfo, lambdaQueryWrapper);
+        PageData<SigninDataResp> pageData = new PageData<>();
+        List<SigninDataResp> results = new ArrayList<>();
+        Set<Long> uids = pageInfo.getRecords().stream().map(User::getId).collect(Collectors.toSet());
+        LambdaQueryWrapper<SigninUserData> signinUserDataLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        signinUserDataLambdaQueryWrapper.in(!uids.isEmpty(),SigninUserData::getUserId,uids);
+        Map<Long, SigninUserData> signinUserDataMap = signinUserDataDao.list(signinUserDataLambdaQueryWrapper).stream().collect(Collectors.toMap(SigninUserData::getUserId, Function.identity()));
+        for (Object user : pageInfo.getRecords()) {
+            User user1 = (User) user;
+            //Todo:需要优化，将部门整个进缓存，在查询不到或者更改时更新单个缓存
+            SysDept sysDept = iSysDeptService.getById(user1.getDeptId());
+            //从部门继承的不能直接显示，或者需要却别开，不然很乱
+
+            SigninDataResp signinDataResp = new SigninDataResp();
+
+
+            String avatar = user1.getAvatar();
+            if (StringUtils.isNotEmpty(avatar)) {
+                avatar = OssDBUtil.toUseUrl(avatar);
+            } else {
+                avatar = "";
+            }
+            BeanUtils.copyProperties(user1,signinDataResp);
+            signinDataResp.setId(String.valueOf(user1.getId()));
+            signinDataResp.setDeptId(String.valueOf(sysDept.getId()));
+            signinDataResp.setDeptName(sysDept.getDeptNameAll());
+            SigninUserData signinUserData = signinUserDataMap.get(user1.getId());
+            if (signinUserData==null){
+                signinDataResp.setExistFace(false);
+                signinDataResp.setExistCard(false);
+                signinDataResp.setCardId("");
+                signinDataResp.setUpdateTime(null);
+                results.add(signinDataResp);
+                continue;
+            }
+            signinDataResp.setExistFace(StringUtils.isNotEmpty(signinUserData.getFaceData()));
+            signinDataResp.setExistCard(StringUtils.isNotEmpty(signinUserData.getCardId()));
+            signinDataResp.setCardId(signinUserData.getCardId());
+            signinDataResp.setUpdateTime(signinUserData.getUpdateTime());
+            results.add(signinDataResp);
+        }
+        pageData.setPages(pageInfo.getPages());
+        pageData.setTotal(pageInfo.getTotal());
+        pageData.setCountId(pageInfo.getCountId());
+        pageData.setCurrent(pageInfo.getCurrent());
+        pageData.setSize(pageInfo.getSize());
+        pageData.setRecords(results);
+        pageData.setMaxLimit(pageInfo.getMaxLimit());
+        return pageData;
+    }
+
+    @Override
+    public List<SigninUserDataExcelDto> exportAllData() {
+        List<SigninUserDataExcelDto> signinUserDataExcelDtos = new ArrayList<>();
+
+        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper.select(User::getId,User::getDeptId,User::getName);
+        List<User> list = userDao.list(userLambdaQueryWrapper);
+
+        Set<Long> uids = list.stream().map(User::getId).collect(Collectors.toSet());
+        LambdaQueryWrapper<SigninUserData> signinUserDataLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        signinUserDataLambdaQueryWrapper.in(!uids.isEmpty(),SigninUserData::getUserId,uids);
+        Map<Long, SigninUserData> signinUserDataMap = signinUserDataDao.list(signinUserDataLambdaQueryWrapper).stream().collect(Collectors.toMap(SigninUserData::getUserId, Function.identity()));
+        for (User user : list) {
+            SigninUserDataExcelDto signinUserDataExcelDto = new SigninUserDataExcelDto();
+            SigninUserData signinUserData = signinUserDataMap.get(user.getId());
+            if (signinUserData!=null){
+                BeanUtils.copyProperties(signinUserData,signinUserDataExcelDto);
+
+            }
+            signinUserDataExcelDto.setUserId(user.getId());
+
+            signinUserDataExcelDto.setName(user.getName());
+            SysDept byId = iSysDeptService.getById(user.getDeptId());
+            if (byId==null){
+                continue;
+            }
+            signinUserDataExcelDto.setDeptName(byId.getDeptNameAll());
+            signinUserDataExcelDtos.add(signinUserDataExcelDto);
+        }
+        return signinUserDataExcelDtos;
+    }
+
+    @Transactional
+    @Override
+    public String importSigninUserCardData(List<SigninUserDataExcelDto> dataList, boolean updateSupport) {
+        List<SigninUserCardDataImportErrorDto> errorData = new ArrayList<>();
+        for (SigninUserDataExcelDto signinUserDataExcelDto : dataList) {
+            if(signinUserDataExcelDto==null){
+                continue;
+            }
+            if (signinUserDataExcelDto.getUserId()==null){
+                continue;
+            }
+            User byId = userDao.getById(signinUserDataExcelDto.getUserId());
+            if (byId==null){
+                SigninUserCardDataImportErrorDto signinUserDataExcelDto1 = new SigninUserCardDataImportErrorDto();
+                signinUserDataExcelDto1.setUserId(signinUserDataExcelDto.getUserId());
+                signinUserDataExcelDto1.setError("用户不存在!");
+                errorData.add(signinUserDataExcelDto1);
+                continue;
+            }
+            LambdaQueryWrapper<SigninUserData> signinUserDataLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            signinUserDataLambdaQueryWrapper.eq(SigninUserData::getUserId,byId.getId());
+            SigninUserData one = signinUserDataDao.getOne(signinUserDataLambdaQueryWrapper);
+
+
+            if (one!=null){
+                one.setUpdateTime(LocalDateTime.now());
+                if (!updateSupport){
+                    if (StringUtils.isEmpty(one.getCardId())){
+                        one.setCardId(signinUserDataExcelDto.getCardId());
+                    }
+                }else {
+                    one.setCardId(signinUserDataExcelDto.getCardId());
+                }
+                signinUserDataDao.updateById(one);
+                continue;
+            }
+            SigninUserData signinUserData = new SigninUserData();
+            signinUserData.setUpdateTime(LocalDateTime.now());
+
+            signinUserData.setUserId(byId.getId());
+            signinUserData.setCardId(signinUserDataExcelDto.getCardId());
+            signinUserDataDao.save(signinUserData);
+        }
+        if (errorData.size()!=0){
+            ExcelUtil<SigninUserCardDataImportErrorDto> util = new ExcelUtil<SigninUserCardDataImportErrorDto>(SigninUserCardDataImportErrorDto.class,minIoProperties.getBucketName());
+            return util.exportExcel(errorData, "失败数据").getData();
+        }
+        return "";// 这样就是操作成功，不能返回任何东西
     }
 
     @Transactional

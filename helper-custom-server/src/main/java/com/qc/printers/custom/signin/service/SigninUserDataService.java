@@ -1,8 +1,11 @@
 package com.qc.printers.custom.signin.service;
 
+import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.signin.domain.dto.SigninDeviceDto;
+import com.qc.printers.common.signin.domain.dto.SigninUserDataExcelDto;
 import com.qc.printers.custom.signin.domain.req.SigninUserCardDataReq;
 import com.qc.printers.custom.signin.domain.req.SigninUserFaceDataReq;
+import com.qc.printers.custom.signin.domain.vo.SigninDataResp;
 import com.qc.printers.custom.signin.domain.vo.SigninUserCardDataResp;
 import com.qc.printers.custom.signin.domain.vo.SigninUserFaceDataResp;
 
@@ -41,4 +44,9 @@ public interface SigninUserDataService {
      */
     SigninDeviceDto checkDeviceStatus(String deviceId, String needType);
 
+    PageData<SigninDataResp> getDataMangerList(Integer pageNum, Integer pageSize, String name, Integer cascade, Long deptId);
+
+    List<SigninUserDataExcelDto> exportAllData();
+
+    String importSigninUserCardData(List<SigninUserDataExcelDto> dataList, boolean updateSupport);
 }

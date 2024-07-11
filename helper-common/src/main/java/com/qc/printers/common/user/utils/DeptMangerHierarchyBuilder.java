@@ -2,10 +2,7 @@ package com.qc.printers.common.user.utils;
 
 import com.qc.printers.common.activiti.utils.SpringUtils;
 import com.qc.printers.common.user.dao.UserDao;
-import com.qc.printers.common.user.domain.entity.SysDept;
-import com.qc.printers.common.user.domain.entity.SysRole;
-import com.qc.printers.common.user.domain.entity.SysRoleDept;
-import com.qc.printers.common.user.domain.entity.User;
+import com.qc.printers.common.user.domain.entity.*;
 import com.qc.printers.common.user.domain.dto.DeptManger;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -20,14 +17,16 @@ public class DeptMangerHierarchyBuilder {
 
     private Set<SysRoleDept> sysRoleDepts;
     private Set<SysRole> sysRoles;
+    private Set<SysDeptLeaderRole> sysDeptLeaderRoles;
 
     private int type = 1;
 
-    public DeptMangerHierarchyBuilder(List<SysDept> nodeList, Set<SysRole> sysRoles, Set<SysRoleDept> sysRoleDepts) {
+    public DeptMangerHierarchyBuilder(List<SysDept> nodeList, Set<SysRole> sysRoles, Set<SysRoleDept> sysRoleDepts,Set<SysDeptLeaderRole> sysDeptLeaderRoles) {
         this.nodeList = nodeList;
         this.childMap = new HashMap<>();
         this.sysRoleDepts = sysRoleDepts;
         this.sysRoles = sysRoles;
+        this.sysDeptLeaderRoles = sysDeptLeaderRoles;
     }
 
     /**
@@ -58,6 +57,10 @@ public class DeptMangerHierarchyBuilder {
         List<SysRoleDept> collect = sysRoleDepts.stream().filter(sysRoleDept -> sysRoleDept.getDeptId().equals(deptId)).toList();
         return sysRoles.stream().filter(sysRole -> collect.stream().anyMatch(sysRoleDept -> sysRoleDept.getRoleId().equals(sysRole.getId()))).collect(Collectors.toList());
     }
+    private List<SysRole> getIncludeLeaderSysRoleByDeptId(Long deptId) {
+        List<SysDeptLeaderRole> collect = sysDeptLeaderRoles.stream().filter(sysDeptLeaderRole -> sysDeptLeaderRole.getDeptId().equals(deptId)).toList();
+        return sysRoles.stream().filter(sysRole -> collect.stream().anyMatch(sysDeptLeaderRole -> sysDeptLeaderRole.getRoleId().equals(sysRole.getId()))).collect(Collectors.toList());
+    }
 
 
     public List<DeptManger> buildHierarchy() {
@@ -67,8 +70,10 @@ public class DeptMangerHierarchyBuilder {
         for (SysDept node : nodeList) {
             Long parentId = getParentId(node);
             List<SysRole> includeSysRoleByDeptId = null;
+            List<SysRole> includeLeaderSysRoleByDeptId = null;
             if (type == 1) {
                 includeSysRoleByDeptId = getIncludeSysRoleByDeptId(node.getId());
+                includeLeaderSysRoleByDeptId = getIncludeLeaderSysRoleByDeptId(node.getId());
             }
             if (parentId.equals(0L)) {
                 DeptManger deptManger = new DeptManger();
@@ -87,6 +92,7 @@ public class DeptMangerHierarchyBuilder {
                 deptManger.setChildren(new ArrayList<>());
                 if (type == 1) {
                     deptManger.setRoles(includeSysRoleByDeptId);
+                    deptManger.setLeaderRoles(includeLeaderSysRoleByDeptId);
                 }
                 topLevelNodes.add(deptManger);
             } else {
@@ -106,6 +112,7 @@ public class DeptMangerHierarchyBuilder {
                 deptManger.setChildren(new ArrayList<>());
                 if (type == 1) {
                     deptManger.setRoles(includeSysRoleByDeptId);
+                    deptManger.setLeaderRoles(includeLeaderSysRoleByDeptId);
                 }
                 childList.add(deptManger);
                 childMap.put(parentId, childList);

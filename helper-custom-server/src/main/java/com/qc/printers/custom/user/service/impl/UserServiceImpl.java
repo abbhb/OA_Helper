@@ -5,6 +5,8 @@ import com.auth0.jwt.interfaces.DecodedJWT;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.qc.printers.common.activiti.entity.dto.workflow.StartProcessDto;
+import com.qc.printers.common.activiti.service.ProcessStartService;
 import com.qc.printers.common.common.Code;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.MyString;
@@ -16,13 +18,13 @@ import com.qc.printers.common.common.utils.*;
 import com.qc.printers.common.common.utils.oss.OssDBUtil;
 import com.qc.printers.common.email.service.EmailService;
 import com.qc.printers.common.user.dao.UserDao;
+import com.qc.printers.common.user.dao.UserExtBaseDao;
 import com.qc.printers.common.user.domain.dto.SummeryInfoDTO;
 import com.qc.printers.common.user.domain.dto.UserInfo;
-import com.qc.printers.common.user.domain.entity.SysDept;
-import com.qc.printers.common.user.domain.entity.SysRole;
-import com.qc.printers.common.user.domain.entity.SysUserRole;
-import com.qc.printers.common.user.domain.entity.User;
+import com.qc.printers.common.user.domain.dto.UserInfoBaseExtDto;
+import com.qc.printers.common.user.domain.entity.*;
 import com.qc.printers.common.user.domain.vo.request.user.SummeryInfoReq;
+import com.qc.printers.common.user.domain.vo.response.user.UserInfoBaseExtStateResp;
 import com.qc.printers.common.user.service.*;
 import com.qc.printers.common.user.service.cache.UserCache;
 import com.qc.printers.custom.user.domain.dto.LoginDTO;
@@ -33,8 +35,17 @@ import com.qc.printers.custom.user.domain.vo.response.*;
 import com.qc.printers.common.user.domain.dto.DeptManger;
 import com.qc.printers.custom.user.service.DeptService;
 import com.qc.printers.custom.user.service.UserService;
+import com.qc.printers.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.activiti.engine.HistoryService;
+import org.activiti.engine.RepositoryService;
+import org.activiti.engine.history.HistoricProcessInstance;
+import org.activiti.engine.history.HistoricProcessInstanceQuery;
+import org.activiti.engine.history.HistoricVariableInstance;
+import org.activiti.engine.repository.ProcessDefinition;
+import org.activiti.engine.repository.ProcessDefinitionQuery;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -55,6 +66,10 @@ public class UserServiceImpl implements UserService {
     private final RestTemplate restTemplate;
     @Autowired
     private UserDao userDao;
+
+    @Autowired
+    private UserExtBaseDao userExtBaseDao;
+
     @Autowired
     private IUserService iUserService;
 
@@ -63,7 +78,12 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private UserCache userCache;
-
+    @Autowired
+    private RepositoryService repositoryService;
+    @Autowired
+    private HistoryService historyService;
+    @Autowired
+    private ProcessStartService processStartService;
     @Autowired
     private CommonService commonService;
 
@@ -1140,6 +1160,111 @@ public class UserServiceImpl implements UserService {
         }
         userSelectListResp.setOptions(list);
         return userSelectListResp;
+    }
+
+    @Override
+    public UserInfoBaseExtStateResp userinfoExtMy() {
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+        String userId = String.valueOf(currentUser.getId());
+        // 首先判断当前有没有进行中的审批，还没结束
+        HistoricProcessInstanceQuery query = historyService.createHistoricProcessInstanceQuery()
+                .startedBy(userId)
+                .notDeleted();
+        // 根据流程key查询 注意是等于不是模糊查询
+        List<HistoricProcessInstance> processSystemList = query.processDefinitionKey("Process_system_1").unfinished().list();
+        HistoricProcessInstance processSystem1 = null;
+
+
+
+
+
+
+
+        if (processSystemList!=null&&processSystemList.size()!=0){
+            processSystem1 = processSystemList.get(0);
+        }
+        UserInfoBaseExtStateResp userInfoBaseExtStateResp = new UserInfoBaseExtStateResp();
+        // 当前信息一直，都是联查两个表，左连接ext表即可！
+        UserInfoBaseExtDto userInfoBaseExtDto = new UserInfoBaseExtDto();
+        userInfoBaseExtStateResp.setCurrentInfo(userInfoBaseExtDto);
+        User user = userDao.getById(Long.valueOf(userId));
+
+        UserExtBase userExtBase = userExtBaseDao.getById(Long.valueOf(userId));
+        if (userExtBase!=null){
+            userInfoBaseExtDto.setCsrq(userExtBase.getCsrq());
+            BeanUtils.copyProperties(userExtBase,userInfoBaseExtDto);
+        }
+        userInfoBaseExtDto.setSex(user.getSex());
+        userInfoBaseExtDto.setPhone(user.getPhone());
+        userInfoBaseExtDto.setStudentId(user.getStudentId());
+        if (processSystem1!=null){
+            userInfoBaseExtStateResp.setState(true);
+            // 额外补上new的信息
+
+
+            List<HistoricVariableInstance> historicVariables = historyService.createHistoricVariableInstanceQuery()
+                    .processInstanceId(processSystem1.getId())
+                    .list();
+            Optional<HistoricVariableInstance> userinfoExtData = historicVariables.stream()
+                    .filter(t -> t.getVariableName().equals("userinfo_ext_data"))
+                    .findAny();
+            if (userinfoExtData.isPresent()){
+                HistoricVariableInstance historicVariableInstance = userinfoExtData.get();
+                userInfoBaseExtStateResp.setNewInfo(JsonUtils.toObj((String) historicVariableInstance.getValue(), UserInfoBaseExtDto.class));
+            }
+
+
+            return userInfoBaseExtStateResp;
+        }
+        userInfoBaseExtStateResp.setState(false);
+
+        return userInfoBaseExtStateResp;
+    }
+
+    @Transactional
+    @Override
+    public String userinfoExtMyApplyFor(UserInfoBaseExtDto userExtBase) {
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+        String userId = String.valueOf(currentUser.getId());
+        ProcessDefinitionQuery query = repositoryService.createProcessDefinitionQuery();
+        query.processDefinitionKey("Process_system_1");
+        query.latestVersion();
+        ProcessDefinition processDefinition = query.singleResult();
+        if (processDefinition==null){
+            throw new CustomException("审批流程被挂起或不存在，请确保此key存在");
+        }
+
+        if (processDefinition.isSuspended()){
+            throw new CustomException("审批流程被挂起");
+        }
+        String deploymentId = processDefinition.getId();
+
+        // 首先判断当前有没有进行中的审批，还没结束
+        HistoricProcessInstanceQuery query2 = historyService.createHistoricProcessInstanceQuery()
+                .startedBy(userId)
+                .notDeleted();
+        // 根据流程key查询 注意是等于不是模糊查询
+        List<HistoricProcessInstance> processSystemList = query2.processDefinitionId(deploymentId).unfinished().list();
+        HistoricProcessInstance processSystem1 = null;
+
+        if (processSystemList!=null&&processSystemList.size()!=0){
+            processSystem1 = processSystemList.get(0);
+        }
+        if (processSystem1!=null){
+            throw new CustomException("当前已经在修改审批了，可以尝试取消或者联系管理完成审批再尝试~");
+        }
+        if (StringUtils.isEmpty(deploymentId)){
+            throw new CustomException("系统异常");
+        }
+        StartProcessDto startProcessDto = new StartProcessDto();
+        startProcessDto.setDefinitionId(deploymentId);
+        Map<String,Object> map = new HashMap<>();
+        // 往map里存入对象
+        map.put("userinfo_ext_data", JsonUtils.toStr(userExtBase));
+        startProcessDto.setVariables(map);
+
+        processStartService.startProcess(startProcessDto,userId);
+        return "申请成功";
     }
 
 

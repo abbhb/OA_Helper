@@ -4,11 +4,9 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.annotation.DataScope;
+import com.qc.printers.common.user.dao.SysDeptLeaderRoleDao;
 import com.qc.printers.common.user.dao.UserDao;
-import com.qc.printers.common.user.domain.entity.SysDept;
-import com.qc.printers.common.user.domain.entity.SysRole;
-import com.qc.printers.common.user.domain.entity.SysRoleDept;
-import com.qc.printers.common.user.domain.entity.User;
+import com.qc.printers.common.user.domain.entity.*;
 import com.qc.printers.common.user.service.ISysDeptService;
 import com.qc.printers.common.user.service.ISysRoleDeptService;
 import com.qc.printers.common.user.service.ISysRoleService;
@@ -42,6 +40,9 @@ public class DeptServiceImpl implements DeptService {
     @Autowired
     private ISysRoleService iSysRoleService;
 
+    @Autowired
+    private SysDeptLeaderRoleDao sysDeptLeaderRoleDao;
+
 //    @DataScope(deptAlias = "sys_dept")
     @Override
     public List<DeptManger> getDeptList(SysDept sysDept) {
@@ -49,6 +50,7 @@ public class DeptServiceImpl implements DeptService {
         sysDeptLambdaQueryWrapper.apply(StringUtils.isNotEmpty(sysDept.getExistSql()),sysDept.getExistSql());
         List<SysDept> list = iSysDeptService.list(sysDeptLambdaQueryWrapper);
         Set<SysRoleDept> sysRoleDepts = new HashSet<>(iSysRoleDeptService.list());
+        Set<SysDeptLeaderRole> sysDeptLeaderRoles = new HashSet<>(sysDeptLeaderRoleDao.list());
         Set<SysRole> sysRoles = new HashSet<>(iSysRoleService.list());
         list.sort((m1, m2) -> {
             Long order1 = m1.getId();
@@ -58,7 +60,7 @@ public class DeptServiceImpl implements DeptService {
         if (list.size() < 1) {
             throw new CustomException("系统异常，请添加根节点(id:0)");
         }
-        DeptMangerHierarchyBuilder deptMangerHierarchyBuilder = new DeptMangerHierarchyBuilder(list, sysRoles, sysRoleDepts);
+        DeptMangerHierarchyBuilder deptMangerHierarchyBuilder = new DeptMangerHierarchyBuilder(list, sysRoles, sysRoleDepts,sysDeptLeaderRoles);
         List<DeptManger> deptMangers = deptMangerHierarchyBuilder.buildHierarchy();
         sortRecursion(deptMangers);
         return deptMangers;
@@ -120,6 +122,16 @@ public class DeptServiceImpl implements DeptService {
                 sysRoleDept.setDeptId(sysDept.getId());
                 sysRoleDept.setRoleId(sysRole.getId());
                 iSysRoleDeptService.save(sysRoleDept);
+            }
+        }
+        // 完善部门领导人角色关系表
+        if (deptManger.getLeaderRoles() != null && deptManger.getLeaderRoles().size() > 0) {
+            for (SysRole sysRole :
+                    deptManger.getLeaderRoles()) {
+                SysDeptLeaderRole sysDeptLeaderRole = new SysDeptLeaderRole();
+                sysDeptLeaderRole.setDeptId(sysDept.getId());
+                sysDeptLeaderRole.setRoleId(sysRole.getId());
+                sysDeptLeaderRoleDao.save(sysDeptLeaderRole);
             }
         }
         return "添加成功";
@@ -191,6 +203,10 @@ public class DeptServiceImpl implements DeptService {
         LambdaQueryWrapper<SysRoleDept> sysRoleDeptLambdaQueryWrapper = new LambdaQueryWrapper<>();
         sysRoleDeptLambdaQueryWrapper.eq(SysRoleDept::getDeptId, deptManger.getId());
         iSysRoleDeptService.remove(sysRoleDeptLambdaQueryWrapper);
+        //还得更新领导角色关联表 way:removeReBuild
+        LambdaQueryWrapper<SysDeptLeaderRole> sysDeptLeaderRoleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysDeptLeaderRoleLambdaQueryWrapper.eq(SysDeptLeaderRole::getDeptId, deptManger.getId());
+        sysDeptLeaderRoleDao.remove(sysDeptLeaderRoleLambdaQueryWrapper);
         //ReBuildNewRoleDept
         if (deptManger.getRoles() != null && deptManger.getRoles().size() > 0) {
             log.info("{}", deptManger.getRoles());
@@ -200,6 +216,16 @@ public class DeptServiceImpl implements DeptService {
                 sysRoleDept.setDeptId(deptManger.getId());
                 sysRoleDept.setRoleId(sysRole.getId());
                 iSysRoleDeptService.save(sysRoleDept);
+            }
+        }
+        // 完善部门领导人角色关系表
+        if (deptManger.getLeaderRoles() != null && deptManger.getLeaderRoles().size() > 0) {
+            for (SysRole sysRole :
+                    deptManger.getLeaderRoles()) {
+                SysDeptLeaderRole sysDeptLeaderRole = new SysDeptLeaderRole();
+                sysDeptLeaderRole.setDeptId(deptManger.getId());
+                sysDeptLeaderRole.setRoleId(sysRole.getId());
+                sysDeptLeaderRoleDao.save(sysDeptLeaderRole);
             }
         }
         return "更新成功";
@@ -230,6 +256,12 @@ public class DeptServiceImpl implements DeptService {
             LambdaQueryWrapper<SysRoleDept> sysRoleDeptLambdaQueryWrapper = new LambdaQueryWrapper<>();
             sysRoleDeptLambdaQueryWrapper.eq(SysRoleDept::getDeptId, sysDept.getId());
             iSysRoleDeptService.remove(sysRoleDeptLambdaQueryWrapper);
+            iSysDeptService.removeById(sysDept.getId());
+        }
+        for (SysDept sysDept : list) {
+            LambdaQueryWrapper<SysDeptLeaderRole> sysDeptLeaderRoleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            sysDeptLeaderRoleLambdaQueryWrapper.eq(SysDeptLeaderRole::getDeptId, sysDept.getId());
+            sysDeptLeaderRoleDao.remove(sysDeptLeaderRoleLambdaQueryWrapper);
             iSysDeptService.removeById(sysDept.getId());
         }
         return "删除成功";
@@ -263,6 +295,8 @@ public class DeptServiceImpl implements DeptService {
         List<SysDept> list = iSysDeptService.list(sysDeptLambdaQueryWrapper);
         Set<SysRoleDept> sysRoleDepts = new HashSet<>(iSysRoleDeptService.list());
         Set<SysRole> sysRoles = new HashSet<>(iSysRoleService.list());
+        Set<SysDeptLeaderRole> sysDeptLeaderRoles = new HashSet<>(sysDeptLeaderRoleDao.list());
+
         list.sort((m1, m2) -> {
             Long order1 = m1.getId();
             Long order2 = m2.getId();
@@ -271,7 +305,7 @@ public class DeptServiceImpl implements DeptService {
         if (list.size() < 1) {
             throw new CustomException("系统异常，请添加根节点(id:0)");
         }
-        DeptMangerHierarchyBuilder deptMangerHierarchyBuilder = new DeptMangerHierarchyBuilder(list, sysRoles, sysRoleDepts);
+        DeptMangerHierarchyBuilder deptMangerHierarchyBuilder = new DeptMangerHierarchyBuilder(list, sysRoles, sysRoleDepts,sysDeptLeaderRoles);
         List<DeptManger> deptMangers = deptMangerHierarchyBuilder.buildHierarchy();
         sortRecursion(deptMangers);
         return deptMangers;

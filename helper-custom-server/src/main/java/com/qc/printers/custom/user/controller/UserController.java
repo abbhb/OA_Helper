@@ -11,8 +11,11 @@ import com.qc.printers.common.common.utils.CASOauthUtil;
 import com.qc.printers.common.common.utils.JWTUtil;
 import com.qc.printers.common.email.service.EmailService;
 import com.qc.printers.common.user.domain.dto.SummeryInfoDTO;
+import com.qc.printers.common.user.domain.dto.UserInfoBaseExtDto;
 import com.qc.printers.common.user.domain.entity.User;
+import com.qc.printers.common.user.domain.entity.UserExtBase;
 import com.qc.printers.common.user.domain.vo.request.user.SummeryInfoReq;
+import com.qc.printers.common.user.domain.vo.response.user.UserInfoBaseExtStateResp;
 import com.qc.printers.common.user.service.annotation.UserPermissionGradeCheck;
 import com.qc.printers.common.vailcode.annotations.CheckVailCode;
 import com.qc.printers.common.vailcode.domain.enums.VailType;
@@ -363,4 +366,17 @@ public class UserController {
         return R.successOnlyObject(userService.userSelectOnlyXUserList(deptId));
     }
 
+    @NeedToken
+    @ApiOperation(value = "返回需要审核修改的个人信息_ext", notes = "")
+    @GetMapping("/userinfo_ext_my")
+    public R<UserInfoBaseExtStateResp> userinfoExtMy() {
+        return R.successOnlyObject(userService.userinfoExtMy());
+    }
+
+    @NeedToken
+    @ApiOperation(value = "修改个人信息_ext", notes = "")
+    @PostMapping("/userinfo_ext_my_apply_for")
+    public R<String> userinfoExtMyApplyFor(@Valid @RequestBody UserInfoBaseExtDto userExtBase) {
+        return R.success(userService.userinfoExtMyApplyFor(userExtBase));
+    }
 }

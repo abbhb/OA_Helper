@@ -4,8 +4,11 @@ package com.qc.printers.custom.user.service;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.user.domain.dto.SummeryInfoDTO;
+import com.qc.printers.common.user.domain.dto.UserInfoBaseExtDto;
 import com.qc.printers.common.user.domain.entity.User;
+import com.qc.printers.common.user.domain.entity.UserExtBase;
 import com.qc.printers.common.user.domain.vo.request.user.SummeryInfoReq;
+import com.qc.printers.common.user.domain.vo.response.user.UserInfoBaseExtStateResp;
 import com.qc.printers.custom.user.domain.dto.LoginDTO;
 import com.qc.printers.custom.user.domain.vo.request.LoginByEmailCodeReq;
 import com.qc.printers.custom.user.domain.vo.request.PasswordByOneTimeCodeReq;
@@ -74,4 +77,8 @@ public interface UserService {
     PageData<UserResult> getUserListForBpm(Integer pageNum, Integer pageSize, String name, Long deptId);
 
     UserSelectListResp userSelectOnlyXUserList(Long deptId);
+
+    UserInfoBaseExtStateResp userinfoExtMy();
+
+    String userinfoExtMyApplyFor(UserInfoBaseExtDto userExtBase);
 }

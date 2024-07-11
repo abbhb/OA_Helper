@@ -13,4 +13,6 @@ public interface UserMapper extends BaseMapper<User> {
     public List<User> getAllUserIncludeDeleted();
 
     public User getUserIncludeDeleted(@Param("id") Long id);
+
+
 }
