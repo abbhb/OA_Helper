@@ -2,6 +2,7 @@ package com.qc.printers.common.user.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.qc.printers.common.common.CustomException;
+import com.qc.printers.common.user.dao.SysDeptLeaderRoleDao;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.*;
@@ -37,6 +38,9 @@ public class UserInfoServiceImpl implements UserInfoService {
 
     @Autowired
     private ISysDeptService iSysDeptService;
+
+    @Autowired
+    private SysDeptLeaderRoleDao sysDeptLeaderRoleDao;
 
     @Autowired
     private ISysMenuService iSysMenuService;
@@ -114,6 +118,14 @@ public class UserInfoServiceImpl implements UserInfoService {
             roleDeptLambdaQueryWrapper.eq(SysRoleDept::getDeptId, itemDeptId);
             Set<Long> roleLongIdItem = iSysRoleDeptService.list(roleDeptLambdaQueryWrapper).stream().map(SysRoleDept::getRoleId).collect(Collectors.toSet());
             userRoleIdList.addAll(roleLongIdItem);
+        }
+        // 如果是部门负责人的话
+        if (myDept.getLeaderId().equals(userId)){
+            LambdaQueryWrapper<SysDeptLeaderRole> sysDeptLeaderRoleLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            sysDeptLeaderRoleLambdaQueryWrapper.eq(SysDeptLeaderRole::getDeptId, myDept.getId());
+            Set<Long> collect1 = sysDeptLeaderRoleDao.list(sysDeptLeaderRoleLambdaQueryWrapper).stream().map(SysDeptLeaderRole::getRoleId).collect(Collectors.toSet());
+
+            userRoleIdList.addAll(collect1);
         }
         LambdaQueryWrapper<SysUserRole> sysUserRoleLambdaQueryWrapper = new LambdaQueryWrapper<>();
         sysUserRoleLambdaQueryWrapper.eq(SysUserRole::getUserId, user.getId());
