@@ -379,4 +379,18 @@ public class UserController {
     public R<String> userinfoExtMyApplyFor(@Valid @RequestBody UserInfoBaseExtDto userExtBase) {
         return R.success(userService.userinfoExtMyApplyFor(userExtBase));
     }
+
+    @NeedToken
+    @ApiOperation(value = "撤回个人信息_ext修改申请", notes = "")
+    @PostMapping("/userinfo_ext_my_withdraw")
+    public R<String> userinfoExtMyWithDraw() {
+        return R.success(userService.userinfoExtMyWithDraw());
+    }
+
+    @NeedToken
+    @ApiOperation(value = "返回需要审核修改的个人信息_ext", notes = "")
+    @GetMapping("/approval_userinfo_ext_data/{taskId}")
+    public R<UserInfoBaseExtDto> approvalUserinfoExtData(@PathVariable String taskId) {
+        return R.successOnlyObject(userService.approvalUserinfoExtData(taskId));
+    }
 }

@@ -120,7 +120,7 @@ public class UserInfoServiceImpl implements UserInfoService {
             userRoleIdList.addAll(roleLongIdItem);
         }
         // 如果是部门负责人的话
-        if (myDept.getLeaderId().equals(userId)){
+        if (myDept.getLeaderId()!=null&&myDept.getLeaderId().equals(userId)){
             LambdaQueryWrapper<SysDeptLeaderRole> sysDeptLeaderRoleLambdaQueryWrapper = new LambdaQueryWrapper<>();
             sysDeptLeaderRoleLambdaQueryWrapper.eq(SysDeptLeaderRole::getDeptId, myDept.getId());
             Set<Long> collect1 = sysDeptLeaderRoleDao.list(sysDeptLeaderRoleLambdaQueryWrapper).stream().map(SysDeptLeaderRole::getRoleId).collect(Collectors.toSet());

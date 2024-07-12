@@ -153,7 +153,6 @@ public class ProcessStartServiceImpl implements ProcessStartService {
         ProcessDefinition definition = repositoryService.createProcessDefinitionQuery()
                 .processDefinitionId(dto.getDefinitionId()).singleResult();
         if (definition.isSuspended()) throw new CustomException("流程已挂起,不能启动!");
-
         // 设置流程发起人用户Id
         Authentication.setAuthenticatedUserId(userId);
         Map<String, Object> variables = dto.getVariables();
@@ -199,5 +198,13 @@ public class ProcessStartServiceImpl implements ProcessStartService {
         runtimeService.deleteProcessInstance(instanceId, "发起人撤销");
         // 删除历史流程实例
 //        historyService.deleteHistoricProcessInstance(instanceId);
+    }
+
+    @Override
+    public void checkProcess(StartProcessDto dto, String s) {
+        ProcessDefinition definition = repositoryService.createProcessDefinitionQuery()
+                .processDefinitionId(dto.getDefinitionId()).singleResult();
+        if (definition.isSuspended()) throw new CustomException("流程已挂起,不能启动!");
+        if (definition.getKey().contains("system"))throw new CustomException("该流程为系统流程需要单独建立启动接口");
     }
 }

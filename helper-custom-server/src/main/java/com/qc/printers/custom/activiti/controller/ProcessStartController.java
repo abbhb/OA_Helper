@@ -51,11 +51,14 @@ public class ProcessStartController {
      *
      * @param dto 启动流程参数
      * @return 结果
+     *
+     * 拒绝系统流程从此接口启动，此接口只适合不携带_system的key的接口
      */
     @NeedToken
     @PostMapping("/start")
     public R<String> start(@RequestBody StartProcessDto dto) {
         User user = ThreadLocalUtil.getCurrentUser();
+        processStartService.checkProcess(dto,String.valueOf(user.getId()));
         processStartService.startProcess(dto, String.valueOf(user.getId()));
         return R.success("启动成功");
     }

@@ -33,4 +33,5 @@ public interface ProcessStartService {
      */
     void delete(String instanceId);
 
+    void checkProcess(StartProcessDto dto, String s);
 }

@@ -1267,5 +1267,140 @@ public class UserServiceImpl implements UserService {
         return "申请成功";
     }
 
+    @Override
+    public String userinfoExtMyWithDraw() {
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+        String userId = String.valueOf(currentUser.getId());
+        ProcessDefinitionQuery query = repositoryService.createProcessDefinitionQuery();
+        query.processDefinitionKey("Process_system_1");
+        query.latestVersion();
+        ProcessDefinition processDefinition = query.singleResult();
+        if (processDefinition==null){
+            throw new CustomException("审批流程被挂起或不存在，请确保此key存在");
+        }
 
+        if (processDefinition.isSuspended()){
+            throw new CustomException("审批流程被挂起");
+        }
+        String deploymentId = processDefinition.getId();
+
+        // 首先判断当前有没有进行中的审批，还没结束
+        HistoricProcessInstanceQuery query2 = historyService.createHistoricProcessInstanceQuery()
+                .startedBy(userId)
+                .notDeleted();
+        // 根据流程key查询 注意是等于不是模糊查询
+        List<HistoricProcessInstance> processSystemList = query2.processDefinitionId(deploymentId).unfinished().list();
+        HistoricProcessInstance processSystem1 = null;
+
+        if (processSystemList!=null&&processSystemList.size()!=0){
+            processSystem1 = processSystemList.get(0);
+        }
+        if (processSystem1==null){
+            throw new CustomException("当前没有在进行的审批");
+        }
+        processStartService.delete(processSystem1.getId());
+
+        return "撤回成功";
+    }
+
+    /**
+     * 后期需要整理到processTodo里
+     * @param taskId
+     * @return
+     */
+    @Override
+    public UserInfoBaseExtDto approvalUserinfoExtData(String taskId) {
+        // 首先判断当前有没有进行中的审批，还没结束
+        HistoricProcessInstanceQuery query = historyService.createHistoricProcessInstanceQuery()
+                .processInstanceId(taskId)
+                .notDeleted();
+        // 根据流程key查询 注意是等于不是模糊查询
+        List<HistoricProcessInstance> processSystemList = query.processDefinitionKey("Process_system_1").list();
+        HistoricProcessInstance processSystem1 = null;
+
+        if (processSystemList!=null&&processSystemList.size()!=0){
+            processSystem1 = processSystemList.get(0);
+        }
+        if (processSystem1!=null){
+            List<HistoricVariableInstance> historicVariables = historyService.createHistoricVariableInstanceQuery()
+                    .processInstanceId(processSystem1.getId())
+                    .list();
+            Optional<HistoricVariableInstance> userinfoExtData = historicVariables.stream()
+                    .filter(t -> t.getVariableName().equals("userinfo_ext_data"))
+                    .findAny();
+            if (userinfoExtData.isPresent()){
+                HistoricVariableInstance historicVariableInstance = userinfoExtData.get();
+                UserInfoBaseExtDto userInfoBaseExtDto1 = JsonUtils.toObj((String) historicVariableInstance.getValue(), UserInfoBaseExtDto.class);
+                return userInfoBaseExtDto1;
+            }
+        }
+
+        throw new CustomException("无法获取");
+    }
+
+    @Transactional
+    @Override
+    public void updateUserInfoExt(Long userId, UserInfoBaseExtDto userInfoBaseExtDto) {
+        // 更新用户表里的字段
+        User user = userDao.getById(userId);
+        user.setPhone(userInfoBaseExtDto.getPhone());
+        user.setStudentId(userInfoBaseExtDto.getStudentId());
+        user.setSex(userInfoBaseExtDto.getSex());
+        userDao.updateById(user);
+        // 更新额外
+        UserExtBase userExtBase = userExtBaseDao.getById(userId);
+        if (userExtBase==null){
+            userExtBase = new UserExtBase();
+            userExtBase.setId(userId);
+        }
+        if (StringUtils.isNotEmpty(userInfoBaseExtDto.getCsrq())){
+            userExtBase.setCsrq(userInfoBaseExtDto.getCsrq());
+        }
+        if (StringUtils.isNotEmpty(userInfoBaseExtDto.getDetailAddress())){
+            userExtBase.setDetailAddress(userInfoBaseExtDto.getDetailAddress());
+        }
+        if (StringUtils.isNotEmpty(userInfoBaseExtDto.getIdPhoto())){
+            userExtBase.setIdPhoto(userInfoBaseExtDto.getIdPhoto());
+        }
+        if (StringUtils.isNotEmpty(userInfoBaseExtDto.getJg1())){
+            userExtBase.setJg1(userInfoBaseExtDto.getJg1());
+        }
+        if (StringUtils.isNotEmpty(userInfoBaseExtDto.getJg2())){
+            userExtBase.setJg2(userInfoBaseExtDto.getJg2());
+        }
+        if (StringUtils.isNotEmpty(userInfoBaseExtDto.getJg3())){
+            userExtBase.setJg3(userInfoBaseExtDto.getJg3());
+        }
+        if (StringUtils.isNotEmpty(userInfoBaseExtDto.getMz())){
+            userExtBase.setMz(userInfoBaseExtDto.getMz());
+        }
+        if (StringUtils.isNotEmpty(userInfoBaseExtDto.getSfzId())){
+            userExtBase.setSfzId(userInfoBaseExtDto.getSfzId());
+        }
+        if (StringUtils.isNotEmpty(userInfoBaseExtDto.getSfzLx())){
+            userExtBase.setSfzLx(userInfoBaseExtDto.getSfzLx());
+        }
+        if (StringUtils.isNotEmpty(userInfoBaseExtDto.getZsxm())){
+            userExtBase.setZsxm(userInfoBaseExtDto.getZsxm());
+        }
+        if (StringUtils.isNotEmpty(userInfoBaseExtDto.getZzmm())){
+            userExtBase.setZzmm(userInfoBaseExtDto.getZzmm());
+        }
+        if (StringUtils.isNotEmpty(userInfoBaseExtDto.getSyd1())){
+            userExtBase.setSyd1(userInfoBaseExtDto.getSyd1());
+        }
+        if (StringUtils.isNotEmpty(userInfoBaseExtDto.getSyd2())){
+            userExtBase.setSyd2(userInfoBaseExtDto.getSyd2());
+        }
+        if (StringUtils.isNotEmpty(userInfoBaseExtDto.getCsd1())){
+            userExtBase.setCsd1(userInfoBaseExtDto.getCsd1());
+        }
+        if (StringUtils.isNotEmpty(userInfoBaseExtDto.getCsd2())){
+            userExtBase.setCsd2(userInfoBaseExtDto.getCsd2());
+        }
+        if (StringUtils.isNotEmpty(userInfoBaseExtDto.getCsd3())){
+            userExtBase.setCsd3(userInfoBaseExtDto.getCsd3());
+        }
+        userExtBaseDao.saveOrUpdate(userExtBase);
+    }
 }

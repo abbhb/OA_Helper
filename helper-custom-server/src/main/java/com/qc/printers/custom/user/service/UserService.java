@@ -81,4 +81,10 @@ public interface UserService {
     UserInfoBaseExtStateResp userinfoExtMy();
 
     String userinfoExtMyApplyFor(UserInfoBaseExtDto userExtBase);
+
+    String userinfoExtMyWithDraw();
+
+    UserInfoBaseExtDto approvalUserinfoExtData(String taskId);
+
+    void updateUserInfoExt(Long userId, UserInfoBaseExtDto userInfoBaseExtDto);
 }

@@ -134,6 +134,7 @@ public class DeployGroupService {
                 query.list();
         List<DefinitionListVo> resultListWeiFenZu = new ArrayList<>();
         for (ProcessDefinition item : list) {
+            if (item.getKey().contains("system"))continue;// 跳过系统流程，系统流程不允许直接发起
             DefinitionListVo vo = new DefinitionListVo();
 
             BeanUtils.copyProperties(item, vo);
