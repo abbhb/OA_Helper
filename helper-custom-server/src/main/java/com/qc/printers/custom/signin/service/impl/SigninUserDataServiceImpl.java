@@ -13,7 +13,7 @@ import com.qc.printers.common.config.MinIoProperties;
 import com.qc.printers.common.signin.dao.SigninDeviceDao;
 import com.qc.printers.common.signin.dao.SigninUserDataDao;
 import com.qc.printers.common.signin.domain.dto.SigninDeviceDto;
-import com.qc.printers.common.signin.domain.dto.SigninUserCardDataImportErrorDto;
+import com.qc.printers.common.signin.domain.dto.UserDataImportErrorDto;
 import com.qc.printers.common.signin.domain.dto.SigninUserDataExcelDto;
 import com.qc.printers.common.signin.domain.entity.SigninDevice;
 import com.qc.printers.common.signin.domain.entity.SigninUserData;
@@ -22,8 +22,6 @@ import com.qc.printers.common.signin.service.SigninUserDataMangerService;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.dto.DeptManger;
 import com.qc.printers.common.user.domain.entity.SysDept;
-import com.qc.printers.common.user.domain.entity.SysRole;
-import com.qc.printers.common.user.domain.entity.SysUserRole;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.service.ISysDeptService;
 import com.qc.printers.custom.signin.domain.dto.SigninUserCardDataDto;
@@ -34,8 +32,6 @@ import com.qc.printers.custom.signin.domain.vo.SigninDataResp;
 import com.qc.printers.custom.signin.domain.vo.SigninUserCardDataResp;
 import com.qc.printers.custom.signin.domain.vo.SigninUserFaceDataResp;
 import com.qc.printers.custom.signin.service.SigninUserDataService;
-import com.qc.printers.custom.user.domain.vo.response.RoleResp;
-import com.qc.printers.custom.user.domain.vo.response.UserResult;
 import com.qc.printers.custom.user.service.DeptService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
@@ -363,7 +359,7 @@ public class SigninUserDataServiceImpl implements SigninUserDataService {
     @Transactional
     @Override
     public String importSigninUserCardData(List<SigninUserDataExcelDto> dataList, boolean updateSupport) {
-        List<SigninUserCardDataImportErrorDto> errorData = new ArrayList<>();
+        List<UserDataImportErrorDto> errorData = new ArrayList<>();
         for (SigninUserDataExcelDto signinUserDataExcelDto : dataList) {
             if(signinUserDataExcelDto==null){
                 continue;
@@ -373,7 +369,7 @@ public class SigninUserDataServiceImpl implements SigninUserDataService {
             }
             User byId = userDao.getById(signinUserDataExcelDto.getUserId());
             if (byId==null){
-                SigninUserCardDataImportErrorDto signinUserDataExcelDto1 = new SigninUserCardDataImportErrorDto();
+                UserDataImportErrorDto signinUserDataExcelDto1 = new UserDataImportErrorDto();
                 signinUserDataExcelDto1.setUserId(signinUserDataExcelDto.getUserId());
                 signinUserDataExcelDto1.setError("用户不存在!");
                 errorData.add(signinUserDataExcelDto1);
@@ -404,7 +400,7 @@ public class SigninUserDataServiceImpl implements SigninUserDataService {
             signinUserDataDao.save(signinUserData);
         }
         if (errorData.size()!=0){
-            ExcelUtil<SigninUserCardDataImportErrorDto> util = new ExcelUtil<SigninUserCardDataImportErrorDto>(SigninUserCardDataImportErrorDto.class,minIoProperties.getBucketName());
+            ExcelUtil<UserDataImportErrorDto> util = new ExcelUtil<UserDataImportErrorDto>(UserDataImportErrorDto.class,minIoProperties.getBucketName());
             return util.exportExcel(errorData, "失败数据").getData();
         }
         return "";// 这样就是操作成功，不能返回任何东西

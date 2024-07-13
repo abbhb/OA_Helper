@@ -16,7 +16,12 @@ import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.common.service.CommonService;
 import com.qc.printers.common.common.utils.*;
 import com.qc.printers.common.common.utils.oss.OssDBUtil;
+import com.qc.printers.common.common.utils.poi.ExcelUtil;
+import com.qc.printers.common.config.MinIoProperties;
 import com.qc.printers.common.email.service.EmailService;
+import com.qc.printers.common.signin.domain.dto.UserDataImportErrorDto;
+import com.qc.printers.common.signin.domain.dto.SigninUserDataExcelDto;
+import com.qc.printers.common.signin.domain.entity.SigninUserData;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.dao.UserExtBaseDao;
 import com.qc.printers.common.user.domain.dto.SummeryInfoDTO;
@@ -51,6 +56,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
@@ -75,7 +81,8 @@ public class UserServiceImpl implements UserService {
 
     @Autowired
     private ISysDeptService iSysDeptService;
-
+    @Autowired
+    private MinIoProperties minIoProperties;
     @Autowired
     private UserCache userCache;
     @Autowired
@@ -1402,5 +1409,89 @@ public class UserServiceImpl implements UserService {
             userExtBase.setCsd3(userInfoBaseExtDto.getCsd3());
         }
         userExtBaseDao.saveOrUpdate(userExtBase);
+    }
+
+    @Override
+    public List<User> exportAllData() {
+        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper.select(User::getEmail,User::getId,User::getDeptId,User::getName,User::getUsername,User::getStudentId);
+        List<User> list = userDao.list(userLambdaQueryWrapper);
+        return list;
+    }
+    @Transactional
+    @Override
+    public String importUserData(List<User> dataList) {
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+        List<UserDataImportErrorDto> errorData = new ArrayList<>();
+        for (User user : dataList) {
+            if(user==null){
+                continue;
+            }
+            if (user.getDeptId()==null){
+                UserDataImportErrorDto signinUserDataExcelDto1 = new UserDataImportErrorDto();
+                signinUserDataExcelDto1.setUserId(user.getId());
+                signinUserDataExcelDto1.setError("部门id为空!");
+                errorData.add(signinUserDataExcelDto1);
+                continue;
+            }
+            if (StringUtils.isEmpty(user.getStudentId())){
+                UserDataImportErrorDto signinUserDataExcelDto1 = new UserDataImportErrorDto();
+                signinUserDataExcelDto1.setUserId(user.getId());
+                signinUserDataExcelDto1.setError("学号为空!");
+                errorData.add(signinUserDataExcelDto1);
+                continue;
+            }
+            if (StringUtils.isEmpty(user.getEmail())){
+                UserDataImportErrorDto signinUserDataExcelDto1 = new UserDataImportErrorDto();
+                signinUserDataExcelDto1.setUserId(user.getId());
+                signinUserDataExcelDto1.setError("安全邮箱【用户名】为空!");
+                errorData.add(signinUserDataExcelDto1);
+                continue;
+            }
+            if (StringUtils.isEmpty(user.getPassword())){
+                UserDataImportErrorDto signinUserDataExcelDto1 = new UserDataImportErrorDto();
+                signinUserDataExcelDto1.setUserId(user.getId());
+                signinUserDataExcelDto1.setError("初始密码为空!");
+                errorData.add(signinUserDataExcelDto1);
+                continue;
+            }
+
+
+            LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            userLambdaQueryWrapper.eq(User::getEmail,user.getEmail());
+            userLambdaQueryWrapper.or().eq(User::getStudentId,user.getStudentId());
+            int count = userDao.count(userLambdaQueryWrapper);
+
+            if (count>0){
+                UserDataImportErrorDto signinUserDataExcelDto1 = new UserDataImportErrorDto();
+                signinUserDataExcelDto1.setUserId(user.getId());
+                signinUserDataExcelDto1.setError("用户邮箱或者学号已存在!");
+                errorData.add(signinUserDataExcelDto1);
+                continue;
+            }
+            if (StringUtils.isEmpty(user.getName())){
+                user.setName("昵称为空！");
+            }
+            String salt = PWDMD5.getSalt();
+            String md5Encryption = PWDMD5.getMD5Encryption(user.getPassword(), salt);
+            User user3 = User.builder().createUser(currentUser.getId()).activeStatus(0).avatar("").createTime(LocalDateTime.now())
+                    .status(1).deptId(user.getDeptId()).email(user.getEmail()).username(user.getEmail())
+                    .sex("男").studentId(user.getStudentId()).name(user.getName())
+                    .password(md5Encryption).salt(salt).build();
+            boolean save = userDao.save(user3);
+            if (!save){
+                UserDataImportErrorDto signinUserDataExcelDto1 = new UserDataImportErrorDto();
+                signinUserDataExcelDto1.setUserId(user.getId());
+                signinUserDataExcelDto1.setError("未知!");
+                errorData.add(signinUserDataExcelDto1);
+                continue;
+            }
+
+        }
+        if (errorData.size()!=0){
+            ExcelUtil<UserDataImportErrorDto> util = new ExcelUtil<UserDataImportErrorDto>(UserDataImportErrorDto.class,minIoProperties.getBucketName());
+            return util.exportExcel(errorData, "失败数据").getData();
+        }
+        return "";
     }
 }
