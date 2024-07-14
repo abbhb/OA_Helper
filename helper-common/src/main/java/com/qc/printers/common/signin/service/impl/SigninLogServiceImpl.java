@@ -19,8 +19,10 @@ import com.qc.printers.common.signin.mapper.SigninGroupRuleMapper;
 import com.qc.printers.common.signin.service.SigninDeviceMangerService;
 import com.qc.printers.common.signin.service.SigninLogService;
 import com.qc.printers.common.user.dao.UserDao;
+import com.qc.printers.common.user.dao.UserExtBaseDao;
 import com.qc.printers.common.user.domain.entity.SysDept;
 import com.qc.printers.common.user.domain.entity.User;
+import com.qc.printers.common.user.domain.entity.UserExtBase;
 import com.qc.printers.common.user.service.ISysDeptService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
@@ -62,6 +64,10 @@ public class SigninLogServiceImpl implements SigninLogService {
 
     @Autowired
     private UserDao userDao;
+
+    @Autowired
+    private UserExtBaseDao userExtBaseDao;
+
     @Autowired
     private SigninDeviceMangerService signinDeviceMangerService;
 
@@ -639,7 +645,11 @@ public class SigninLogServiceImpl implements SigninLogService {
             LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
             userLambdaQueryWrapper.eq(User::getStudentId, signinLog.getStudentId());
             User one = userDao.getOne(userLambdaQueryWrapper);
+            UserExtBase userExtBase = userExtBaseDao.getById(one.getId());
             addLogExtInfo.setAvatarUrl(OssDBUtil.toUseUrl(one.getAvatar()));
+            if (userExtBase!=null&&StringUtils.isNotEmpty(userExtBase.getIdPhoto())){
+                addLogExtInfo.setAvatarUrl(OssDBUtil.toUseUrl(userExtBase.getIdPhoto()));
+            }
             SysDept sysDept = iSysDeptService.getById(one.getDeptId());
             addLogExtInfo.setDeptName(sysDept.getDeptNameAll());
 
