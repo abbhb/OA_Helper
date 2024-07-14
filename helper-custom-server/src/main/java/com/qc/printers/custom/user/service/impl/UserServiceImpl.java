@@ -623,19 +623,17 @@ public class UserServiceImpl implements UserService {
         if (currentUser == null) {
             return false;
         }
-        if (StringUtils.isEmpty(user.getPhone()) || StringUtils.isEmpty(user.getSex()) || StringUtils.isEmpty(user.getStudentId())) {
+        if (StringUtils.isEmpty(user.getSex())) {
             throw new CustomException("请输入完整!");
         }
         LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         lambdaUpdateWrapper.eq(User::getId, currentUser.getId());
         lambdaUpdateWrapper.set(User::getName, user.getName());
-        lambdaUpdateWrapper.set(User::getPhone, user.getPhone());
         //判空
         if (!StringUtils.isEmpty(user.getAvatar())) {
             lambdaUpdateWrapper.set(User::getAvatar, OssDBUtil.toDBUrl(user.getAvatar()));
         }
         lambdaUpdateWrapper.set(User::getSex, user.getSex());
-        lambdaUpdateWrapper.set(User::getStudentId, user.getStudentId());
         boolean update = userDao.update(lambdaUpdateWrapper);
         return update;
     }

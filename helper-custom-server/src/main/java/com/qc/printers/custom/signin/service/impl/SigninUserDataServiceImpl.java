@@ -478,7 +478,9 @@ public class SigninUserDataServiceImpl implements SigninUserDataService {
         List<SigninUserCardDataResp> signinUserCardDataResps = new ArrayList<>();
         log.info("device:{},face{}", deviceId, body);
         // 将 List<Item> 转换为 Map<Integer, Item>
+
         Map<String, SigninUserCardDataDto> stringSigninUserCardDataDtoMap = body.stream()
+                .filter(signinUserCardDataDto -> signinUserCardDataDto.getStudentId()!=null&&!signinUserCardDataDto.getStudentId().equals("")&&!signinUserCardDataDto.getStudentId().equals("null"))
                 .collect(Collectors.toMap(SigninUserCardDataDto::getStudentId, item -> item));
         for (User user1 : userList) {
             SigninUserCardDataResp signinUserCardDataResp = new SigninUserCardDataResp();
