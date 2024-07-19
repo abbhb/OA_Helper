@@ -100,8 +100,8 @@ public class SigninLogServiceImpl implements SigninLogService {
             if (StringUtils.isEmpty(signinLog.getSigninDeviceId())) throw new CustomException("必须提供设备id");
         }
 
-        signinLogDao.save(signinLog);
-        this.addSigninLogCliByLog(signinLog);
+        boolean save = signinLogDao.save(signinLog);
+        addSigninLogCliByLog(signinLog);
         return "记录成功";
     }
 
@@ -639,7 +639,7 @@ public class SigninLogServiceImpl implements SigninLogService {
     @Transactional
     @Override
     public AddLogExtInfo addSigninlogByDevicePlus(HttpServletRequest request, SigninLog signinLog) {
-        this.addSigninlogByDevice(request, signinLog);
+        String s = addSigninlogByDevice(request, signinLog);
         AddLogExtInfo addLogExtInfo = new AddLogExtInfo();
         try {
             LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
@@ -753,6 +753,10 @@ public class SigninLogServiceImpl implements SigninLogService {
         BcRule jieguo = null;
         BcRule closestPastShift = null;
         String closestPastShiftType = null;  // 用于记录最近班次是上班还是下班
+
+
+
+
         long minTimeDifference = Long.MAX_VALUE;
         for (BcRule shift : bcRules) {
             // 一个时间段不会存在多个重复的打卡，起码在一个考勤组内，打卡时间段必须错开!
@@ -786,6 +790,7 @@ public class SigninLogServiceImpl implements SigninLogService {
 
             // 查找已经经过的最近的班次
             if (currentTime.isAfter(sbTimeObject)) {
+                // 只记录更小的时间，取绝对值，离当前更近的
                 long timeDifference = Duration.between(sbTimeObject, currentTime).toMinutes();
                 if (timeDifference < minTimeDifference) {
                     minTimeDifference = timeDifference;
@@ -966,16 +971,20 @@ public class SigninLogServiceImpl implements SigninLogService {
                 signinLogCliLambdaQueryWrapper.eq(SigninLogCli::getLogDatetime, signinLog.getSigninTime().toLocalDate());
                 signinLogCliLambdaQueryWrapper.eq(SigninLogCli::getBcCount, rules.get(i).getCount());
                 signinLogCliLambdaQueryWrapper.eq(SigninLogCli::getStartEnd, 0);
+                // fix:修复了任意个时段只有第一个人能打卡
+                signinLogCliLambdaQueryWrapper.eq(SigninLogCli::getUserId,signinLog.getUserId());
                 SigninLogCli signinLogCliDaoOne = signinLogCliDao.getOne(signinLogCliLambdaQueryWrapper);
                 if (signinLogCliDaoOne != null) {
                     // 暂时只记录上班前最早的，后续的肯定没那么早
-                    continue;
+                    log.info("后续上班，不是最早{}",signinLogCliDaoOne);
+                    break;
                 }
                 signinLogCli1.setStateTime(signinLogCli1.getState().equals(1) ? Math.abs((int) ChronoUnit.MINUTES.between(timeOnlyCurrent, timeOnlySB)) : 0);
+                log.info("上班记录{}",signinLogCli1);
 
                 signinLogCliDao.save(signinLogCli1);
                 // 在之间，记录,同班次不可能出现上班和下班交叉，直接进入下一班此查找
-                continue;
+                break;
             }
             String xbTime = rules.get(i).getXbTime();
             // 将字符串解析为 LocalTime 对象
@@ -1028,6 +1037,8 @@ public class SigninLogServiceImpl implements SigninLogService {
                 signinLogCliLambdaQueryWrapper.eq(SigninLogCli::getLogDatetime, signinLog.getSigninTime().toLocalDate());
                 signinLogCliLambdaQueryWrapper.eq(SigninLogCli::getBcCount, rules.get(i).getCount());
                 signinLogCliLambdaQueryWrapper.eq(SigninLogCli::getStartEnd, 1);
+                // fix:修复了任意个时段只有第一个人能打卡
+                signinLogCliLambdaQueryWrapper.eq(SigninLogCli::getUserId,signinLog.getUserId());
                 SigninLogCli signinLogCliDaoOne = signinLogCliDao.getOne(signinLogCliLambdaQueryWrapper);
                 if (signinLogCliDaoOne != null) {
                     // 下班如果刚开始是早退就允许更新时间和状态
@@ -1041,13 +1052,18 @@ public class SigninLogServiceImpl implements SigninLogService {
                         int fenzhong = Math.abs(((int) ChronoUnit.MINUTES.between(timeOnlyCurrent, timeOnlydateTimeXBBB)));
                         signinLogCliLambdaUpdateWrapper.set(SigninLogCli::getStateTime, signinLogCli1.getState().equals(2) ? fenzhong == 0 ? 1 : fenzhong : 0);
                         signinLogCliDao.update(signinLogCliLambdaUpdateWrapper);
+                        log.info("下班更新{}",fenzhong);
+
+                        break;
                     }
                     continue;
                 }
                 signinLogCli1.setStateTime(signinLogCli1.getState().equals(2) ? Math.abs((int) ChronoUnit.MINUTES.between(currentDateTime, timeOnlydateTimeXBBB)) : 0);
+                log.info("记录{}",signinLogCli1);
+
                 signinLogCliDao.save(signinLogCli1);
+                break;
                 // 在之间，记录,同班次不可能出现上班和下班交叉，直接进入下一班此查找
-                continue;
             }
         }
 

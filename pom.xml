@@ -21,6 +21,7 @@
         <module>helper-common</module>
         <module>helper-tools</module>
         <module>helper-custom-server</module>
+        <module>temp-test</module>
     </modules>
 
     <properties>
