@@ -11,6 +11,9 @@ import java.util.List;
  */
 @Data
 public class SigninGroupDateRealResp implements Serializable {
+    /**
+     * 提示语，比如当前正在签到等等
+     */
     private String kaoqingString;
     /**
      * 最近班次应到人数

@@ -102,6 +102,8 @@ public class UserServiceImpl implements UserService {
     @Autowired
     private ITrLoginService iTrLoginService;
 
+
+
     @Autowired
     public UserServiceImpl(RestTemplate restTemplate) {
         this.restTemplate = restTemplate;
@@ -602,6 +604,7 @@ public class UserServiceImpl implements UserService {
         } else {
             avatar = "";
         }
+
         List<RoleResp> collect = currentUser.getSysRoles().stream().sorted(Comparator.comparing(SysRole::getRoleSort)).map(sysRole -> new RoleResp(String.valueOf(sysRole.getId()), sysRole.getRoleName(), sysRole.getRoleKey(), sysRole.getRoleSort())).collect(Collectors.toList());
         UserResult userResult = new UserResult(String.valueOf(currentUser.getId()), currentUser.getUsername(), currentUser.getName(), currentUser.getPhone(), currentUser.getSex(), String.valueOf(currentUser.getStudentId()), currentUser.getStatus(), currentUser.getCreateTime(), currentUser.getUpdateTime(), String.valueOf(currentUser.getDeptId()), sysDept.getDeptName(), currentUser.getEmail(), avatar, collect);
 
