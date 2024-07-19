@@ -362,7 +362,7 @@ public class SigninLogServiceImpl implements SigninLogService {
         LambdaQueryWrapper<SigninGroupRule> signinGroupRuleLambdaQueryWrapper = new LambdaQueryWrapper<>();
         signinGroupRuleLambdaQueryWrapper.eq(SigninGroupRule::getGroupId,groupId);
         signinGroupRuleLambdaQueryWrapper.le(SigninGroupRule::getStartTime,now);
-        signinGroupRuleLambdaQueryWrapper.and(QueryWrapper->QueryWrapper.ge(SigninGroupRule::getEndTime,now).or().isNull(SigninGroupRule::getEndTime));
+        signinGroupRuleLambdaQueryWrapper.and(QueryWrapper->QueryWrapper.gt(SigninGroupRule::getEndTime,now).or().isNull(SigninGroupRule::getEndTime));
         SigninGroupRule one = signinGroupRuleDao.getOne(signinGroupRuleLambdaQueryWrapper);
         if (one==null){
             throw new CustomException("业务异常-9005");
