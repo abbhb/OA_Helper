@@ -8,6 +8,7 @@ import com.qc.printers.common.signin.domain.resp.SigninGroupDateResp;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 
@@ -30,12 +31,10 @@ public interface SigninLogService {
     /**
      * 返回某天某用户某班次的某班次是否请假
      * @param userId 用户id
-     * @param date 某天的date对象
-     * @param bcId 某班次id
-     * @param bcCount 第几个班次
+     * @param time 判断哪个时间在不在请假
      * @return 返回一个布尔类型是否请假
      */
-    boolean getUserAskForLeave(Long userId, LocalDate date,Long bcId,Integer bcCount);
+    boolean getUserAskForLeave(Long userId, LocalDateTime time);
 
     SigninGroupDateResp exportSigninGgroupDate(String groupId, LocalDate date);
 
