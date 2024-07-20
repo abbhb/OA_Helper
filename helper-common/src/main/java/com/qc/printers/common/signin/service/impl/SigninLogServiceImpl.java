@@ -258,6 +258,8 @@ public class SigninLogServiceImpl implements SigninLogService {
 
                 boolean userAskForLeave_s = this.getUserAskForLeave(userId, sb_dateTime);
                 boolean userAskForLeave_x = this.getUserAskForLeave(userId, xb_dateTime);
+                log.info("tag:请假-表示sb{}表示下班{}",userAskForLeave_s,userAskForLeave_x);
+
                 if (userAskForLeave_s||userAskForLeave_x){
                     SigninLogCliBcDto signinLogCli = new SigninLogCliBcDto();
                     // 有请假记录,直接计为请假
@@ -509,7 +511,8 @@ public class SigninLogServiceImpl implements SigninLogService {
                 // 当前不在打卡时段，且找不到任何班次已经过去了的，直接返回全部没到就行，不用查表了
                 signinGroupDateRealResp.setKaoqingString("今日还未上班!");
                 signinGroupDateRealResp.setNumberOfChiDao(0);// 还没开始打卡，迟什么到
-                signinGroupDateRealResp.setNumberOfLeave(0);
+                signinGroupDateRealResp.setNumberOfLeave(0);// 请假后续会补上
+                Integer numberOfLeave = 0;
                 signinGroupDateRealResp.setNumberOfZaoTUi(0);
                 signinGroupDateRealResp.setNumberOfActualArrival(0);
                 List<SigninLogRealYiQianDaoDto> signinLogRealYiQianDaoDtos = new ArrayList<>();
@@ -527,11 +530,31 @@ public class SigninLogServiceImpl implements SigninLogService {
                     }else {
                         signinLogRealYiQianDaoDto.setDeptName(deptServiceById.getDeptNameAll());
                     }
+
+                    // 请假的
+                    // 以每个班次的上班时间和下班时间来看，有一个在请假就算该班次请假
+                    // 使用DateTimeFormatter解析时间字符串
+                    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+                    LocalTime sbtime = LocalTime.parse(bcTimeRule.getBcRule().getSbTime(), timeFormatter);
+                    LocalTime xbtime = LocalTime.parse(bcTimeRule.getBcRule().getXbTime(), timeFormatter);
+                    // 将LocalDate和LocalTime组合成LocalDateTime
+                    LocalDateTime sb_dateTime = now.atTime(sbtime);
+                    LocalDateTime xb_dateTime = now.atTime(xbtime);
+                    boolean userAskForLeave_s = this.getUserAskForLeave(kqUserId, sb_dateTime);
+                    boolean userAskForLeave_x = this.getUserAskForLeave(kqUserId, xb_dateTime);
+                    log.info("tag:请假-表示sb{}表示下班{}",userAskForLeave_s,userAskForLeave_x);
+
+                    if (userAskForLeave_s||userAskForLeave_x){
+                        // 这个班次用户已经请假了，直接不往后查
+                        signinLogRealYiQianDaoDto.setTag("请假");
+                        numberOfLeave+=1;
+                    }
                     signinLogRealYiQianDaoDtos.add(signinLogRealYiQianDaoDto);
                 }
                 signinGroupDateRealResp.setWeiQianDao(signinLogRealYiQianDaoDtos);// 所有人
                 signinGroupDateRealResp.setYiQianDao(new ArrayList<>());// 空
                 signinGroupDateRealResp.setNumberOfPeopleSupposedToCome(signinLogRealYiQianDaoDtos.size());//应到
+                signinGroupDateRealResp.setNumberOfLeave(numberOfLeave);
                 return signinGroupDateRealResp;
             }
             if (bcTimeRule.getState().equals(1)){
@@ -579,6 +602,7 @@ public class SigninLogServiceImpl implements SigninLogService {
                 signinGroupDateRealResp.setKaoqingString("今日还未上班!");
                 signinGroupDateRealResp.setNumberOfChiDao(0);// 还没开始打卡，迟什么到
                 signinGroupDateRealResp.setNumberOfLeave(0);
+                Integer numberOfLeave = 0;
                 signinGroupDateRealResp.setNumberOfZaoTUi(0);
                 signinGroupDateRealResp.setNumberOfActualArrival(0);
                 List<SigninLogRealYiQianDaoDto> signinLogRealYiQianDaoDtos = new ArrayList<>();
@@ -588,6 +612,7 @@ public class SigninLogServiceImpl implements SigninLogService {
                     if (byId==null){
                         continue;// 人都不存在了
                     }
+
                     signinLogRealYiQianDaoDto.setName(byId.getName());
                     signinLogRealYiQianDaoDto.setTag("缺勤");
                     SysDept deptServiceById = iSysDeptService.getById(byId.getDeptId());
@@ -596,10 +621,28 @@ public class SigninLogServiceImpl implements SigninLogService {
                     }else {
                         signinLogRealYiQianDaoDto.setDeptName(deptServiceById.getDeptNameAll());
                     }
+                    // 请假的
+                    // 以每个班次的上班时间和下班时间来看，有一个在请假就算该班次请假
+                    // 使用DateTimeFormatter解析时间字符串
+                    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+                    LocalTime sbtime = LocalTime.parse(bcTimeRule.getBcRule().getSbTime(), timeFormatter);
+                    LocalTime xbtime = LocalTime.parse(bcTimeRule.getBcRule().getXbTime(), timeFormatter);
+                    // 将LocalDate和LocalTime组合成LocalDateTime
+                    LocalDateTime sb_dateTime = now.atTime(sbtime);
+                    LocalDateTime xb_dateTime = now.atTime(xbtime);
+                    boolean userAskForLeave_s = this.getUserAskForLeave(kqUserId, sb_dateTime);
+                    boolean userAskForLeave_x = this.getUserAskForLeave(kqUserId, xb_dateTime);
+                    log.info("tag:请假-表示sb{}表示下班{}",userAskForLeave_s,userAskForLeave_x);
+                    if (userAskForLeave_s||userAskForLeave_x){
+                        // 这个班次用户已经请假了，直接不往后查
+                        signinLogRealYiQianDaoDto.setTag("请假");
+                        numberOfLeave+=1;
+                    }
                     signinLogRealYiQianDaoDtos.add(signinLogRealYiQianDaoDto);
                 }
                 signinGroupDateRealResp.setWeiQianDao(signinLogRealYiQianDaoDtos);// 所有人
                 signinGroupDateRealResp.setYiQianDao(new ArrayList<>());// 空
+                signinGroupDateRealResp.setNumberOfLeave(numberOfLeave);// 请假的真实人数
                 signinGroupDateRealResp.setNumberOfPeopleSupposedToCome(signinLogRealYiQianDaoDtos.size());//应到
             }
             if (bcTimeRule.getState().equals(1)){
@@ -743,8 +786,9 @@ public class SigninLogServiceImpl implements SigninLogService {
                 LocalDateTime xb_dateTime = now.atTime(xbtime);
                 boolean userAskForLeave_s = this.getUserAskForLeave(kqUserId, sb_dateTime);
                 boolean userAskForLeave_x = this.getUserAskForLeave(kqUserId, xb_dateTime);
+                log.info("tag:请假-表示sb{}表示下班{}",userAskForLeave_s,userAskForLeave_x);
 
-                if (userAskForLeave_s|userAskForLeave_x){
+                if (userAskForLeave_s||userAskForLeave_x){
                     // 这个班次用户已经请假了，直接不往后查
                     signinLogRealYiQianDaoDto.setTag("请假");
                     numberOfLeave+=1;
