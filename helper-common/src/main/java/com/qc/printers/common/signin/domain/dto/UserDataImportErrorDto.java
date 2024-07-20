@@ -6,7 +6,7 @@ import lombok.Data;
 import java.io.Serializable;
 
 @Data
-public class SigninUserCardDataImportErrorDto implements Serializable {
+public class UserDataImportErrorDto implements Serializable {
 
     @Excel(name = "失败ID", cellType = Excel.ColumnType.STRING, type = Excel.Type.EXPORT,prompt = "失败ID")
     private Long userId;

@@ -87,4 +87,8 @@ public interface UserService {
     UserInfoBaseExtDto approvalUserinfoExtData(String taskId);
 
     void updateUserInfoExt(Long userId, UserInfoBaseExtDto userInfoBaseExtDto);
+
+    List<User> exportAllData();
+
+    String importUserData(List<User> dataList);
 }

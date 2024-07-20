@@ -702,7 +702,7 @@ public class SigninLogServiceImpl implements SigninLogService {
 
     private void signinPushToLed(WSSigninPush wsSigninPush,Long targetId) {
         if (!signinTipMessageConfig.isEnable())return;// 一旦使用也会有初始化的过程，无需再判断其他
-        pushService.sendPushMsg(WSAdapter.buildSigninPushSend(wsSigninPush),targetId);
+        pushService.sendPushMsg(WSAdapter.buildSigninPushSend(wsSigninPush),Long.valueOf(signinTipMessageConfig.getUserId()));
 
     }
 

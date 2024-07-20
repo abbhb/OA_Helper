@@ -145,7 +145,7 @@ public class DeptServiceImpl implements DeptService {
         SysDept sysDept = iSysDeptService.getById(thisParentId);
         String sdept = "";
 
-        while (sysDept != null && sysDept.getParentId() != null && sysDept.getParentId().equals(1L)) {
+        while (sysDept != null && sysDept.getParentId() != null && !sysDept.getParentId().equals(0L)) {
             sdept = String.valueOf(sysDept.getId()) + "," + sdept;
             sysDept = iSysDeptService.getById(sysDept.getParentId());
         }

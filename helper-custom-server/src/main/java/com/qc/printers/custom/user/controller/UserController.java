@@ -9,7 +9,10 @@ import com.qc.printers.common.common.annotation.PermissionCheck;
 import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.common.utils.CASOauthUtil;
 import com.qc.printers.common.common.utils.JWTUtil;
+import com.qc.printers.common.common.utils.poi.ExcelUtil;
+import com.qc.printers.common.config.MinIoProperties;
 import com.qc.printers.common.email.service.EmailService;
+import com.qc.printers.common.signin.domain.dto.SigninUserDataExcelDto;
 import com.qc.printers.common.user.domain.dto.SummeryInfoDTO;
 import com.qc.printers.common.user.domain.dto.UserInfoBaseExtDto;
 import com.qc.printers.common.user.domain.entity.User;
@@ -33,6 +36,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
@@ -52,6 +56,8 @@ public class UserController {
 
     @Autowired
     private RoleService roleService;
+    @Autowired
+    private MinIoProperties minIoProperties;
 
     private final TrLoginService trLoginService;
     private final CASOauthUtil casOauthUtil;
@@ -392,5 +398,40 @@ public class UserController {
     @GetMapping("/approval_userinfo_ext_data/{taskId}")
     public R<UserInfoBaseExtDto> approvalUserinfoExtData(@PathVariable String taskId) {
         return R.successOnlyObject(userService.approvalUserinfoExtData(taskId));
+    }
+
+
+    @NeedToken
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:user:export")
+    @PostMapping("/export")
+    @ApiOperation(value = "导出数据", notes = "")
+    public R<String> export()
+    {
+        List<User> list = userService.exportAllData();
+        ExcelUtil<User> util = new ExcelUtil<User>(User.class,minIoProperties.getBucketName());
+        return util.exportExcel(list, "生物数据");
+    }
+
+    @NeedToken
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:user:import")
+    @PostMapping("/importData")
+    @ApiOperation(value = "导入数据", notes = "")
+    public R<String> importData(MultipartFile file) throws Exception
+    {
+        ExcelUtil<User> util = new ExcelUtil<User>(User.class,minIoProperties.getBucketName());
+        List<User> dataList = util.importExcel(file.getInputStream());
+        String s = userService.importUserData(dataList);
+        log.info("dattas{}",dataList);
+
+        return R.successOnlyObject(s);
+    }
+    @NeedToken
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:user:import")
+    @GetMapping("/importTemplate")
+    @ApiOperation(value = "导入模板", notes = "")
+    public R<String> importTemplate()
+    {
+        ExcelUtil<User> util = new ExcelUtil<User>(User.class,minIoProperties.getBucketName());
+        return util.importTemplateExcel("用户数据");
     }
 }
