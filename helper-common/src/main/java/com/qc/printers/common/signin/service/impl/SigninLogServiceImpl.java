@@ -81,6 +81,8 @@ public class SigninLogServiceImpl implements SigninLogService {
     @Autowired
     private PushService pushService;
 
+    @Autowired
+    private SigninLogAskLeaveDao signinLogAskLeaveDao;
 
     /**
      * signinImage为base64
@@ -123,10 +125,23 @@ public class SigninLogServiceImpl implements SigninLogService {
     }
 
     @Override
-    public boolean getUserAskForLeave(Long userId, LocalDate date, Long bcId, Integer bcCount) {
-
-        // 暂未实现
-        return false;
+    public boolean getUserAskForLeave(Long userId, LocalDateTime time) {
+        LambdaQueryWrapper<SigninLogAskLeave> signinLogAskLeaveLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        signinLogAskLeaveLambdaQueryWrapper.eq(SigninLogAskLeave::getUserId,userId);
+//        此处学到新东西了，两个条件要同时生效得and，默认是or
+        signinLogAskLeaveLambdaQueryWrapper
+                .eq(SigninLogAskLeave::getUserId, userId)
+                .and(wrapper ->
+                        wrapper.ge(SigninLogAskLeave::getStartTime, time)
+                                .le(SigninLogAskLeave::getEndTime, time)
+                );
+        int count = signinLogAskLeaveDao.count(signinLogAskLeaveLambdaQueryWrapper);
+        if (count<1){
+            // 这个用户在这个时间没有请假
+            return false;
+        }
+        // 绝对有请假
+        return true;
     }
 
     /**
@@ -230,8 +245,20 @@ public class SigninLogServiceImpl implements SigninLogService {
                 // 几个班次就到几
 
                 //[fix:也不一定，说不定有傻逼请假了也来打卡，还迟到早退] 直接一开始就排除请假的
-                boolean userAskForLeave = this.getUserAskForLeave(userId, date, signinBc.getId(), i);
-                if (userAskForLeave){
+                // 以每个班次的上班时间和下班时间来看，有一个在请假就算该班次请假
+                BcRule bcRule = signinBc.getRules().get(i - 1);
+                // 使用DateTimeFormatter解析时间字符串
+                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+                LocalTime sbtime = LocalTime.parse(bcRule.getSbTime(), timeFormatter);
+                LocalTime xbtime = LocalTime.parse(bcRule.getXbTime(), timeFormatter);
+                // 将LocalDate和LocalTime组合成LocalDateTime
+                LocalDateTime sb_dateTime = date.atTime(sbtime);
+                LocalDateTime xb_dateTime = date.atTime(xbtime);
+
+
+                boolean userAskForLeave_s = this.getUserAskForLeave(userId, sb_dateTime);
+                boolean userAskForLeave_x = this.getUserAskForLeave(userId, xb_dateTime);
+                if (userAskForLeave_s||userAskForLeave_x){
                     SigninLogCliBcDto signinLogCli = new SigninLogCliBcDto();
                     // 有请假记录,直接计为请假
                     signinLogCli.setState(4);
@@ -706,8 +733,18 @@ public class SigninLogServiceImpl implements SigninLogService {
                     signinLogRealYiQianDaoDto.setDeptName(deptServiceById.getDeptNameAll());
                 }
                 // 先排除掉请假的
-                boolean userAskForLeave = this.getUserAskForLeave(kqUserId, now, signinBc.getId(), bcTimeRule.getBcRule().getCount());
-                if (userAskForLeave){
+                // 以每个班次的上班时间和下班时间来看，有一个在请假就算该班次请假
+                // 使用DateTimeFormatter解析时间字符串
+                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+                LocalTime sbtime = LocalTime.parse(bcTimeRule.getBcRule().getSbTime(), timeFormatter);
+                LocalTime xbtime = LocalTime.parse(bcTimeRule.getBcRule().getXbTime(), timeFormatter);
+                // 将LocalDate和LocalTime组合成LocalDateTime
+                LocalDateTime sb_dateTime = now.atTime(sbtime);
+                LocalDateTime xb_dateTime = now.atTime(xbtime);
+                boolean userAskForLeave_s = this.getUserAskForLeave(kqUserId, sb_dateTime);
+                boolean userAskForLeave_x = this.getUserAskForLeave(kqUserId, xb_dateTime);
+
+                if (userAskForLeave_s|userAskForLeave_x){
                     // 这个班次用户已经请假了，直接不往后查
                     signinLogRealYiQianDaoDto.setTag("请假");
                     numberOfLeave+=1;
@@ -771,8 +808,19 @@ public class SigninLogServiceImpl implements SigninLogService {
                     signinLogRealYiQianDaoDto.setDeptName(deptServiceById.getDeptNameAll());
                 }
                 // 先排除掉请假的
-                boolean userAskForLeave = this.getUserAskForLeave(kqUserId, now, signinBc.getId(), bcTimeRule.getBcRule().getCount());
-                if (userAskForLeave){
+                // 以每个班次的上班时间和下班时间来看，有一个在请假就算该班次请假
+                // 使用DateTimeFormatter解析时间字符串
+                DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+                LocalTime sbtime = LocalTime.parse(bcTimeRule.getBcRule().getSbTime(), timeFormatter);
+                LocalTime xbtime = LocalTime.parse(bcTimeRule.getBcRule().getXbTime(), timeFormatter);
+                // 将LocalDate和LocalTime组合成LocalDateTime
+                LocalDateTime sb_dateTime = now.atTime(sbtime);
+                LocalDateTime xb_dateTime = now.atTime(xbtime);
+
+
+                boolean userAskForLeave_s = this.getUserAskForLeave(kqUserId, sb_dateTime);
+                boolean userAskForLeave_x = this.getUserAskForLeave(kqUserId, xb_dateTime);
+                if (userAskForLeave_s||userAskForLeave_x){
                     // 这个班次用户已经请假了，直接不往后查
                     signinLogRealYiQianDaoDto.setTag("请假");
                     numberOfLeave+=1;

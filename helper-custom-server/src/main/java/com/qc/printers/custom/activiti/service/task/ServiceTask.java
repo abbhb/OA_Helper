@@ -2,7 +2,9 @@ package com.qc.printers.custom.activiti.service.task;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
+import com.qc.printers.common.signin.domain.entity.SigninLogAskLeave;
 import com.qc.printers.common.signin.domain.resp.FaceFileResp;
+import com.qc.printers.common.signin.service.SigninLogAskLeaveService;
 import com.qc.printers.common.signin.service.SigninUserDataMangerService;
 import com.qc.printers.common.user.domain.dto.UserInfoBaseExtDto;
 import com.qc.printers.custom.user.service.UserService;
@@ -14,6 +16,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,9 +30,31 @@ public class ServiceTask {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private SigninLogAskLeaveService signinLogAskLeaveService;
+
     public void hello(String initiator) {
         System.out.println("===myBean执行====");
         System.out.println("你好：" + initiator);//打印   你好：中国
+    }
+
+
+    @Transactional
+    public void askLeaveisqingjia(DelegateExecution execution) {
+        System.out.println("===myBean执行====");
+        String initiator = (String) execution.getVariable("initiator");
+        String qishiriqi = (String) execution.getVariable("date90842");
+        String jiezhiriqi = (String) execution.getVariable("date29019");
+        String qishishijian = (String) execution.getVariable("time88479");
+        String jiezhishijian = (String) execution.getVariable("time23031");
+        System.out.println("你好：" + initiator);//打印   你好：中国
+        // initiator为发起人
+        String qishi = qishiriqi + " " + qishishijian;
+        String jiezhi = jiezhiriqi + " " + jiezhishijian;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+        LocalDateTime start_ = LocalDateTime.parse(qishi, formatter);
+        LocalDateTime end_ = LocalDateTime.parse(jiezhi, formatter);
+        signinLogAskLeaveService.addAskLeave(new SigninLogAskLeave(Long.valueOf(initiator),start_,end_));
     }
 
     /**
