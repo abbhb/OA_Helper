@@ -65,6 +65,7 @@ public class JWTUtil {
      * 先验证token是否被伪造，然后解码token。
      * @param token 字符串token
      * @return 解密后的DecodedJWT对象，可以读取token中的数据。
+     * 对某些token不适用，不建议用在全局校验登录，比如推送服务，token是随机字符串
      */
     public static DecodedJWT deToken(String token) {
         DecodedJWT jwt = null;

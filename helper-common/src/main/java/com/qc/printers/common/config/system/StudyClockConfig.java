@@ -1,4 +1,4 @@
-package com.qc.printers.common.config;
+package com.qc.printers.common.config.system;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;

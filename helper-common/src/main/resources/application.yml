@@ -115,6 +115,9 @@ chatai:
 system-message:
   userId: 10011
   roomId: 2
+system-tip-message:
+  userId: 10012
+  enable: true
 my-consul:
   ip: ${helper.consul.ip}
   port: ${helper.consul.port}

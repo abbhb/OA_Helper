@@ -18,7 +18,6 @@ import com.qc.printers.common.common.domain.vo.response.CursorPageBaseResp;
 import com.qc.printers.common.common.domain.vo.response.PageBaseResp;
 import com.qc.printers.common.common.event.UserApplyEvent;
 import com.qc.printers.common.common.utils.AssertUtil;
-import com.qc.printers.common.config.SystemMessageConfig;
 import com.qc.printers.common.user.dao.UserApplyDao;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.dao.UserFriendDao;

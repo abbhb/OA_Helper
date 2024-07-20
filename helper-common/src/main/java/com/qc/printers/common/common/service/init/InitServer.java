@@ -5,14 +5,18 @@ import com.qc.printers.common.chat.dao.RoomDao;
 import com.qc.printers.common.chat.domain.entity.Room;
 import com.qc.printers.common.chat.domain.enums.HotFlagEnum;
 import com.qc.printers.common.chat.service.cache.HotRoomCache;
+import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.MyString;
 import com.qc.printers.common.common.annotation.RedissonLock;
 import com.qc.printers.common.common.service.CommonConfigService;
 import com.qc.printers.common.common.utils.RSAUtil;
 import com.qc.printers.common.common.utils.RedisUtils;
+import com.qc.printers.common.config.system.signin.SigninTipMessageConfig;
 import com.qc.printers.common.oauth.dao.SysOauthDao;
 import com.qc.printers.common.oauth.domain.entity.SysOauth;
 import com.qc.printers.common.oauth.service.OauthOpenidService;
+import com.qc.printers.common.user.dao.UserDao;
+import com.qc.printers.common.user.domain.entity.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -37,6 +41,12 @@ public class InitServer {
 
     @Autowired
     private SysOauthDao sysOauthDao;
+
+    @Autowired
+    private UserDao userDao;
+
+    @Autowired
+    private SigninTipMessageConfig signinTipMessageConfig;
 
     private void commonConfigRedis() {
         //缓存公共配置
@@ -78,6 +88,16 @@ public class InitServer {
         RedisUtils.set(MyString.oauth_client_init_time, now);
     }
 
+    private void initSigninWs(){
+        // 先判断是否启用了
+        if (!signinTipMessageConfig.isEnable())return;
+        String userId = signinTipMessageConfig.getUserId();
+        User user = userDao.getById(Long.valueOf(userId));
+        if (user==null)throw new CustomException("打卡消息推送用户异常，请检查或关闭该服务!");
+        // 创建一个该用户的永久登录的token
+        RedisUtils.set("SIGNIN-TUISONG-LED-10012-01", userId);// 尝试设置，当存在也不会异常，存在try catch
+
+    }
     public void init() {
         System.out.println("初始化服务");
         System.out.println("RSA初始化");
@@ -88,6 +108,8 @@ public class InitServer {
         initChatRoomRedis();
         System.out.println("初始化oauth-openid-max缓存");
         initOauthOpenidMaxsRedis();
+        System.out.println("初始化大屏推送服务");
+        initSigninWs();
 
     }
 }

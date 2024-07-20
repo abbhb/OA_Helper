@@ -29,6 +29,7 @@ public enum WSRespTypeEnum {
     RECALL(9, "消息撤回", WSMsgRecall.class),
     APPLY(10, "好友申请", WSFriendApply.class),
     MEMBER_CHANGE(11, "成员变动", WSMemberChange.class),
+    SIGNIN_PUSH(12, "签到服务推送给大屏，其他业务暂时不会受到此消息！", WSSigninPush.class),
     ;
 
     private static Map<Integer, WSRespTypeEnum> cache;
