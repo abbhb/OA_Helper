@@ -110,6 +110,13 @@ public class WSAdapter {
         return wsBaseResp;
     }
 
+  public static WSBaseResp<WSSigninPush> buildSigninPushSend(WSSigninPush resp) {
+        WSBaseResp<WSSigninPush> wsBaseResp = new WSBaseResp<>();
+        wsBaseResp.setType(WSRespTypeEnum.SIGNIN_PUSH.getType());
+        wsBaseResp.setData(resp);
+        return wsBaseResp;
+    }
+
     public WSBaseResp<WSOnlineOfflineNotify> buildOnlineNotifyResp(User user) {
         WSBaseResp<WSOnlineOfflineNotify> wsBaseResp = new WSBaseResp<>();
         wsBaseResp.setType(WSRespTypeEnum.ONLINE_OFFLINE_NOTIFY.getType());

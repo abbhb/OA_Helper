@@ -38,7 +38,7 @@ public class SigninLogController {
     /**
      * 签到机记录接口
      * 返回值带额外信息
-     * 目前id卡在u用
+     * 2024-07-20 添加大屏推送服务
      * @return
      */
     @PostMapping("/add_log_device_plus")

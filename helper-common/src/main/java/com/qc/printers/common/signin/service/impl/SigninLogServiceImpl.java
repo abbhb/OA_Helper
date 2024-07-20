@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.MyString;
 import com.qc.printers.common.common.utils.oss.OssDBUtil;
+import com.qc.printers.common.config.system.signin.SigninTipMessageConfig;
 import com.qc.printers.common.signin.dao.*;
 import com.qc.printers.common.signin.domain.dto.SigninBcTimeRuleDto;
 import com.qc.printers.common.signin.domain.dto.SigninGroupDateUserDto;
@@ -23,7 +24,11 @@ import com.qc.printers.common.user.dao.UserExtBaseDao;
 import com.qc.printers.common.user.domain.entity.SysDept;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.domain.entity.UserExtBase;
+import com.qc.printers.common.user.domain.vo.response.ws.WSFriendApply;
+import com.qc.printers.common.user.domain.vo.response.ws.WSSigninPush;
 import com.qc.printers.common.user.service.ISysDeptService;
+import com.qc.printers.common.user.service.adapter.WSAdapter;
+import com.qc.printers.common.user.service.impl.PushService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -67,9 +72,14 @@ public class SigninLogServiceImpl implements SigninLogService {
 
     @Autowired
     private UserExtBaseDao userExtBaseDao;
-
     @Autowired
     private SigninDeviceMangerService signinDeviceMangerService;
+
+
+    @Autowired
+    private SigninTipMessageConfig signinTipMessageConfig;
+    @Autowired
+    private PushService pushService;
 
 
     /**
@@ -645,18 +655,28 @@ public class SigninLogServiceImpl implements SigninLogService {
             LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
             userLambdaQueryWrapper.eq(User::getStudentId, signinLog.getStudentId());
             User one = userDao.getOne(userLambdaQueryWrapper);
-            UserExtBase userExtBase = userExtBaseDao.getById(one.getId());
             addLogExtInfo.setAvatarUrl(OssDBUtil.toUseUrl(one.getAvatar()));
+            SysDept sysDept = iSysDeptService.getById(one.getDeptId());
+            addLogExtInfo.setDeptName(sysDept.getDeptNameAll());
+            UserExtBase userExtBase = userExtBaseDao.getById(one.getId());
             if (userExtBase!=null&&StringUtils.isNotEmpty(userExtBase.getIdPhoto())){
                 addLogExtInfo.setAvatarUrl(OssDBUtil.toUseUrl(userExtBase.getIdPhoto()));
             }
-            SysDept sysDept = iSysDeptService.getById(one.getDeptId());
-            addLogExtInfo.setDeptName(sysDept.getDeptNameAll());
-
+            WSSigninPush wsSigninPush = new WSSigninPush(addLogExtInfo.getAvatarUrl(), addLogExtInfo.getDeptName(), one.getStudentId(), one.getName());
+            if (userExtBase!=null&&StringUtils.isNotEmpty(userExtBase.getZsxm())){
+                wsSigninPush.setName(userExtBase.getZsxm());
+            }
+            signinPushToLed(wsSigninPush,one.getId());
         }catch (Exception e){
             log.error(e.getMessage());
         }
         return addLogExtInfo;
+    }
+
+    private void signinPushToLed(WSSigninPush wsSigninPush,Long targetId) {
+        if (!signinTipMessageConfig.isEnable())return;// 一旦使用也会有初始化的过程，无需再判断其他
+        pushService.sendPushMsg(WSAdapter.buildSigninPushSend(wsSigninPush),targetId);
+
     }
 
     private void extracted(SigninGroupDateRealResp signinGroupDateRealResp, LocalDate now, List<Long> kqUserIds, SigninBc signinBc, SigninBcTimeRuleDto bcTimeRule) {

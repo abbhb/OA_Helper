@@ -9,7 +9,7 @@ import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
-import com.qc.printers.common.config.StudyClockConfig;
+import com.qc.printers.common.config.system.StudyClockConfig;
 import com.qc.printers.common.study.domain.entity.StudyClock;
 import com.qc.printers.common.study.mapper.StudyClockMapper;
 import com.qc.printers.common.study.service.IStudyClockService;

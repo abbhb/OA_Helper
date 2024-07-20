@@ -5,7 +5,7 @@ import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.service.CommonService;
 import com.qc.printers.common.common.utils.RSAUtil;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
-import com.qc.printers.common.config.SystemMessageConfig;
+import com.qc.printers.common.config.system.SystemMessageConfig;
 import com.qc.printers.common.confirm.service.SysConfirmService;
 import com.qc.printers.custom.common.domain.entity.UploadFileResp;
 import io.swagger.annotations.Api;
