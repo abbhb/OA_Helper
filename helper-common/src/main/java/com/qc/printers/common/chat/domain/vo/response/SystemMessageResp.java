@@ -16,7 +16,7 @@ public class SystemMessageResp implements Serializable {
      */
     private Boolean read;
 
-
+    private Long id;
     /**
      * 通知的创建时间
      */

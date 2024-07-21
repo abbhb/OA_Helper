@@ -17,5 +17,5 @@ public class SystemMessageConfirm implements Serializable {
 
     private Long systemMessageId;
 
-    private Integer read;
+    private Integer readType;
 }

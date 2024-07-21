@@ -15,7 +15,6 @@ import com.qc.printers.common.common.utils.oss.OssDBUtil;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.User;
-import com.qc.printers.common.user.service.cache.UserCache;
 import com.qc.printers.custom.chat.service.SystemMessageService;
 import lombok.extern.slf4j.Slf4j;
 import org.jetbrains.annotations.NotNull;
@@ -62,7 +61,7 @@ public class SystemMessageServiceImpl implements SystemMessageService {
                 result.add(systemMessageResp);
                 continue;
             }
-            if (collect.get(systemMessage.getId()).getRead().equals(2)){
+            if (collect.get(systemMessage.getId()).getReadType().equals(2)){
                 // 标记已读并删除了
                 continue;
             }
@@ -86,7 +85,7 @@ public class SystemMessageServiceImpl implements SystemMessageService {
             LambdaQueryWrapper<SystemMessageConfirm> systemMessageConfirmLambdaQueryWrapper = new LambdaQueryWrapper<>();
             systemMessageConfirmLambdaQueryWrapper.eq(SystemMessageConfirm::getUserId,currentUser.getId());
             systemMessageConfirmLambdaQueryWrapper.eq(SystemMessageConfirm::getSystemMessageId,systemMessage.getId());
-            systemMessageConfirmLambdaQueryWrapper.eq(SystemMessageConfirm::getRead,1).or().eq(SystemMessageConfirm::getRead,2);
+            systemMessageConfirmLambdaQueryWrapper.eq(SystemMessageConfirm::getReadType,1).or().eq(SystemMessageConfirm::getReadType,2);
             if (systemMessageConfirmDao.count(systemMessageConfirmLambdaQueryWrapper)<1){
                 tiaoshu+=1;
             }
@@ -104,17 +103,17 @@ public class SystemMessageServiceImpl implements SystemMessageService {
         if (one==null){
             one = new SystemMessageConfirm();
             one.setSystemMessageId(id);
-            one.setRead(type);
+            one.setReadType(type);
             one.setUserId(currentUser.getId());
             systemMessageConfirmDao.save(one);
             if (type.equals(2))return "删除成功";
             return "已读成功";
         }
-        if (one.getRead().equals(2)){
+        if (one.getReadType().equals(2)){
             // 此时已经删除
             return "已经删除";
         }
-        one.setRead(type);
+        one.setReadType(type);
         systemMessageConfirmDao.updateById(one);
         return "操作成功";
     }
