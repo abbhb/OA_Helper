@@ -56,6 +56,8 @@ public class BcRule implements Serializable {
      */
     @ApiModelProperty("暂时不生效，该配置，不支持跨日")
     private Integer ciRi;
+
+    private Boolean lianban;// 下一班次的上班免打卡
     /**
      * 下班是否需要打卡
      * 暂时必须打卡

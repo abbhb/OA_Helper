@@ -63,6 +63,7 @@ public class SigninBcServiceImpl implements SigninBcService {
                     throw new CustomException("仅允许最后一班下班时间到次日");
                 }
             }
+
             lastRule = rule;
         }
     }
