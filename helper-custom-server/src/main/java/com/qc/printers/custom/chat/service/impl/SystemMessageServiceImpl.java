@@ -86,7 +86,9 @@ public class SystemMessageServiceImpl implements SystemMessageService {
             LambdaQueryWrapper<SystemMessageConfirm> systemMessageConfirmLambdaQueryWrapper = new LambdaQueryWrapper<>();
             systemMessageConfirmLambdaQueryWrapper.eq(SystemMessageConfirm::getUserId,currentUser.getId());
             systemMessageConfirmLambdaQueryWrapper.eq(SystemMessageConfirm::getSystemMessageId,systemMessage.getId());
-            systemMessageConfirmLambdaQueryWrapper.eq(SystemMessageConfirm::getReadType,1).or().eq(SystemMessageConfirm::getReadType,2);
+            systemMessageConfirmLambdaQueryWrapper.eq(SystemMessageConfirm::getReadType,1).or(lambda ->{
+                lambda.eq(SystemMessageConfirm::getReadType,2);
+            });
             if (systemMessageConfirmDao.count(systemMessageConfirmLambdaQueryWrapper)<1){
                 tiaoshu+=1;
             }
