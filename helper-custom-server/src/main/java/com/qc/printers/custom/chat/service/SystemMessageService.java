@@ -10,4 +10,6 @@ public interface SystemMessageService {
     Integer noreadCount();
 
     String read(Long id,Integer type);
+
+    String readBatch(List<Long> ids, Integer type);
 }

@@ -1,6 +1,7 @@
 package com.qc.printers.custom.chat.controller;
 
 import com.qc.printers.common.chat.domain.vo.request.ChatMessagePageReq;
+import com.qc.printers.common.chat.domain.vo.request.SystemMessageConfirmReq;
 import com.qc.printers.common.chat.domain.vo.response.ChatMessageResp;
 import com.qc.printers.common.chat.domain.vo.response.SystemMessageResp;
 import com.qc.printers.common.common.R;
@@ -58,6 +59,15 @@ public class SystemMessageController {
     @ApiOperation("阅读上报-阅读和阅读并删除")
     public R<String> read(@PathVariable Long id,@PathVariable Integer type) {
         return R.success(systemMessageService.read(id,type));
+    }
+
+
+    @CrossOrigin("*")
+    @NeedToken
+    @PostMapping("/readbatch/{type}")
+    @ApiOperation("阅读上报-阅读和阅读并删除")
+    public R<String> read(@Valid @RequestBody SystemMessageConfirmReq data, @PathVariable Integer type) {
+        return R.success(systemMessageService.readBatch(data.getIds(),type));
     }
 
 
