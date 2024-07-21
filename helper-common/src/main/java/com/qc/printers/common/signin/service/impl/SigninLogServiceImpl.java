@@ -132,8 +132,8 @@ public class SigninLogServiceImpl implements SigninLogService {
         signinLogAskLeaveLambdaQueryWrapper
                 .eq(SigninLogAskLeave::getUserId, userId)
                 .and(wrapper ->
-                        wrapper.ge(SigninLogAskLeave::getStartTime, time)
-                                .le(SigninLogAskLeave::getEndTime, time)
+                        wrapper.le(SigninLogAskLeave::getStartTime, time)
+                                .ge(SigninLogAskLeave::getEndTime, time)
                 );
         int count = signinLogAskLeaveDao.count(signinLogAskLeaveLambdaQueryWrapper);
         if (count<1){
