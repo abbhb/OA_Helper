@@ -14,6 +14,7 @@ import com.qc.printers.common.user.service.cache.UserCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Date;
 import java.util.Objects;
@@ -65,6 +66,7 @@ public class RecallMsgHandler extends AbstractMsgHandler {
         return "原消息已被撤回";
     }
 
+    @Transactional
     public void recall(Long recallUid, Message message) {//todo 消息覆盖问题用版本号解决
         MessageExtra extra = message.getExtra();
         extra.setRecall(new MsgRecall(recallUid, new Date()));

@@ -5,6 +5,7 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.date.DateUnit;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.lang.Pair;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.qc.printers.common.chat.dao.*;
 import com.qc.printers.common.chat.domain.dto.MsgReadInfoDTO;
 import com.qc.printers.common.chat.domain.entity.*;
@@ -52,6 +53,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import javax.annotation.Nullable;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.function.Function;
@@ -106,6 +108,12 @@ public class ChatServiceImpl implements ChatService {
     @Autowired
     private SystemMessageConfig systemMessageConfig;
 
+    @Autowired
+    private SystemMessageDao systemMessageDao;
+
+    @Autowired
+    private SystemMessageConfirmDao systemMessageConfirmDao;
+
     /**
      * 发送消息
      */
@@ -115,13 +123,26 @@ public class ChatServiceImpl implements ChatService {
         check(request, uid);
         AbstractMsgHandler msgHandler = MsgHandlerFactory.getStrategyNoNull(request.getMsgType());//todo 这里先不扩展，后续再改
         msgHandler.checkMsg(request, uid);
-        //同步获取消息的跳转链接标题
+        // 同步获取消息的跳转链接标题
         Message insert = MessageAdapter.buildMsgSave(request, uid);
         messageDao.save(insert);
         msgHandler.saveMsg(insert, request);
-        //发布消息发送事件
+        // 如果是系统消息需要往另一张表里存
+        checkAndSendSystemMessage(insert,request);
+        // 发布消息发送事件
         applicationEventPublisher.publishEvent(new MessageSendEvent(this, insert.getId()));
         return insert.getId();
+    }
+
+    @Transactional
+    public void checkAndSendSystemMessage(Message insert, ChatMessageReq request) {
+        if (!insert.getFromUid().equals(Long.valueOf(systemMessageConfig.getUserId()))||!insert.getRoomId().equals(Long.valueOf(systemMessageConfig.getRoomId()))) return;
+        // 只有房间号和uid都对的上系统消息才算系统消息
+        LambdaQueryWrapper<SystemMessage> systemMessageLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        systemMessageLambdaQueryWrapper.eq(SystemMessage::getMsgId,insert.getId());
+        int count = systemMessageDao.count(systemMessageLambdaQueryWrapper);
+        if (count>0)return;// 这条消息已经出现过
+        systemMessageDao.save(SystemMessage.builder().msgId(insert.getId()).createUser(insert.getFromUid()).createTime(LocalDateTime.now()).build());
     }
 
     private void check(ChatMessageReq request, Long uid) {
@@ -241,13 +262,30 @@ public class ChatServiceImpl implements ChatService {
         }
     }
 
+    @Transactional
     @Override
     public void recallMsg(Long uid, ChatMessageBaseReq request) {
         Message message = messageDao.getById(request.getMsgId());
         //校验能不能执行撤回
         checkRecall(uid, message);
+        // 如果是系统消息需要撤回系统消息通知
+        checkAndRecallSystemMessage(message);
         //执行消息撤回
         recallMsgHandler.recall(uid, message);
+    }
+
+    @Transactional
+    public void checkAndRecallSystemMessage(Message message) {
+        if (!message.getFromUid().equals(Long.valueOf(systemMessageConfig.getUserId()))||!message.getRoomId().equals(Long.valueOf(systemMessageConfig.getRoomId()))) return;
+        // 只有房间号和uid都对的上系统消息才算系统消息
+        LambdaQueryWrapper<SystemMessage> systemMessageLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        systemMessageLambdaQueryWrapper.eq(SystemMessage::getMsgId,message.getId());
+        int count = systemMessageDao.count(systemMessageLambdaQueryWrapper);
+        if (count==0)return;// 这条消息本身就不存在
+        LambdaQueryWrapper<SystemMessage> systemMessageLambdaQueryWrapper1 = new LambdaQueryWrapper<>();
+        systemMessageLambdaQueryWrapper1.eq(SystemMessage::getMsgId,message.getId());
+        systemMessageDao.remove(systemMessageLambdaQueryWrapper1);
+
     }
 
     @Override

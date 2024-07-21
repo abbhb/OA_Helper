@@ -48,6 +48,20 @@ public class MessageAdapter {
                 .collect(Collectors.toList());
     }
 
+    public static ChatMessageResp buildChatMessageResp(Message message) {
+        ChatMessageResp messageVO = new ChatMessageResp();
+        ChatMessageResp.Message messagevo = new ChatMessageResp.Message();
+        messagevo.setMessageMark(null);
+        messagevo.setType(message.getType());
+        messagevo.setId(String.valueOf(message.getId()));
+        messagevo.setSendTime(Date.from(message.getCreateTime().atZone(ZoneId.systemDefault()).toInstant()));
+        AbstractMsgHandler msgHandler = MsgHandlerFactory.getStrategyNoNull(message.getType());
+        if (Objects.nonNull(msgHandler)) {
+            messagevo.setBody(msgHandler.showMsg(message));
+        }
+        messageVO.setMessage(messagevo);
+        return messageVO;
+    }
     private static ChatMessageResp.Message buildMessage(Message message, Map<Long, Message> replyMap, List<MessageMark> marks, Long receiveUid) {
         ChatMessageResp.Message messageVO = new ChatMessageResp.Message();
         BeanUtil.copyProperties(message, messageVO);
