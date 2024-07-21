@@ -130,6 +130,7 @@ public class SystemMessageServiceImpl implements SystemMessageService {
         User user = userDao.getById(systemMessage.getCreateUser());
         systemMessageResp.setUsername(user.getName());
         systemMessageResp.setAvatar(OssDBUtil.toUseUrl(user.getAvatar()));
+        systemMessageResp.setId(systemMessage.getId());
         return systemMessageResp;
     }
 }
