@@ -36,6 +36,7 @@ import com.qc.printers.custom.user.domain.dto.LoginDTO;
 import com.qc.printers.custom.user.domain.vo.request.LoginByEmailCodeReq;
 import com.qc.printers.custom.user.domain.vo.request.PasswordByOneTimeCodeReq;
 import com.qc.printers.custom.user.domain.vo.request.PasswordR;
+import com.qc.printers.custom.user.domain.vo.request.ResetReq;
 import com.qc.printers.custom.user.domain.vo.response.*;
 import com.qc.printers.common.user.domain.dto.DeptManger;
 import com.qc.printers.custom.user.service.DeptService;
@@ -1494,5 +1495,17 @@ public class UserServiceImpl implements UserService {
             return util.exportExcel(errorData, "失败数据").getData();
         }
         return "";
+    }
+    @Transactional
+    @Override
+    public ResetResp resetPassword(ResetReq resetReq) {
+        User byId = userDao.getById(resetReq.getUserId());
+        String salt = PWDMD5.getSalt();
+        String newpassword = PWDMD5.StrongPasswordGenerator.generateStrongPassword(8);
+        String md5Encryption = PWDMD5.getMD5Encryption(newpassword, salt);
+        byId.setPassword(md5Encryption);
+        byId.setSalt(salt);
+        userDao.updateById(byId);
+        return ResetResp.builder().newPassword(newpassword).build();
     }
 }

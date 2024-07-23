@@ -13,6 +13,7 @@ import com.qc.printers.custom.user.domain.dto.LoginDTO;
 import com.qc.printers.custom.user.domain.vo.request.LoginByEmailCodeReq;
 import com.qc.printers.custom.user.domain.vo.request.PasswordByOneTimeCodeReq;
 import com.qc.printers.custom.user.domain.vo.request.PasswordR;
+import com.qc.printers.custom.user.domain.vo.request.ResetReq;
 import com.qc.printers.custom.user.domain.vo.response.*;
 
 import java.util.List;
@@ -91,4 +92,6 @@ public interface UserService {
     List<User> exportAllData();
 
     String importUserData(List<User> dataList);
+
+    ResetResp resetPassword(ResetReq resetReq);
 }

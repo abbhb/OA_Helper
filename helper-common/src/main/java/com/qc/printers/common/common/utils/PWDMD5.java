@@ -4,7 +4,10 @@ import org.springframework.util.DigestUtils;
 
 import java.nio.charset.StandardCharsets;
 import java.util.Random;
-
+import java.security.SecureRandom;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 public class PWDMD5 {
 
     // 固定随机盐
@@ -46,5 +49,43 @@ public class PWDMD5 {
             stringBuffer.append(str.charAt(number));
         }
         return stringBuffer.toString();
+    }
+
+
+
+    public class StrongPasswordGenerator {
+        public static String generateStrongPassword(int length) {
+            String upperCase = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+            String lowerCase = "abcdefghijklmnopqrstuvwxyz";
+            String numbers = "0123456789";
+            String specialChars = "!@#$%^&*()_+";
+
+            String allChars = upperCase + lowerCase + numbers + specialChars;
+            SecureRandom random = new SecureRandom();
+
+            List<Character> passwordChars = new ArrayList<>();
+
+            // 确保密码中至少包含一个上字符、小写字母、数字和特殊字符
+            passwordChars.add(upperCase.charAt(random.nextInt(upperCase.length())));
+            passwordChars.add(lowerCase.charAt(random.nextInt(lowerCase.length())));
+            passwordChars.add(numbers.charAt(random.nextInt(numbers.length())));
+            passwordChars.add(specialChars.charAt(random.nextInt(specialChars.length())));
+
+            // 随机选择剩余字符
+            for (int i = 4; i < length; i++) {
+                passwordChars.add(allChars.charAt(random.nextInt(allChars.length())));
+            }
+
+            // 打乱字符顺序
+            Collections.shuffle(passwordChars);
+
+            // 将字符列表转换为字符串
+            StringBuilder password = new StringBuilder();
+            for (Character c : passwordChars) {
+                password.append(c);
+            }
+
+            return password.toString();
+        }
     }
 }

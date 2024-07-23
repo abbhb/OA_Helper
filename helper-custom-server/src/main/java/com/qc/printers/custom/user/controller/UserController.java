@@ -121,6 +121,17 @@ public class UserController {
          */
         return R.success(userService.emailRegister(registerEmailRes.getEmail(), registerEmailRes.getPassword()));
     }
+    @PostMapping("/reset_password")
+    @NeedToken
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:user:reset")
+    @ApiOperation(value = "重置密码", notes = "")
+    public R<ResetResp> resetPassword(@RequestBody ResetReq resetReq) {
+        /**
+         * 直接注册就行，校验邮箱验证码通过验证码通用注解
+         */
+        return R.success(userService.resetPassword(resetReq));
+    }
+
 
     @PostMapping("/login_by_email_code")
     @CheckVailCode(key = "#loginByEmailCodeReq.email", value = "#loginByEmailCodeReq.emailCode", type = VailType.EMAIL)
