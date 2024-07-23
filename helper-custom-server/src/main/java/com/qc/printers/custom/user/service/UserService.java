@@ -40,7 +40,7 @@ public interface UserService {
 
     R<String> updateUser(String userid, String name, String username, String phone, String idNumber, String status, String grouping, String sex, String token);
 
-    PageData<UserResult> getUserList(User ua,Integer pageNum, Integer pageSize, String name, Integer cascade, Long deptId);
+    PageData<UserResult> getUserList(User ua,Integer pageNum, Integer pageSize, String name, Integer mustHaveStudentId, Integer cascade, Long deptId);
 
     R<String> deleteUsers(String id);
 
