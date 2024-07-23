@@ -1,5 +1,7 @@
 package com.qc.printers.common.vailcode.utils;
 
+import com.qc.printers.common.common.CustomException;
+import com.qc.printers.common.common.utils.ResourceUtil;
 import com.qc.printers.common.vailcode.domain.entity.Captcha;
 import org.apache.commons.lang.math.RandomUtils;
 
@@ -8,6 +10,7 @@ import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URL;
 import java.util.Base64;
 import java.util.Objects;
@@ -67,46 +70,12 @@ public class CaptchaUtils {
      **/
     public static BufferedImage getBufferedImage(Integer place) {
         try {
-            /*//随机图片
-
-            //获取本地图片
-            else {
-                String imgPath = String.format(IMG_PATH, nonce);
-                File file = new File(imgPath);
-                return ImageIO.read(file);
-            }*/
-            // todo:fix network error
-//            BufferedImage image = new BufferedImage(1080, 720, BufferedImage.TYPE_INT_BGR);
-//            Graphics2D graphics = image.createGraphics();
-//            graphics.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
-//            //设置字体
-//            Font font = new Font("黑体", Font.PLAIN, 60);
-//            graphics.setFont(font);
-//            //设置颜色
-//            graphics.setColor(Color.WHITE);
-//            //向画板上写字
-//            graphics.drawString(RandomChinese.getRandomChineseLen(17), 35, 100);
-//            graphics.drawString(RandomChinese.getRandomChineseLen(17), 35, 200);
-//            graphics.drawString(RandomChinese.getRandomChineseLen(17), 35, 300);
-//            graphics.drawString(RandomChinese.getRandomChineseLen(17), 35, 400);
-//            graphics.drawString(RandomChinese.getRandomChineseLen(17), 35, 500);
-//            graphics.drawString(RandomChinese.getRandomChineseLen(17), 35, 600);
-//            graphics.drawString(RandomChinese.getRandomChineseLen(17), 35, 700);
-//            //释放资源
-//            graphics.dispose();
-            // 判断网络
-            int nonce = getNonceByRange(0, 1000);
-            //获取网络资源图片
-            if (0 == place) {
-                String imgUrl = String.format(IMG_URL, nonce);
-                URL url = new URL(imgUrl);
-                return ImageIO.read(url.openStream());
-            }
-            return null;
+            ResourceUtil resourceUtil = new ResourceUtil();
+            InputStream randomCaptchaImageResource = resourceUtil.getRandomCaptchaImageResource();
+            return ImageIO.read(randomCaptchaImageResource);
         } catch (Exception e) {
-            System.out.println("获取拼图资源失败");
             //异常处理
-            return null;
+            throw new CustomException("验证码拼图资源获取失败,请联系运维修复!");
         }
     }
 
