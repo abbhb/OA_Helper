@@ -166,43 +166,8 @@ public class OauthController {
      * @return
      */
     @PostMapping("/gitlab/token")
-    public TokenResp authorizeCodeToAccessTokenForGitlab(HttpServletRequest request,String code, String grant_type, String client_id, String client_secret, String redirect_uri, String refresh_token) {
+    public TokenResp authorizeCodeToAccessTokenForGitlab(HttpServletRequest request,String code, String grant_type, String client_id, String client_secret, String redirect_uri, String refresh_token) throws UnsupportedEncodingException {
         log.info("gitlab.token.request:{},getPathInfo{}",request,request.getPathInfo());
-        String redirectUriEnd = oauthService.getEndRedirectUri(client_id, redirect_uri);
-
-        Authorize authorize = new Authorize();
-        authorize.setCode(code);
-        authorize.setRedirectUri(redirectUriEnd);
-        authorize.setClientId(client_id);
-        authorize.setClientSecret(client_secret);
-        authorize.setGrantType(grant_type);
-        authorize.setRefreshToken(refresh_token);
-        GetAccessTokenHandel instance = getAccessTokenHandelFactory.getInstance(authorize.getGrantType());
-        if (instance == null) {
-            TokenResp tokenResp = new TokenResp();
-            tokenResp.setCode(100000);
-            tokenResp.setMsg("缺少参数response_type或response_type非法");
-            return tokenResp;
-        }
-        return instance.getAccessToken(authorize);
-
-    }
-
-    /**
-     * 该接口按照gitlab标准实现
-     * 兼容性V2
-     *
-     * @param code
-     * @param grant_type
-     * @param client_id
-     * @param client_secret
-     * @param redirect_uri
-     * @param refresh_token
-     * @return
-     */
-    @PostMapping("/gitlab/v2/token")
-    public TokenResp authorizeCodeToAccessTokenForGitlabV2(HttpServletRequest request,String code, String grant_type, String client_id, String client_secret, String redirect_uri, String refresh_token) throws UnsupportedEncodingException {
-
         // 获取Authorization请求头
         String authHeader = request.getHeader("Authorization");
         if (authHeader != null && authHeader.startsWith("Basic ")) {
@@ -214,6 +179,7 @@ public class OauthController {
             client_secret = client_serect.split(":")[1];
         }
         String redirectUriEnd = oauthService.getEndRedirectUri(client_id, redirect_uri);
+
         Authorize authorize = new Authorize();
         authorize.setCode(code);
         authorize.setRedirectUri(redirectUriEnd);
@@ -231,7 +197,6 @@ public class OauthController {
         return instance.getAccessToken(authorize);
 
     }
-
 
     /**
      * 这个接口都能访问，无需授权
