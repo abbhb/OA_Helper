@@ -406,7 +406,13 @@ public class UserServiceImpl implements UserService {
 
     @DataScope(userAlias = "user")
     @Override
-    public PageData<UserResult> getUserList(User ua,Integer pageNum, Integer pageSize, String name, Integer cascade, Long deptId) {
+    public PageData<UserResult> getUserList(User ua
+            ,Integer pageNum
+            , Integer pageSize
+            , String name
+            , Integer mustHaveStudentId
+            , Integer cascade
+            , Long deptId) {
         if (pageNum == null) {
             throw new IllegalArgumentException("传参错误");
         }
@@ -416,11 +422,22 @@ public class UserServiceImpl implements UserService {
         if (cascade == null) {
             cascade = 0;// 0为不级联，1为级联
         }
+        if (mustHaveStudentId==null){
+            mustHaveStudentId = 0;//不是必须
+        }
         Page<User> pageInfo = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         //添加过滤条件
         lambdaQueryWrapper.like(StringUtils.isNotEmpty(name), User::getName, name);
         AssertUtil.notEqual(deptId, null, "请指定查询");
+        if (mustHaveStudentId.equals(1)){
+            lambdaQueryWrapper.isNotNull(User::getStudentId) // 学号不为null
+                    .and(wrapper -> wrapper
+                            .ne(User::getStudentId, "null") // 学号不为字符串"null"
+                            .or()
+                            .eq(User::getStudentId, "") // 学号为字符串""
+                    );
+        }
         if (!cascade.equals(1)) {
             lambdaQueryWrapper.eq(User::getDeptId, deptId);
         } else {
