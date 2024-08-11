@@ -24,6 +24,8 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.Base64;
 import java.util.Enumeration;
 import java.util.List;
 
@@ -199,24 +201,19 @@ public class OauthController {
      * @return
      */
     @PostMapping("/gitlab/v2/token")
-    public TokenResp authorizeCodeToAccessTokenForGitlabV2(HttpServletRequest request,String code, String grant_type, String client_id, String client_secret, String redirect_uri, String refresh_token) {
+    public TokenResp authorizeCodeToAccessTokenForGitlabV2(HttpServletRequest request,String code, String grant_type, String client_id, String client_secret, String redirect_uri, String refresh_token) throws UnsupportedEncodingException {
 
-        Enumeration<String> headerNames = request.getHeaderNames();
-        log.info("测试该请求");
-        while (headerNames.hasMoreElements()) {
-            String headerName = headerNames.nextElement();
-            String headerValue = request.getHeader(headerName);
-            // 或者获取所有值
-            Enumeration<String> values = request.getHeaders(headerName);
-            while (values.hasMoreElements()) {
-                String value = values.nextElement();
-                // 处理每个值
-                log.info("header{},value{}",headerName,value);
-
-            }
+        // 获取Authorization请求头
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Basic ")) {
+            // 移除"Basic "前缀并解码
+            String encodedCredentials = authHeader.substring(6);
+            byte[] decodedBytes = Base64.getDecoder().decode(encodedCredentials);
+            String client_serect = new String(decodedBytes, "UTF-8");
+            client_id = client_serect.split(":")[0];
+            client_secret = client_serect.split(":")[1];
         }
         String redirectUriEnd = oauthService.getEndRedirectUri(client_id, redirect_uri);
-
         Authorize authorize = new Authorize();
         authorize.setCode(code);
         authorize.setRedirectUri(redirectUriEnd);
