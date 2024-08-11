@@ -163,7 +163,8 @@ public class OauthController {
      * @return
      */
     @PostMapping("/gitlab/token")
-    public TokenResp authorizeCodeToAccessTokenForGitlab(String code, String grant_type, String client_id, String client_secret, String redirect_uri, String refresh_token) {
+    public TokenResp authorizeCodeToAccessTokenForGitlab(HttpServletRequest request,String code, String grant_type, String client_id, String client_secret, String redirect_uri, String refresh_token) {
+        log.info("gitlab.token.request:{},getPathInfo{}",request,request.getPathInfo());
         String redirectUriEnd = oauthService.getEndRedirectUri(client_id, redirect_uri);
 
         Authorize authorize = new Authorize();
@@ -235,6 +236,7 @@ public class OauthController {
      */
     @GetMapping("/gitlab/user_info")
     public OauthUserInfoResp getUserInfoHeader(@RequestParam(name = "access_token", required = false) String accessToken, HttpServletRequest request) {
+        log.info("{},request:{}",request.getPathInfo(),request);
         if (StringUtils.isEmpty(accessToken)) {
             return oauthService.getUserInfoHeader(request);
         }
