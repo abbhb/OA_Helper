@@ -324,7 +324,7 @@ public class OauthServiceImpl implements OauthService {
         sysOauthLambdaQueryWrapper.eq(SysOauth::getClientId, clientId);
         SysOauth sysOauth = sysOauthDao.getOne(sysOauthLambdaQueryWrapper);
         if (sysOauth == null) {
-            throw new CustomException("无法获取该oauth客户端");
+            throw new CustomException("无法获取该oauth客户端[请尝试gitlab-v2接口]");
         }
         if (sysOauth.getForceConfigurationRedirect().equals(1)) {
             // 静态回调

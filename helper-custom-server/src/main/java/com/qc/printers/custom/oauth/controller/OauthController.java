@@ -25,6 +25,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -184,6 +185,37 @@ public class OauthController {
         return instance.getAccessToken(authorize);
 
     }
+
+    /**
+     * 该接口按照gitlab标准实现
+     * 兼容性V2
+     *
+     * @return
+     */
+    @PostMapping("/gitlab/v2/token")
+    public TokenResp authorizeCodeToAccessTokenForGitlabV2(@RequestBody Map<String,Object> data) {
+        log.info("data:{}",data);
+//        String redirectUriEnd = oauthService.getEndRedirectUri(client_id, redirect_uri);
+//
+//        Authorize authorize = new Authorize();
+//        authorize.setCode(code);
+//        authorize.setRedirectUri(redirectUriEnd);
+//        authorize.setClientId(client_id);
+//        authorize.setClientSecret(client_secret);
+//        authorize.setGrantType(grant_type);
+//        authorize.setRefreshToken(refresh_token);
+//        GetAccessTokenHandel instance = getAccessTokenHandelFactory.getInstance(authorize.getGrantType());
+//        if (instance == null) {
+//            TokenResp tokenResp = new TokenResp();
+//            tokenResp.setCode(100000);
+//            tokenResp.setMsg("缺少参数response_type或response_type非法");
+//            return tokenResp;
+//        }
+//        return instance.getAccessToken(authorize);
+        return null;
+
+    }
+
 
     /**
      * 这个接口都能访问，无需授权
