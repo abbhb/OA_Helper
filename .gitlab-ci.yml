@@ -1,0 +1,4 @@
+test-job: # 测试作业（test-job名字可修改，是某个阶段的job名称）
+  script: # 定义命令的关键词script
+    - echo "This is my first job!" # 输出 "This is my first job!"
+    - date # 打印日期
