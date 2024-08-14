@@ -1,6 +1,63 @@
-test-job: # 测试作业（test-job名字可修改，是某个阶段的job名称）
-  script: # 定义命令的关键词script
-    - echo "This is my first job!" # 输出 "This is my first job!"
-    - date # 打印日期
+
+stages:
+  - build
+  - dockerize
+  - deploy
+variables:
+  # 替换为你的 Harbor 仓库地址，包括项目名称和仓库名称
+  HARBOR_REPO: your-harbor-instance.com/your-namespace/yourapp
+  DOCKER_IMAGE_TAG: $CI_COMMIT_REF_SLUG
+  # 在 GitLab CI/CD 设置中添加 HARBOR_USERNAME 和 HARBOR_PASSWORD
+  HARBOR_USERNAME: $HARBOR_USERNAME
+  HARBOR_PASSWORD: $HARBOR_PASSWORD
+  SSH_PRIVATE_KEY: $DEPLOY_KEY
+  MAVEN_CLI_OPTS: "-s settings.xml --batch-mode"
+  MAVEN_OPTS: "-Dmaven.repo.local=.m2"
+  HARBOR_IMAGE: ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/easyoaserver
+  DOCKERFILE_PATH: "."
+
+
+before_script:
+  - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
+  - chmod 0600 ~/.ssh/id_rsa
+  - docker login -u "$HARBOR_USERNAME" -p "$HARBOR_PASSWORD" $HARBOR_REPO
+cache:
+  paths:
+    - .m2/repository/
+    - target/
+
+build:
+  stage: build
   tags:
     - aifile
+  script:
+    - mvn clean package
+  artifacts:
+    paths:
+      - target/
+dockerize:
+  stage: dockerize
+  image: easyoa-server:latest
+  tags:
+    - aifile
+  services:
+    - docker:dind
+  variables:
+    DOCKER_HOST: tcp://docker:2375
+  script:
+    - docker build -t $HARBOR_IMAGE:${CI_COMMIT_REF_SLUG} $DOCKERFILE_PATH
+    - docker login -u $HARBOR_USERNAME -p $HARBOR_PASSWORD $HARBOR_REGISTRY
+    - docker push $HARBOR_IMAGE:${CI_COMMIT_REF_SLUG}
+
+deploy:
+  stage: deploy
+  tags:
+    - aifile
+  script:
+    - echo "Deploying to $DEPLOY_HOST"
+    - ssh $DEPLOY_USER@$DEPLOY_HOST "docker login -u $HARBOR_USERNAME -p $HARBOR_PASSWORD $HARBOR_REGISTRY"
+    - ssh $DEPLOY_USER@$DEPLOY_HOST "docker pull $HARBOR_IMAGE:${CI_COMMIT_REF_SLUG}"
+    - ssh $DEPLOY_USER@$DEPLOY_HOST "docker stop easyoa-server || true && docker rm easyoa-server || true"
+    - ssh $DEPLOY_USER@$DEPLOY_HOST "docker run -d --name measyoa-server $HARBOR_IMAGE:${CI_COMMIT_REF_SLUG}"
+  only:
+    - master
