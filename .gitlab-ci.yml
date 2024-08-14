@@ -9,6 +9,7 @@ variables:
   HARBOR_USERNAME: $HARBOR_USERNAME
   HARBOR_PASSWORD: $HARBOR_PASSWORD
   SSH_PRIVATE_KEY: $DEPLOY_KEY
+  MAVEN_CLI_OPTS: "-s $CI_PROJECT_DIR/docs/settings.xml"
   MAVEN_OPTS: "-Dmaven.repo.local=.m2"
   HARBOR_IMAGE: ${HARBOR_REPO}/easyoaserver
   DOCKERFILE_PATH: "."
@@ -31,7 +32,7 @@ build:
   tags:
     - aifile
   script:
-    - mvn clean package
+    - mvn ${MAVEN_CLI_OPTS} clean package
   artifacts:
     paths:
       - target/
