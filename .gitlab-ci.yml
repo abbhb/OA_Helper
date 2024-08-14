@@ -1,3 +1,5 @@
+image: maven:3.6.3-jdk-17 # 使用 Maven 3.6.3 和 Java 17 的官方镜像
+
 stages:
   - build
   - dockerize
