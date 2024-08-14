@@ -18,8 +18,10 @@ variables:
 
 
 before_script:
+  - mkdir -p ~/.ssh
   - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-  - chmod 0600 ~/.ssh/id_rsa
+  - chmod 700 ~/.ssh
+  - chmod 600 ~/.ssh/id_rsa
   - docker login -u "$HARBOR_USERNAME" -p "$HARBOR_PASSWORD" $HARBOR_REPO
 cache:
   paths:
