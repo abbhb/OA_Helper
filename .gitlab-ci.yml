@@ -44,9 +44,11 @@ dockerize:
   stage: dockerize
   tags:
     - aifile
-  image: docker:latest # 使用官方的 Docker 镜像
+  image: docker:dind
   services:
-    - docker:dind
+    - name: 'docker:20.10.6-dind'
+      command: [ '--tls=false', '--host=tcp://0.0.0.0:2375' ]
+      alias: docker
 #  variables:
 #    DOCKER_HOST: tcp://docker:2375
   script:
