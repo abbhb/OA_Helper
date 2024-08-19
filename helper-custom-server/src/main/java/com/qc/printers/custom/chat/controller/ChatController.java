@@ -101,6 +101,15 @@ public class ChatController {
         return R.success("成功");
     }
 
+    @NeedToken
+    @PostMapping("/msg/remove")
+    @ApiOperation("消息记录删除，删除后对于本人就跟不存在此条消息一样")
+    @FrequencyControl(time = 10, count = 5, target = FrequencyControl.Target.UID)
+    public R<Void> setMsgMark(@Valid @RequestBody ChatMessageStateReq request) {
+        chatService.setMsgRemove(RequestHolder.get().getUid(), request);
+        return R.success("成功");
+    }
+
     /**
      * 只有群管理员能撤回任意消息
      *

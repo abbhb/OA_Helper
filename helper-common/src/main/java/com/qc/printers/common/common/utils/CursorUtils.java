@@ -4,6 +4,7 @@ import cn.hutool.core.collection.CollectionUtil;
 import cn.hutool.core.lang.Pair;
 import cn.hutool.core.util.StrUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.support.SFunction;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
@@ -50,6 +51,7 @@ public class CursorUtils {
     public static <T> CursorPageBaseResp<T> getCursorPageByMysql(IService<T> mapper, CursorPageBaseReq request, Consumer<LambdaQueryWrapper<T>> initWrapper, SFunction<T, ?> cursorColumn) {
         Class<?> cursorType = LambdaUtils.getReturnType(cursorColumn);
         LambdaQueryWrapper<T> wrapper = new LambdaQueryWrapper<>();
+
         initWrapper.accept(wrapper);
         if (StrUtil.isNotBlank(request.getCursor())) {
             wrapper.lt(cursorColumn, parseCursor(request.getCursor(), cursorType));

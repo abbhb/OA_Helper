@@ -91,6 +91,8 @@ public class ChatServiceImpl implements ChatService {
     @Autowired
     private ContactDao contactDao;
     @Autowired
+    private MessageUserStateDao messageUserStateDao;
+    @Autowired
     private RoomCache roomCache;
     @Autowired
     private GroupMemberDao groupMemberDao;
@@ -217,9 +219,13 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public CursorPageBaseResp<ChatMessageResp> getMsgPage(ChatMessagePageReq request, Long receiveUid) {
+        // 判断下这个房间的会话是否存在，不存在就是用户点了不显示，主动拉取消息肯定需要显示了
+
+        // 如果是删除消息记录和会话呢？
+
         //用最后一条消息id，来限制被踢出的人能看见的最大一条消息
         Long lastMsgId = getLastMsgId(request.getRoomId(), receiveUid);
-        CursorPageBaseResp<Message> cursorPage = messageDao.getCursorPage(request.getRoomId(), request, lastMsgId);
+        CursorPageBaseResp<Message> cursorPage = messageDao.getCursorPage(request.getRoomId(), request, lastMsgId,receiveUid);
         if (cursorPage.isEmpty()) {
             return CursorPageBaseResp.empty();
         }
@@ -345,6 +351,32 @@ public class ChatServiceImpl implements ChatService {
             insert.setRoomId(request.getRoomId());
             insert.setReadTime(new Date());
             contactDao.save(insert);
+        }
+    }
+
+    @Override
+    @Transactional
+    @RedissonLock(key = "#uid")
+    public void setMsgRemove(Long uid, ChatMessageStateReq request) {
+        Long msgId = request.getMsgId();
+        Message message = messageDao.getById(msgId);
+        Long roomId = message.getRoomId();
+        LambdaQueryWrapper<MessageUserState> stateLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        stateLambdaQueryWrapper.eq(MessageUserState::getRoomId,roomId);
+        stateLambdaQueryWrapper.eq(MessageUserState::getMsgId,msgId);
+
+        stateLambdaQueryWrapper.eq(MessageUserState::getUserId,uid);
+        MessageUserState one = messageUserStateDao.getOne(stateLambdaQueryWrapper);
+        if (Objects.nonNull(one)){
+            one.setState(request.getState());
+            messageUserStateDao.updateById(one);
+        }else {
+            one = new MessageUserState();
+            one.setRoomId(roomId);
+            one.setMsgId(msgId);
+            one.setUserId(uid);
+            one.setState(request.getState());
+            messageUserStateDao.save(one);
         }
     }
 

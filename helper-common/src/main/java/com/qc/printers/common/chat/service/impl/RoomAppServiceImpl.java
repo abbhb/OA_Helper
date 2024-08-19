@@ -29,6 +29,7 @@ import com.qc.printers.common.chat.service.adapter.RoomAdapter;
 import com.qc.printers.common.chat.service.cache.*;
 import com.qc.printers.common.chat.service.strategy.msg.AbstractMsgHandler;
 import com.qc.printers.common.chat.service.strategy.msg.MsgHandlerFactory;
+import com.qc.printers.common.common.Code;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.annotation.RedissonLock;
 import com.qc.printers.common.common.domain.vo.request.CursorPageBaseReq;
@@ -108,27 +109,28 @@ public class RoomAppServiceImpl implements RoomAppService {
     public CursorPageBaseResp<ChatRoomResp> getContactPage(CursorPageBaseReq request, Long uid) {
         // 查出用户要展示的会话列表
         CursorPageBaseResp<Long> page;
-        if (Objects.nonNull(uid)) {
-            Double hotEnd = getCursorOrNull(request.getCursor());
-            Double hotStart = null;
-            // 用户基础会话 如果会话存在，但是群聊已经删除就会异常
-            CursorPageBaseResp<Contact> contactPage = contactDao.getContactPage(uid, request);
-            List<Long> baseRoomIds = contactPage.getList().stream().map(Contact::getRoomId).collect(Collectors.toList());
-            if (!contactPage.getIsLast()) {
-                hotStart = getCursorOrNull(contactPage.getCursor());
-            }
-            // 热门房间
-            Set<ZSetOperations.TypedTuple<String>> typedTuples = hotRoomCache.getRoomRange(hotStart, hotEnd);
-            List<Long> hotRoomIds = typedTuples.stream().map(ZSetOperations.TypedTuple::getValue).filter(Objects::nonNull).map(Long::parseLong).collect(Collectors.toList());
-            baseRoomIds.addAll(hotRoomIds);
-            // 基础会话和热门房间合并
-            page = CursorPageBaseResp.init(contactPage, baseRoomIds);
-        } else {// 用户未登录，只查全局房间
-            CursorPageBaseResp<Pair<Long, Double>> roomCursorPage = hotRoomCache.getRoomCursorPage(request);
-            List<Long> roomIds = roomCursorPage.getList().stream().map(Pair::getKey).collect(Collectors.toList());
-            page = CursorPageBaseResp.init(roomCursorPage, roomIds);
+        if (!Objects.nonNull(uid)) {
+            // 用户未登录，只查全局房间
+            //            CursorPageBaseResp<Pair<Long, Double>> roomCursorPage = hotRoomCache.getRoomCursorPage(request);
+//            List<Long> roomIds = roomCursorPage.getList().stream().map(Pair::getKey).collect(Collectors.toList());
+//            page = CursorPageBaseResp.init(roomCursorPage, roomIds);
+            throw new CustomException("请先登录",Code.DEL_TOKEN);
         }
-        // 最后组装会话信息（名称，头像，未读数等）
+        Double hotEnd = getCursorOrNull(request.getCursor());// 默认为null
+        Double hotStart = null;
+        // 用户基础会话 如果会话存在，但是群聊已经删除就会异常
+        CursorPageBaseResp<Contact> contactPage = contactDao.getContactPage(uid, request);
+        List<Long> baseRoomIds = contactPage.getList().stream().map(Contact::getRoomId).collect(Collectors.toList());
+        if (!contactPage.getIsLast()) {
+            hotStart = getCursorOrNull(contactPage.getCursor());
+        }
+        // 热门房间
+        Set<ZSetOperations.TypedTuple<String>> typedTuples = hotRoomCache.getRoomRange(hotStart, hotEnd);
+        List<Long> hotRoomIds = typedTuples.stream().map(ZSetOperations.TypedTuple::getValue).filter(Objects::nonNull).map(Long::parseLong).collect(Collectors.toList());
+        baseRoomIds.addAll(hotRoomIds);
+        // 基础会话和热门房间合并
+        page = CursorPageBaseResp.init(contactPage, baseRoomIds);
+        // 最后组装会话信息（名称，头像，未读数等）-前面都是id，直到这一步才真的去获取会话的信息，此处有问题，按道理说删除会话不影响后续
         List<ChatRoomResp> result = buildContactResp(uid, page.getList());
         return CursorPageBaseResp.init(page, result);
     }

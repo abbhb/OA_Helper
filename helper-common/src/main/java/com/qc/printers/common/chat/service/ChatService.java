@@ -77,4 +77,6 @@ public interface ChatService {
     CursorPageBaseResp<ChatMessageReadResp> getReadPage(Long uid, ChatMessageReadReq request);
 
     void msgRead(Long uid, ChatMessageMemberReq request);
+
+    void setMsgRemove(Long uid, ChatMessageStateReq request);
 }

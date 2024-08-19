@@ -28,8 +28,9 @@ import java.util.Objects;
 @Service
 public class MessageDao extends ServiceImpl<MessageMapper, Message> {
 
-    public CursorPageBaseResp<Message> getCursorPage(Long roomId, CursorPageBaseReq request, Long lastMsgId) {
+    public CursorPageBaseResp<Message> getCursorPage(Long roomId, CursorPageBaseReq request, Long lastMsgId,Long uid) {
         return CursorUtils.getCursorPageByMysql(this, request, wrapper -> {
+            wrapper.apply("LEFT JOIN message_user_state musx ON musx.msg_id = message.id and musx.user_id = {0} AND (musx.state IS NULL OR musx.state = 0)",uid);
             wrapper.eq(Message::getRoomId, roomId);
             wrapper.eq(Message::getStatus, MessageStatusEnum.NORMAL.getStatus());
             wrapper.le(Objects.nonNull(lastMsgId), Message::getId, lastMsgId);

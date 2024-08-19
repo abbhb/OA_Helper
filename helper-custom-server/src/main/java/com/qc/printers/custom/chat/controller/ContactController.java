@@ -42,6 +42,14 @@ public class ContactController {
     @Autowired
     private RoomAppService roomService;
 
+    /**
+     * 获取不到会话可能是不显示删除了，去房间表同步在创建就好
+     * 问题确认，删除会话不会影响系统功能，只是用户自己不显示而已，但是bug出在删除的哪个用户如果不是删除会话记录，
+     * 即同步删除聊天信息新建的时候应该带上最后msg_id和消息时间，去room表拉取就行，否则会报错，同上
+     * 在删除会话（连同消息记录）时得处理消息表，加字段逻辑删除还是真删除？
+     * @param request
+     * @return
+     */
     @GetMapping("/public/contact/page")
     @NeedToken
     @ApiOperation("会话列表")
