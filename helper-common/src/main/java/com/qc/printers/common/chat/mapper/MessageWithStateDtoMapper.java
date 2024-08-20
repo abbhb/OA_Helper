@@ -10,7 +10,7 @@ import org.apache.ibatis.annotations.Select;
 
 @Mapper
 public interface MessageWithStateDtoMapper extends BaseMapper<MessageWithStateDto> {
-    String querySql = "select message.*,must.state from message LEFT JOIN message_user_state must ON message.id = must.msg_id AND must.user_id = ${userid} where must.state IS NULL OR must.state = 1 ";
+    String querySql = "select message.*,must.state from message LEFT JOIN message_user_state must ON message.id = must.msg_id AND must.user_id = ${userid} where must.state IS NULL OR must.state = 0 ";
     String wrapperSql = "SELECT * from ( " + querySql + " ) AS q ${ew.customSqlSegment}";
     /**
      * 分页查询
