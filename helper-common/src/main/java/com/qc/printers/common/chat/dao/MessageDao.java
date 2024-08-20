@@ -7,8 +7,11 @@ import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qc.printers.common.chat.domain.entity.Message;
 import com.qc.printers.common.chat.domain.entity.MessageWithStateDto;
+import com.qc.printers.common.chat.domain.entity.msg.MessageExtra;
 import com.qc.printers.common.chat.domain.enums.MessageStatusEnum;
 import com.qc.printers.common.chat.mapper.MessageMapper;
 import com.qc.printers.common.chat.mapper.MessageWithStateDtoMapper;
@@ -39,7 +42,7 @@ public class MessageDao extends ServiceImpl<MessageMapper, Message> {
     @Autowired
     private MessageWithStateDtoMapper messageWithStateDtoMapper;
 
-    public CursorPageBaseResp<Message> getCursorPage(Long roomId, CursorPageBaseReq request, Long lastMsgId,Long uid) {
+    public CursorPageBaseResp<Message> getCursorPage(Long roomId, CursorPageBaseReq request, Long lastMsgId,Long uid) throws JsonProcessingException {
         // 特殊处理
 //        return CursorUtils.getCursorPageByMysql(this, request, wrapper -> {
 //            wrapper.apply("LEFT JOIN message_user_state musx ON musx.msg_id = message.id and musx.user_id = {0} AND (musx.state IS NULL OR musx.state = 0)",);
@@ -67,11 +70,13 @@ public class MessageDao extends ServiceImpl<MessageMapper, Message> {
         List<Message> messages = new ArrayList<>();
         log.info("MessageDao-message:{}",page.getRecords());
         // todo:fix json无法映射回去
+        ObjectMapper objectMapper = new ObjectMapper();
+
         for (MessageWithStateDto record : page.getRecords()) {
             Message message = new Message();
             message.setId(record.getId());
             // 此ext有问题
-            message.setExtra(record.getExtra());
+            message.setExtra(objectMapper.treeToValue(record.getExtra(), MessageExtra.class));
             message.setContent(record.getContent());
             message.setType(record.getType());
             message.setFromUid(record.getFromUid());

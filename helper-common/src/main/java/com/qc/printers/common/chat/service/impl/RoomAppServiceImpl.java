@@ -440,7 +440,7 @@ public class RoomAppServiceImpl implements RoomAppService {
             roomBaseInfo.setRoomId(room.getId());
             roomBaseInfo.setType(room.getType());
             roomBaseInfo.setHotFlag(room.getHotFlag());
-            roomBaseInfo.setLastMsgId(room.getLastMsgId());
+            roomBaseInfo.setLastMsgId(room.getLastMsgId());// 此处每个人都不同
             roomBaseInfo.setActiveTime(room.getActiveTime());
             if (RoomTypeEnum.of(room.getType()) == RoomTypeEnum.GROUP) {
                 RoomGroup roomGroup = roomInfoBatch.get(room.getId());
