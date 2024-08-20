@@ -74,8 +74,8 @@ public class MessageWithStateDto implements Serializable {
      * 消息扩展字段
      * MessageExtra
      */
-    @TableField(value = "extra", typeHandler = FastjsonTypeHandler.class)
-    private JsonNode extra;
+    @TableField(value = "extra")
+    private String extra;
 
     /**
      * 创建时间

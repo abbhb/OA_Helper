@@ -8,6 +8,7 @@ import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qc.printers.common.chat.domain.entity.Message;
 import com.qc.printers.common.chat.domain.entity.MessageWithStateDto;
@@ -77,7 +78,9 @@ public class MessageDao extends ServiceImpl<MessageMapper, Message> {
             message.setId(record.getId());
             // 此ext有问题
             try {
-                message.setExtra(objectMapper.treeToValue(record.getExtra(), MessageExtra.class));
+                JsonNode jsonNode = objectMapper.readTree(record.getExtra());
+
+                message.setExtra(objectMapper.treeToValue(jsonNode, MessageExtra.class));
             } catch (JsonProcessingException e) {
                 log.error("{}",e);
                 throw new CustomException(e.getMessage());
