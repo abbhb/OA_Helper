@@ -16,6 +16,7 @@ import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.domain.vo.request.CursorPageBaseReq;
 import com.qc.printers.common.common.domain.vo.response.CursorPageBaseResp;
 import com.qc.printers.common.common.utils.CursorUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -32,6 +33,7 @@ import static com.qc.printers.common.common.utils.CursorUtils.parseCursor;
  * @since 2023-03-25
  */
 @Service
+@Slf4j
 public class MessageDao extends ServiceImpl<MessageMapper, Message> {
 
     @Autowired
@@ -63,9 +65,12 @@ public class MessageDao extends ServiceImpl<MessageMapper, Message> {
                 .orElse(null);
         Boolean isLast = page.getRecords().size() != request.getPageSize();
         List<Message> messages = new ArrayList<>();
+        log.info("MessageDao-message:{}",page.getRecords());
+        // todo:fix json无法映射回去
         for (MessageWithStateDto record : page.getRecords()) {
             Message message = new Message();
             message.setId(record.getId());
+            // 此ext有问题
             message.setExtra(record.getExtra());
             message.setContent(record.getContent());
             message.setType(record.getType());

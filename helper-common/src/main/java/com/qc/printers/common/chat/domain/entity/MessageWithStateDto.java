@@ -9,8 +9,8 @@ import java.io.Serializable;
 import java.time.LocalDateTime;
 
 @Data
-@EqualsAndHashCode(callSuper = false)
 @Builder
+@TableName(value = "message", autoResultMap = true)// 此处不加json为null
 @AllArgsConstructor
 @NoArgsConstructor
 public class MessageWithStateDto implements Serializable {
