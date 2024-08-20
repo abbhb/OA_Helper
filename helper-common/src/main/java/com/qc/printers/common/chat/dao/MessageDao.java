@@ -42,7 +42,7 @@ public class MessageDao extends ServiceImpl<MessageMapper, Message> {
     @Autowired
     private MessageWithStateDtoMapper messageWithStateDtoMapper;
 
-    public CursorPageBaseResp<Message> getCursorPage(Long roomId, CursorPageBaseReq request, Long lastMsgId,Long uid) throws JsonProcessingException {
+    public CursorPageBaseResp<Message> getCursorPage(Long roomId, CursorPageBaseReq request, Long lastMsgId,Long uid) {
         // 特殊处理
 //        return CursorUtils.getCursorPageByMysql(this, request, wrapper -> {
 //            wrapper.apply("LEFT JOIN message_user_state musx ON musx.msg_id = message.id and musx.user_id = {0} AND (musx.state IS NULL OR musx.state = 0)",);
@@ -76,7 +76,12 @@ public class MessageDao extends ServiceImpl<MessageMapper, Message> {
             Message message = new Message();
             message.setId(record.getId());
             // 此ext有问题
-            message.setExtra(objectMapper.treeToValue(record.getExtra(), MessageExtra.class));
+            try {
+                message.setExtra(objectMapper.treeToValue(record.getExtra(), MessageExtra.class));
+            } catch (JsonProcessingException e) {
+                log.error("{}",e);
+                throw new CustomException(e.getMessage());
+            }
             message.setContent(record.getContent());
             message.setType(record.getType());
             message.setFromUid(record.getFromUid());
