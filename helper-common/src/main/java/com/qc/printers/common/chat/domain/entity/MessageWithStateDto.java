@@ -1,6 +1,7 @@
 package com.qc.printers.common.chat.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.extension.handlers.FastjsonTypeHandler;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.qc.printers.common.chat.domain.entity.msg.MessageExtra;
@@ -73,7 +74,7 @@ public class MessageWithStateDto implements Serializable {
      * 消息扩展字段
      * MessageExtra
      */
-    @TableField(value = "extra", typeHandler = JacksonTypeHandler.class)
+    @TableField(value = "extra", typeHandler = FastjsonTypeHandler.class)
     private JsonNode extra;
 
     /**
