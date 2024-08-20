@@ -4,6 +4,7 @@ server:
     # Controller统一前缀
     context-path: /api
 spring:
+
   servlet:
     multipart:
       max-file-size: -1

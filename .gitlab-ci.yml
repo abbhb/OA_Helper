@@ -43,7 +43,7 @@ build:
 dockerize:
   stage: dockerize
   tags:
-    - aifile
+    - aifile-shell
   image: docker:dind
   services:
     - name: 'docker:20.10.6-dind'

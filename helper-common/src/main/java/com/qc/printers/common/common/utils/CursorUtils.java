@@ -51,7 +51,6 @@ public class CursorUtils {
     public static <T> CursorPageBaseResp<T> getCursorPageByMysql(IService<T> mapper, CursorPageBaseReq request, Consumer<LambdaQueryWrapper<T>> initWrapper, SFunction<T, ?> cursorColumn) {
         Class<?> cursorType = LambdaUtils.getReturnType(cursorColumn);
         LambdaQueryWrapper<T> wrapper = new LambdaQueryWrapper<>();
-
         initWrapper.accept(wrapper);
         if (StrUtil.isNotBlank(request.getCursor())) {
             wrapper.lt(cursorColumn, parseCursor(request.getCursor(), cursorType));
@@ -66,7 +65,7 @@ public class CursorUtils {
         return new CursorPageBaseResp<>(cursor, isLast, page.getRecords());
     }
 
-    private static String toCursor(Object o) {
+    public static String toCursor(Object o) {
         if (o instanceof Date) {
             return String.valueOf(((Date) o).getTime());
         } else {
@@ -74,7 +73,7 @@ public class CursorUtils {
         }
     }
 
-    private static Object parseCursor(String cursor, Class<?> cursorClass) {
+    public static Object parseCursor(String cursor, Class<?> cursorClass) {
         // 问题根本不在这，isLast还在请求可不没有了，取消昨天的日期格式更改，改回原来的统一localdatetime
         if (cursor.contains("null")) {
             throw new CustomException("到底了~");
