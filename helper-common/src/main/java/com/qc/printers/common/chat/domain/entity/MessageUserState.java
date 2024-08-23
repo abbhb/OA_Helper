@@ -18,6 +18,8 @@ public class MessageUserState implements Serializable {
 
     private Long id;
 
+    private Integer typeN;
+
     private Long userId;
 
     private Long roomId;

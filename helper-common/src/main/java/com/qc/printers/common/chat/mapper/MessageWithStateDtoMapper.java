@@ -10,7 +10,17 @@ import org.apache.ibatis.annotations.Select;
 
 @Mapper
 public interface MessageWithStateDtoMapper extends BaseMapper<MessageWithStateDto> {
-    String querySql = "select message.*,must.state from message LEFT JOIN message_user_state must ON message.id = must.msg_id AND must.user_id = ${userid} where must.state IS NULL OR must.state = 0 ";
+    // 首先，获取 `must.type_n = 1` 的条件下相关的 msg_id
+    String subQuery = "SELECT MAX(must.msg_id) AS last_msg_id " +
+            "FROM message_user_state must " +
+            "WHERE must.user_id = ${userid} " +
+            "AND must.room_id = ${roomid} " +
+            "AND must.type_n = 1";
+
+    String querySql = "select message.*,must.state from message LEFT JOIN message_user_state must ON message.id = must.msg_id " +
+            "AND must.user_id = ${userid} " +
+            "where must.state IS NULL OR " +
+            "must.state = 0 AND (message.id > (" + subQuery + ") OR must.type_n != 1) ";
     String wrapperSql = "SELECT * from ( " + querySql + " ) AS q ${ew.customSqlSegment}";
     /**
      * 分页查询
