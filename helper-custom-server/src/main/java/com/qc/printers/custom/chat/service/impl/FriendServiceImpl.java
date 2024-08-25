@@ -305,7 +305,7 @@ public class FriendServiceImpl implements FriendService {
         );
         // 查询所有的群聊
         List<Long> myAllGroupIds = groupMemberMapper.selectGroupIdsByUid(userId);
-        List<RoomGroup> roomGroups = roomGroupDao.listByRoomIds(myAllGroupIds);
+        List<RoomGroup> roomGroups = roomGroupDao.listByIds(myAllGroupIds);
         List<GroupRemarkDTO> groupRemarkDTOS = roomGroups.stream().map(roomGroup -> {
             GroupRemarkDTO remarkDTO = new GroupRemarkDTO();
             BeanUtils.copyProperties(roomGroup, remarkDTO);
@@ -323,8 +323,7 @@ public class FriendServiceImpl implements FriendService {
                             groupRemarkDTO.getName();
                     String firstLetter = getFirstLetter(nameToSort);
                     return firstLetter.toUpperCase();
-                }))
-                .collect(Collectors.toList());
+                })).toList();
 
 
 
