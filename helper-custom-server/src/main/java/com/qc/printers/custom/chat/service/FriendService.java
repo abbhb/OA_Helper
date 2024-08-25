@@ -1,6 +1,7 @@
 package com.qc.printers.custom.chat.service;
 
 
+import com.qc.printers.common.chat.domain.vo.response.ChatMemberWListResp;
 import com.qc.printers.common.common.domain.vo.request.CursorPageBaseReq;
 import com.qc.printers.common.common.domain.vo.request.PageBaseReq;
 import com.qc.printers.common.common.domain.vo.response.CursorPageBaseResp;
@@ -12,6 +13,8 @@ import com.qc.printers.common.user.domain.vo.response.friend.FriendApplyResp;
 import com.qc.printers.common.user.domain.vo.response.friend.FriendCheckResp;
 import com.qc.printers.common.user.domain.vo.response.friend.FriendResp;
 import com.qc.printers.common.user.domain.vo.response.friend.FriendUnreadResp;
+
+import java.util.List;
 
 /**
  * @author : limeng
@@ -71,4 +74,6 @@ public interface FriendService {
     void deleteFriend(Long uid, Long friendUid);
 
     CursorPageBaseResp<FriendResp> friendList(Long uid, CursorPageBaseReq request);
+
+    List<ChatMemberWListResp> getContactList(Long uid);
 }

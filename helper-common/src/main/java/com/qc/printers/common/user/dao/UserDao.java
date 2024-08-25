@@ -31,8 +31,7 @@ import java.util.stream.Collectors;
 @Transactional
 @Service
 public class UserDao extends ServiceImpl<UserMapper, User> {
-    @Autowired
-    private UserCache userCache;
+
 
     @DataScope(userAlias = "user")
     public List<User> listUserWithScope(User user){
@@ -54,6 +53,7 @@ public class UserDao extends ServiceImpl<UserMapper, User> {
         return CursorUtils.getCursorPageByMysql(this, request, wrapper -> {
             wrapper.eq(User::getActiveStatus, online.getStatus());//筛选上线或者离线的
             wrapper.in(CollectionUtils.isNotEmpty(memberUidList), User::getId, memberUidList);//普通群对uid列表做限制
+            wrapper.orderByDesc(User::getLoginDate);
         }, User::getLoginDate);
     }
 
@@ -124,27 +124,7 @@ public class UserDao extends ServiceImpl<UserMapper, User> {
     }
 
 
-    @Override
-    public boolean updateBatchById(Collection<User> entityList, int batchSize) {
-        return super.updateBatchById(entityList, batchSize);
-    }
 
-    @Override
-    public boolean saveOrUpdateBatch(Collection<User> entityList) {
-        for (User user :
-                entityList) {
-            if (user.getId() != null) {
-                userCache.userInfoChange(user.getId());
-            }
-        }
-        return super.saveOrUpdateBatch(entityList);
-    }
-
-    @Override
-    public boolean removeById(Serializable id) {
-        userCache.delUserInfo((Long) id);
-        return super.removeById(id);
-    }
 
     @Transactional
     @Override
@@ -152,55 +132,7 @@ public class UserDao extends ServiceImpl<UserMapper, User> {
         throw new CustomException("防止没有更新缓存，禁用");
     }
 
-    @Transactional
-    @Override
-    public boolean remove(Wrapper<User> queryWrapper) {
-        User one = this.getOne(queryWrapper);
-        userCache.delUserInfo(one.getId());
-        return super.remove(queryWrapper);
-    }
 
-    @Override
-    public boolean removeByIds(Collection<? extends Serializable> idList) {
-        for (Serializable id :
-                idList) {
-            userCache.userInfoChange((Long) id);
-        }
-        return super.removeByIds(idList);
-    }
-
-    @Override
-    public boolean updateById(User entity) {
-        userCache.userInfoChange(entity.getId());
-        return super.updateById(entity);
-    }
-
-
-    @Transactional
-    @Override
-    public boolean update(Wrapper<User> updateWrapper) {
-        User one = this.getOne(updateWrapper);
-        userCache.userInfoChange(one.getId());
-        return super.update(updateWrapper);
-    }
-
-    @Transactional
-    @Override
-    public boolean update(User entity, Wrapper<User> updateWrapper) {
-        User one = this.getOne(updateWrapper);
-        userCache.userInfoChange(one.getId());
-        return super.update(entity, updateWrapper);
-    }
-
-    @Transactional
-    @Override
-    public boolean updateBatchById(Collection<User> entityList) {
-        for (User user :
-                entityList) {
-            userCache.userInfoChange(user.getId());
-        }
-        return super.updateBatchById(entityList);
-    }
 
     @Override
     public boolean saveOrUpdate(User entity, Wrapper<User> updateWrapper) {

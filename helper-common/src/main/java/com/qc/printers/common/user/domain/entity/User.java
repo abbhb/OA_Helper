@@ -26,6 +26,7 @@ public class User implements Serializable {
      * 指定系统（chatgpt）用户的UID
      */
     public static final long UID_SYSTEM = 1659939726386827265L;
+//    public static final long UID_SYSTEM = 1659939726386827265L;
 
     //value属性用于指定主键的字段
     //type属性用于设置主键生成策略，默认雪花算法

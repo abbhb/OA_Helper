@@ -15,7 +15,7 @@ public interface RoomService {
     /**
      * 创建一个单聊房间
      */
-    RoomFriend createFriendRoom(List<Long> uidList);
+    RoomFriend createFriendRoom(Long uid,Long friendUid);
 
     RoomFriend getFriendRoom(Long uid1, Long uid2);
 

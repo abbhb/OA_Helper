@@ -20,6 +20,7 @@ public class RedisKey {
      * 用户信息
      */
     public static final String USER_INFO_STRING = "userInfo:uid_%d";
+    public static final String USER_STRING = "user_:uid_%d";
     /**
      * 房间详情
      */

@@ -66,6 +66,11 @@ public class ContactController {
         return R.success(roomService.getContactDetail(uid, request.getId()));
     }
 
+    /**
+     * 会话总入口，越过此处可能出现房间Id不存在
+     * @param request
+     * @return
+     */
     @NeedToken
     @GetMapping("/public/contact/detail/friend")
     @ApiOperation("会话详情(联系人列表发消息用)")

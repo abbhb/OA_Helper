@@ -12,6 +12,7 @@ import com.qc.printers.common.chat.domain.enums.GroupRoleEnum;
 import com.qc.printers.common.chat.domain.enums.RoomTypeEnum;
 import com.qc.printers.common.chat.service.RoomService;
 import com.qc.printers.common.chat.service.adapter.ChatAdapter;
+import com.qc.printers.common.common.annotation.RedissonLock;
 import com.qc.printers.common.common.domain.enums.NormalOrNoEnum;
 import com.qc.printers.common.common.utils.AssertUtil;
 import com.qc.printers.common.user.domain.entity.User;
@@ -43,13 +44,14 @@ public class RoomServiceImpl implements RoomService {
     @Autowired
     private RoomGroupDao roomGroupDao;
 
+    @RedissonLock(key = "#uid")
     @Override
     @Transactional(rollbackFor = Exception.class)
-    public RoomFriend createFriendRoom(List<Long> uidList) {
+    public RoomFriend createFriendRoom(Long uid,Long friendUid) {
+        List<Long> uidList = Arrays.asList(uid, friendUid);
         AssertUtil.isNotEmpty(uidList, "房间创建失败，好友数量不对");
         AssertUtil.equal(uidList.size(), 2, "房间创建失败，好友数量不对");
         String key = ChatAdapter.generateRoomKey(uidList);
-
         RoomFriend roomFriend = roomFriendDao.getByKey(key);
         if (Objects.nonNull(roomFriend)) { //如果存在房间就恢复，适用于恢复好友场景
             restoreRoomIfNeed(roomFriend);

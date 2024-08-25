@@ -34,10 +34,7 @@ public class UserFriendDao extends ServiceImpl<UserFriendMapper, UserFriend> {
                 .one();
     }
 
-    public CursorPageBaseResp<UserFriend> getFriendPage(Long uid, CursorPageBaseReq cursorPageBaseReq) {
-        return CursorUtils.getCursorPageByMysql(this, cursorPageBaseReq,
-                wrapper -> wrapper.eq(UserFriend::getUid, uid), UserFriend::getId);
-    }
+
 
     public List<UserFriend> getUserFriend(Long uid, Long friendUid) {
         return lambdaQuery()

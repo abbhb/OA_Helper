@@ -2,6 +2,7 @@ package com.qc.printers.custom.chat.controller;
 
 
 
+import com.qc.printers.common.chat.domain.vo.response.ChatMemberWListResp;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.domain.vo.request.CursorPageBaseReq;
@@ -25,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.annotation.Resource;
 import javax.validation.Valid;
+import java.util.List;
 
 /**
  * <p>
@@ -101,5 +103,14 @@ public class FriendController {
         Long uid = RequestHolder.get().getUid();
         return R.success(friendService.friendList(uid, request));
     }
+
+    @GetMapping("/v2/page")
+    @NeedToken
+    @ApiOperation("联系人列表-仿wx")
+    public R<List<ChatMemberWListResp>> contactList() {
+        Long uid = RequestHolder.get().getUid();
+        return R.success(friendService.getContactList(uid));
+    }
+
 }
 

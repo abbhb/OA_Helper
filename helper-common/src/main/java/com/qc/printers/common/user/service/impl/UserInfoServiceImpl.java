@@ -93,6 +93,12 @@ public class UserInfoServiceImpl implements UserInfoService {
         return userInfo;
     }
 
+    @Override
+    public User getUserForCache(Long userId) {
+
+        return  userDao.getById(userId);
+    }
+
     @Cacheable(cacheNames = "roleList", key = "'roleList'+#userId")
     public Set<SysRole> getUserAllRole(Long userId) {
         User user = userDao.getById(userId);

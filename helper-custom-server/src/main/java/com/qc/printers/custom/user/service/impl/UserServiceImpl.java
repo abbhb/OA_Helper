@@ -299,6 +299,7 @@ public class UserServiceImpl implements UserService {
                 users.add(user);
             }
             update = userDao.updateBatchById(users);
+
         } else {
             updateUserStatuVerdict(Long.valueOf(id), currentUser);
             LambdaUpdateWrapper<User> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
@@ -353,6 +354,8 @@ public class UserServiceImpl implements UserService {
         lambdaUpdateWrapper.set(User::getAvatar, OssDBUtil.toDBUrl(user.getAvatar()));
         boolean update = userDao.update(lambdaUpdateWrapper);
         if (update) {
+            userCache.userInfoChange(user.getId());
+
             return R.success("更新成功");
         }
         return R.error("err");
@@ -394,6 +397,8 @@ public class UserServiceImpl implements UserService {
         lambdaUpdateWrapper.set(User::getAvatar, OssDBUtil.toDBUrl(user.getAvatar()));
         boolean update = userDao.update(lambdaUpdateWrapper);
         if (update) {
+            userCache.userInfoChange(user.getId());
+
             return R.success("更新成功");
         }
         return R.error("err");
@@ -589,6 +594,8 @@ public class UserServiceImpl implements UserService {
             lambdaUpdateWrapper.eq(User::getId, Long.valueOf(id.asString()));
             boolean update = userDao.update(lambdaUpdateWrapper);
             if (update) {
+                userCache.userInfoChange(Long.valueOf(id.asString()));
+
                 return R.success("绑定成功");
             }
             return R.error("异常");
@@ -656,6 +663,8 @@ public class UserServiceImpl implements UserService {
         }
         lambdaUpdateWrapper.set(User::getSex, user.getSex());
         boolean update = userDao.update(lambdaUpdateWrapper);
+        userCache.userInfoChange(user.getId());
+
         return update;
     }
 
@@ -700,6 +709,7 @@ public class UserServiceImpl implements UserService {
         userLambdaUpdateWrapper.set(User::getPassword, md5Encryptions);
         userLambdaUpdateWrapper.set(User::getSalt, salt);
         boolean update = userDao.update(userLambdaUpdateWrapper);
+
         return update;
     }
 
@@ -773,6 +783,7 @@ public class UserServiceImpl implements UserService {
 
         }
         boolean update = userDao.update(lambdaUpdateWrapper);
+        userCache.userInfoChange(Long.valueOf(user.getId()));
 
         return update;
 
@@ -1373,6 +1384,7 @@ public class UserServiceImpl implements UserService {
         user.setStudentId(userInfoBaseExtDto.getStudentId());
         user.setSex(userInfoBaseExtDto.getSex());
         userDao.updateById(user);
+
         // 更新额外
         UserExtBase userExtBase = userExtBaseDao.getById(userId);
         if (userExtBase==null){
@@ -1428,6 +1440,8 @@ public class UserServiceImpl implements UserService {
             userExtBase.setCsd3(userInfoBaseExtDto.getCsd3());
         }
         userExtBaseDao.saveOrUpdate(userExtBase);
+        userCache.userInfoChange(user.getId());
+
     }
 
     @Override

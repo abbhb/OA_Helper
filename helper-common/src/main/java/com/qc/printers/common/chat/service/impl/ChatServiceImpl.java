@@ -136,6 +136,12 @@ public class ChatServiceImpl implements ChatService {
         return insert.getId();
     }
 
+    /**
+     * 如果推送系统消息写入系统消息表，便于顶部系统通知处做聚合查询
+     * todo:实不用这个表，直接查全部消息过滤出系统通知房间的消息也行，后期在优化
+     * @param insert
+     * @param request
+     */
     @Transactional
     public void checkAndSendSystemMessage(Message insert, ChatMessageReq request) {
         if (!insert.getFromUid().equals(Long.valueOf(systemMessageConfig.getUserId()))||!insert.getRoomId().equals(Long.valueOf(systemMessageConfig.getRoomId()))) return;

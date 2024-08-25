@@ -142,10 +142,16 @@ public class RoomAppServiceImpl implements RoomAppService {
         return buildContactResp(uid, Collections.singletonList(roomId)).get(0);
     }
 
+    @Transactional
     @Override
     public ChatRoomResp getContactDetailByFriend(Long uid, Long friendUid) {
         RoomFriend friendRoom = roomService.getFriendRoom(uid, friendUid);
-        AssertUtil.isNotEmpty(friendRoom, "他不是您的好友");
+        // AssertUtil.isNotEmpty(friendRoom, "他不是您的好友"); 系统改造，所有的人在通讯录都可以互相发言，已退出的话无法登录系统也不存在
+        if(friendRoom==null){
+            // 第一此获取此用户的会话，需要创建room_friend表记录
+            //创建一个聊天房间
+            friendRoom = roomService.createFriendRoom(uid,friendUid);
+        }
         return buildContactResp(uid, Collections.singletonList(friendRoom.getRoomId())).get(0);
     }
 

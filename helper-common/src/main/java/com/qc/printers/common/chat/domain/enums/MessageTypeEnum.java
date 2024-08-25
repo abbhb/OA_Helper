@@ -23,7 +23,7 @@ public enum MessageTypeEnum {
     SOUND(5, "语音"),
     VIDEO(6, "视频"),
     EMOJI(7, "表情"),
-    SYSTEM(8, "系统消息"),
+    SYSTEM(8, "系统消息"),// 此处系统消息指的应该是xx撤回了消息这种消息的产生者，系统通知的实现用的是个真实用户绑定通知全员群实现的
     ;
 
     private static Map<Integer, MessageTypeEnum> cache;

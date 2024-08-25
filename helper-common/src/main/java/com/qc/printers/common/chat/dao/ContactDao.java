@@ -60,6 +60,7 @@ public class ContactDao extends ServiceImpl<ContactMapper, Contact> {
             wrapper.eq(Contact::getRoomId, message.getRoomId());
             wrapper.ne(Contact::getUid, message.getFromUid());//不需要查询出自己
             wrapper.ge(Contact::getReadTime, message.getCreateTime());//已读时间大于等于消息发送时间
+            wrapper.orderByDesc(Contact::getReadTime);
         }, Contact::getReadTime);
     }
 
@@ -68,6 +69,7 @@ public class ContactDao extends ServiceImpl<ContactMapper, Contact> {
             wrapper.eq(Contact::getRoomId, message.getRoomId());
             wrapper.ne(Contact::getUid, message.getFromUid());//不需要查询出自己
             wrapper.lt(Contact::getReadTime, message.getCreateTime());//已读时间小于消息发送时间
+            wrapper.orderByDesc(Contact::getReadTime);//已读时间小于消息发送时间
         }, Contact::getReadTime);
     }
 
@@ -77,6 +79,7 @@ public class ContactDao extends ServiceImpl<ContactMapper, Contact> {
     public CursorPageBaseResp<Contact> getContactPage(Long uid, CursorPageBaseReq request) {
         return CursorUtils.getCursorPageByMysql(this, request, wrapper -> {
             wrapper.eq(Contact::getUid, uid);
+            wrapper.orderByDesc(Contact::getActiveTime);
         }, Contact::getActiveTime);
     }
 
