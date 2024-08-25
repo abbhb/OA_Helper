@@ -27,7 +27,7 @@ public interface GroupMemberMapper extends BaseMapper<GroupMember> {
      * @param groupId
      * @return
      */
-    @Select("SELECT DISTINCT `uid` FROM `group_member` WHERE `group_id` = #{groupId} ORDER BY `role` ASC")
+    @Select("SELECT `uid` FROM (SELECT DISTINCT `uid`, `role`  FROM `group_member` WHERE `group_id` = #{groupId} ORDER BY `role` ASC) AS subquery")
     List<Long> selectUidsByGroupId(Long groupId);
 
 }
