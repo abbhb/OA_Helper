@@ -2,6 +2,7 @@ package com.qc.printers.common.chat.service;
 
 import com.qc.printers.common.chat.domain.entity.RoomFriend;
 import com.qc.printers.common.chat.domain.entity.RoomGroup;
+import com.qc.printers.common.chat.domain.vo.request.ChatRemarkSetReq;
 
 import java.util.List;
 
@@ -31,4 +32,5 @@ public interface RoomService {
     RoomGroup createGroupRoom(Long uid);
 
 
+    String setRemark(Long uid, ChatRemarkSetReq request);
 }

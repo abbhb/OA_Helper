@@ -8,6 +8,7 @@ import com.qc.printers.common.chat.domain.vo.response.ChatMemberStatisticResp;
 import com.qc.printers.common.chat.domain.vo.response.ChatMessageReadResp;
 import com.qc.printers.common.chat.domain.vo.response.ChatMessageResp;
 import com.qc.printers.common.chat.service.ChatService;
+import com.qc.printers.common.chat.service.RoomService;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.FrequencyControl;
 import com.qc.printers.common.common.annotation.NeedToken;
@@ -41,6 +42,8 @@ import java.util.List;
 public class ChatController {
     @Autowired
     private ChatService chatService;
+    @Autowired
+    private RoomService roomService;
     @Autowired
     private UserCache userCache;
 
@@ -150,5 +153,20 @@ public class ChatController {
         chatService.msgRead(uid, request);
         return R.success("11");
     }
+
+    /**
+     * set为空就是清除备注，目前仅支持群聊和联系人
+     * @param request
+     * @return
+     */
+    @PostMapping("/remark/set")
+    @NeedToken
+    @ApiOperation("设置备注")
+    public R<String> setRemark(@Valid @RequestBody ChatRemarkSetReq request) {
+        // todo: c.q.p.c.common.GlobalExceptionHandler    : nested exception is org.apache.ibatis.builder.BuilderException: The expression 'coll' evaluated to a null value.
+        Long uid = RequestHolder.get().getUid();
+        return R.success(roomService.setRemark(uid, request));
+    }
+
 }
 

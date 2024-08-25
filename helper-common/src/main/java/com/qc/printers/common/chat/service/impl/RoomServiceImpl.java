@@ -1,20 +1,17 @@
 package com.qc.printers.common.chat.service.impl;
 
-import com.qc.printers.common.chat.dao.GroupMemberDao;
-import com.qc.printers.common.chat.dao.RoomDao;
-import com.qc.printers.common.chat.dao.RoomFriendDao;
-import com.qc.printers.common.chat.dao.RoomGroupDao;
-import com.qc.printers.common.chat.domain.entity.GroupMember;
-import com.qc.printers.common.chat.domain.entity.Room;
-import com.qc.printers.common.chat.domain.entity.RoomFriend;
-import com.qc.printers.common.chat.domain.entity.RoomGroup;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.qc.printers.common.chat.dao.*;
+import com.qc.printers.common.chat.domain.entity.*;
 import com.qc.printers.common.chat.domain.enums.GroupRoleEnum;
 import com.qc.printers.common.chat.domain.enums.RoomTypeEnum;
+import com.qc.printers.common.chat.domain.vo.request.ChatRemarkSetReq;
 import com.qc.printers.common.chat.service.RoomService;
 import com.qc.printers.common.chat.service.adapter.ChatAdapter;
 import com.qc.printers.common.common.annotation.RedissonLock;
 import com.qc.printers.common.common.domain.enums.NormalOrNoEnum;
 import com.qc.printers.common.common.utils.AssertUtil;
+import com.qc.printers.common.common.utils.StringUtils;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.service.cache.UserCache;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,6 +38,9 @@ public class RoomServiceImpl implements RoomService {
     private GroupMemberDao groupMemberDao;
     @Autowired
     private UserCache userCache;
+    @Autowired
+    private RoomRemarkDao roomRemarkDao;
+
     @Autowired
     private RoomGroupDao roomGroupDao;
 
@@ -94,6 +94,35 @@ public class RoomServiceImpl implements RoomService {
                 .build();
         groupMemberDao.save(leader);
         return roomGroup;
+    }
+
+    @Transactional
+    @Override
+    public String setRemark(Long uid, ChatRemarkSetReq request) {
+        LambdaQueryWrapper<RoomRemark> roomRemarkLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        roomRemarkLambdaQueryWrapper.eq(RoomRemark::getUid,uid);
+        roomRemarkLambdaQueryWrapper.eq(RoomRemark::getType,request.getType());
+        roomRemarkLambdaQueryWrapper.eq(RoomRemark::getToId,request.getToId());
+        RoomRemark one = roomRemarkDao.getOne(roomRemarkLambdaQueryWrapper);
+        if (one!= null &&StringUtils.isEmpty(request.getRemarkName())){
+            roomRemarkDao.removeById(one.getId());
+            return "删除备注成功";
+        }
+        if (one!=null){
+            one.setRemarkName(request.getRemarkName());
+            roomRemarkDao.updateById(one);
+            return "修改备注成功";
+        }
+        if (StringUtils.isEmpty(request.getRemarkName())){
+            return "";
+        }
+        one = new RoomRemark();
+        one.setUid(uid);
+        one.setType(request.getType());
+        one.setToId(request.getToId());
+        one.setRemarkName(request.getRemarkName());
+        roomRemarkDao.save(one);
+        return "设置备注成功";
     }
 
     private RoomFriend createFriendRoom(Long roomId, List<Long> uidList) {
