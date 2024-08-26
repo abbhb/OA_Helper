@@ -59,6 +59,8 @@ public class UserInfoServiceImpl implements UserInfoService {
         UserInfo userInfo = new UserInfo();
         User user = userDao.getById(userId);
         if (user == null) {
+            log.error("异常的userID{}",userId);
+
             throw new CustomException("请重试！");
         }
 
@@ -103,6 +105,7 @@ public class UserInfoServiceImpl implements UserInfoService {
     public Set<SysRole> getUserAllRole(Long userId) {
         User user = userDao.getById(userId);
         if (user == null) {
+            log.error("异常的userID{}",userId);
             throw new CustomException("请重试！");
         }
         // 部门角色为继承制，下级部门继承上级

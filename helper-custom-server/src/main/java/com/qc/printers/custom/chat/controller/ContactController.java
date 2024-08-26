@@ -58,6 +58,11 @@ public class ContactController {
         return R.success(roomService.getContactPage(request, uid));
     }
 
+    /**
+     * 传入的roomID
+     * @param request
+     * @return
+     */
     @GetMapping("/public/contact/detail")
     @NeedToken
     @ApiOperation("会话详情")

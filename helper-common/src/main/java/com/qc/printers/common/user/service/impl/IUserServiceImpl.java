@@ -9,6 +9,7 @@ import com.qc.printers.common.user.domain.entity.SysRoleDept;
 import com.qc.printers.common.user.domain.entity.SysUserRole;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.service.*;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -20,6 +21,7 @@ import java.util.Set;
 
 @Transactional
 @Service
+@Slf4j
 public class IUserServiceImpl implements IUserService {
     @Autowired
     private UserDao userDao;
@@ -42,6 +44,7 @@ public class IUserServiceImpl implements IUserService {
     @Autowired
     private ISysRoleService iSysRoleService;
 
+
     public boolean isSuperAdmin(Set<SysRole> roleSet, Long userId) {
         if (roleSet != null) {
             if (roleSet.stream().anyMatch(sysRole -> sysRole.getRoleKey() != null && sysRole.getRoleKey().equals("userDaoadmin"))) {
@@ -55,6 +58,8 @@ public class IUserServiceImpl implements IUserService {
         UserInfo userInfo = new UserInfo();
         User user = userDao.getById(userId);
         if (user == null) {
+            log.error("异常的userID{}",userId);
+
             throw new CustomException("请重试！");
         }
         BeanUtils.copyProperties(user, userInfo);

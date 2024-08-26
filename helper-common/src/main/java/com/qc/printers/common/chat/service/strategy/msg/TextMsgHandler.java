@@ -65,13 +65,16 @@ public class TextMsgHandler extends AbstractMsgHandler {
         if (CollectionUtil.isNotEmpty(body.getAtUidList())) {
             List<Long> atUidList = body.getAtUidList();
             Set<Long> collect = new HashSet<>(atUidList);
-            Map<Long, UserInfo> batch = userCache.getUserInfoBatch(collect);
-            AssertUtil.equal(atUidList.size(), batch.values().size(), "@用户不存在");
             boolean atAll = body.getAtUidList().contains(0L);
-            if (atAll) {
+
+            if (atAll){
+                // @全体
                 // @全体成员权限判断
                 // 后期升级群聊包含管理员,管理员权重1000，群主权重10000，按权重判断权限
                 AssertUtil.isTrue(iRoleService.hasPower(uid, RoleEnum.CHAT_MANAGER), "没有权限@全体");
+            }else {
+                Map<Long, UserInfo> batch = userCache.getUserInfoBatch(collect);
+                AssertUtil.equal(atUidList.size(), batch.values().size(), "@用户不存在");
             }
         }
     }
