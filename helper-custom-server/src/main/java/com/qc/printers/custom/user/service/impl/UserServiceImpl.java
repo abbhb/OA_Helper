@@ -791,9 +791,7 @@ public class UserServiceImpl implements UserService {
         }
         boolean update = userDao.update(lambdaUpdateWrapper);
         userCache.userInfoChange(Long.valueOf(user.getId()));
-
         return update;
-
     }
 
 
@@ -1467,32 +1465,25 @@ public class UserServiceImpl implements UserService {
             if(user==null){
                 continue;
             }
+            UserDataImportErrorDto.UserDataImportErrorDtoBuilder userDataImportErrorDtoBuilder = UserDataImportErrorDto.builder()
+                    .studentId(user.getStudentId())
+                    .deptId(String.valueOf(user.getDeptId()))
+                    .email(user.getEmail())
+                    .name(user.getName());
             if (user.getDeptId()==null){
-                UserDataImportErrorDto signinUserDataExcelDto1 = new UserDataImportErrorDto();
-                signinUserDataExcelDto1.setUserId(user.getId());
-                signinUserDataExcelDto1.setError("部门id为空!");
-                errorData.add(signinUserDataExcelDto1);
+                errorData.add(userDataImportErrorDtoBuilder.error("部门id为空!").build());
                 continue;
             }
             if (StringUtils.isEmpty(user.getStudentId())){
-                UserDataImportErrorDto signinUserDataExcelDto1 = new UserDataImportErrorDto();
-                signinUserDataExcelDto1.setUserId(user.getId());
-                signinUserDataExcelDto1.setError("学号为空!");
-                errorData.add(signinUserDataExcelDto1);
+                errorData.add(userDataImportErrorDtoBuilder.error("学号为空!").build());
                 continue;
             }
             if (StringUtils.isEmpty(user.getEmail())){
-                UserDataImportErrorDto signinUserDataExcelDto1 = new UserDataImportErrorDto();
-                signinUserDataExcelDto1.setUserId(user.getId());
-                signinUserDataExcelDto1.setError("安全邮箱【用户名】为空!");
-                errorData.add(signinUserDataExcelDto1);
+                errorData.add(userDataImportErrorDtoBuilder.error("安全邮箱【用户名】为空!").build());
                 continue;
             }
             if (StringUtils.isEmpty(user.getPassword())){
-                UserDataImportErrorDto signinUserDataExcelDto1 = new UserDataImportErrorDto();
-                signinUserDataExcelDto1.setUserId(user.getId());
-                signinUserDataExcelDto1.setError("初始密码为空!");
-                errorData.add(signinUserDataExcelDto1);
+                errorData.add(userDataImportErrorDtoBuilder.error("初始密码为空!").build());
                 continue;
             }
 
@@ -1503,10 +1494,7 @@ public class UserServiceImpl implements UserService {
             int count = userDao.count(userLambdaQueryWrapper);
 
             if (count>0){
-                UserDataImportErrorDto signinUserDataExcelDto1 = new UserDataImportErrorDto();
-                signinUserDataExcelDto1.setUserId(user.getId());
-                signinUserDataExcelDto1.setError("用户邮箱或者学号已存在!");
-                errorData.add(signinUserDataExcelDto1);
+                errorData.add(userDataImportErrorDtoBuilder.error("用户邮箱或者学号已存在!").build());
                 continue;
             }
             if (StringUtils.isEmpty(user.getName())){
