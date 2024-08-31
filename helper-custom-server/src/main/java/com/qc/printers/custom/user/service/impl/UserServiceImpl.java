@@ -491,6 +491,13 @@ public class UserServiceImpl implements UserService {
         List<UserResult> results = new ArrayList<>();
         for (Object user : pageInfo.getRecords()) {
             User user1 = (User) user;
+            if (StringUtils.isEmpty(user1.getEmail())){
+                user1.setEmail("");
+            }
+            if (StringUtils.isEmpty(user1.getStudentId())){
+                user1.setStudentId("");
+            }
+
             //Todo:需要优化，将部门整个进缓存，在查询不到或者更改时更新单个缓存
             SysDept sysDept = iSysDeptService.getById(user1.getDeptId());
             //从部门继承的不能直接显示，或者需要却别开，不然很乱
@@ -759,12 +766,12 @@ public class UserServiceImpl implements UserService {
             }
         } else {
             //非admin
-            lambdaUpdateWrapper.set(User::getEmail, user.getEmail());
+            lambdaUpdateWrapper.set(User::getEmail, StringUtils.isEmpty(user.getEmail())?null:user.getEmail());
             lambdaUpdateWrapper.set(User::getDeptId, user.getDeptId());
             lambdaUpdateWrapper.set(User::getAvatar, OssDBUtil.toDBUrl(user.getAvatar()));
             lambdaUpdateWrapper.set(User::getPhone, user.getPhone());
             lambdaUpdateWrapper.set(User::getName, user.getName());
-            lambdaUpdateWrapper.set(User::getStudentId, user.getStudentId());
+            lambdaUpdateWrapper.set(User::getStudentId, StringUtils.isEmpty(user.getStudentId())?null:user.getStudentId());
             lambdaUpdateWrapper.set(User::getStatus, user.getStatus());
             lambdaUpdateWrapper.set(User::getSex, user.getSex());
 

@@ -181,20 +181,7 @@ public class SigninLogServiceImpl implements SigninLogService {
         if (signinBc==null){
             throw new CustomException("班次不存在");
         }
-         /**支持的模式，Set为该模式下的设备，不需要对记录进行校验，添加记录的时候已经校验过了
-        List<SigninWay> signinWays = rulesInfo.getSigninWays();
-        Map<String,Set<String>> typeDeviceIds = new HashMap<>();
-        for (SigninWay signinWay : signinWays) {
-            if (!typeDeviceIds.containsKey(signinWay.getType())){
-                Set<String> objects = new HashSet<>();
-                objects.add(signinWay.getDeviceId());
-                typeDeviceIds.put(signinWay.getType(),objects);
-                continue;
-            }
-            Set<String> strings = typeDeviceIds.get(signinWay.getType());
-            strings.add(signinWay.getDeviceId());
-            typeDeviceIds.put(signinWay.getType(),strings);
-        }*/
+
         // 忘了干啥的，反正总是0目前
         Integer signinType = rulesInfo.getSigninType();
         // 该考勤组的用户，需要统计
@@ -216,7 +203,7 @@ public class SigninLogServiceImpl implements SigninLogService {
             signinGroupDateUserDto.setName(user.getName());
             signinGroupDateUserDto.setDeptId(sysDept.getId());
             signinGroupDateUserDto.setBcCount(signinBc.getEveryDay());
-
+            // todo:我感觉此处可以优化成把一天的记录全查出来，在业务层放入map，key为用户id
             // 把用户一天的记录全查出来，在业务层去循环，而不一条一查
             LambdaQueryWrapper<SigninLogCli> signinLogCliLambdaQueryWrapper = new LambdaQueryWrapper<>();
             signinLogCliLambdaQueryWrapper.eq(SigninLogCli::getLogDatetime,date);

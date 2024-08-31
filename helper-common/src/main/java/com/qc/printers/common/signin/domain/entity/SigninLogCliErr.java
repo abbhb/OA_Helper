@@ -12,6 +12,10 @@ public class SigninLogCliErr implements Serializable {
     private Long signinLogCliId;
 
     private Integer newState;
+    /**
+     * 变更理由
+     */
+    private String reason;
 
     private Long updateUser;
 

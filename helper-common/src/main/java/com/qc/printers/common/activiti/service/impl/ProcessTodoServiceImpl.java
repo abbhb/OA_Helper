@@ -156,47 +156,37 @@ public class ProcessTodoServiceImpl implements ProcessTodoService {
     @Transactional
     @Override
     public void complete(TodoCompleteDto dto) {
-        try {
-            List<String> usersGroups = new ArrayList<>();
-            usersGroups.add(dto.getDeptId());
-            Task task = taskService.createTaskQuery()
-                    .active()
-                    .processInstanceId(dto.getProcessInstanceId())
-                    .taskCandidateOrAssigned(dto.getUserId(), usersGroups)
-                    .orderByTaskCreateTime()
-                    .desc().singleResult();
-            if (task == null) throw new CustomException("未找到审批节点!");
-            // 如果没有代理人就拾取任务进行办理
-            if (StringUtils.isEmpty(task.getAssignee())) {
-                taskService.claim(task.getId(), dto.getUserId());
-            }
 
-            Map<String, Object> variables = dto.getVariables();
-            taskService.setVariables(task.getId(), variables);
-            taskService.setVariablesLocal(task.getId(), variables);
-            taskService.complete(task.getId());
-
-            // 获取相关数据
-            ProcessDefinition definition = repositoryService.createProcessDefinitionQuery()
-                    .processDefinitionId(task.getProcessDefinitionId()).singleResult();
-            HistoricActivityInstance activityInstance = historyService.createHistoricActivityInstanceQuery()
-                    .processInstanceId(task.getProcessInstanceId()).list()
-                    .stream().filter(t -> t.getTaskId() != null && t.getTaskId().equals(task.getId()))
-                    .findAny().orElse(null);
-            // 保存数据
-            assert activityInstance != null;
-            deployService.saveData(task.getProcessInstanceId(), definition.getDeploymentId(),
-                    activityInstance.getActivityId(), variables);
-        } catch (TreeBuilderException ex) {
-            log.error("流程条件表达式错误,e:{}", ex.getMessage());
-            throw new CustomException("流程条件表达式错误:" + ex.getMessage());
-        } catch (ActivitiException ex) {
-            log.error("Activiti流程异常,e:{}", ex.getMessage());
-            throw new CustomException("Activiti流程异常:" + ex.getMessage());
-        } catch (Exception ex) {
-            ex.printStackTrace();
-            log.error("流程提交未知异常,e:{}", ex.getMessage());
-            throw new CustomException("流程提交未知异常!");
+        List<String> usersGroups = new ArrayList<>();
+        usersGroups.add(dto.getDeptId());
+        Task task = taskService.createTaskQuery()
+                .active()
+                .processInstanceId(dto.getProcessInstanceId())
+                .taskCandidateOrAssigned(dto.getUserId(), usersGroups)
+                .orderByTaskCreateTime()
+                .desc().singleResult();
+        if (task == null) throw new CustomException("未找到审批节点!");
+        // 如果没有代理人就拾取任务进行办理
+        if (StringUtils.isEmpty(task.getAssignee())) {
+            taskService.claim(task.getId(), dto.getUserId());
         }
+
+        Map<String, Object> variables = dto.getVariables();
+        taskService.setVariables(task.getId(), variables);
+        taskService.setVariablesLocal(task.getId(), variables);
+        taskService.complete(task.getId());
+
+        // 获取相关数据
+        ProcessDefinition definition = repositoryService.createProcessDefinitionQuery()
+                .processDefinitionId(task.getProcessDefinitionId()).singleResult();
+        HistoricActivityInstance activityInstance = historyService.createHistoricActivityInstanceQuery()
+                .processInstanceId(task.getProcessInstanceId()).list()
+                .stream().filter(t -> t.getTaskId() != null && t.getTaskId().equals(task.getId()))
+                .findAny().orElse(null);
+        // 保存数据
+        assert activityInstance != null;
+        deployService.saveData(task.getProcessInstanceId(), definition.getDeploymentId(),
+                activityInstance.getActivityId(), variables);
+
     }
 }

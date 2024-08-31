@@ -11,6 +11,7 @@ import com.qc.printers.common.activiti.service.SysDeployService;
 import com.qc.printers.common.activiti.service.TableService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.Map;
 
@@ -32,6 +33,7 @@ public class SysDeployServiceImpl extends ServiceImpl<SysDeployMapper, SysDeploy
      * @param activityId 流程定义节点唯一标识
      * @param variables  流程变量
      */
+    @Transactional
     @Override
     public void saveData(String instanceId, String deployId, String activityId, Map<String, Object> variables) {
         SysDeployEntity sysDeploy = this.getById(deployId);

@@ -1,6 +1,7 @@
 package com.qc.printers.common.user.utils;
 
 import com.qc.printers.common.activiti.utils.SpringUtils;
+import com.qc.printers.common.common.utils.StringUtils;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.entity.*;
 import com.qc.printers.common.user.domain.dto.DeptManger;
@@ -83,7 +84,7 @@ public class DeptMangerHierarchyBuilder {
                     if (byId != null) {
                         deptManger.setLeaderId(node.getLeaderId());
                         deptManger.setLeader(byId.getName());
-                        deptManger.setEmail(byId.getEmail());
+                        deptManger.setEmail(StringUtils.isEmpty(byId.getEmail())?"":byId.getEmail());
                         deptManger.setPhone(byId.getPhone());
 
                     }
@@ -104,7 +105,7 @@ public class DeptMangerHierarchyBuilder {
                     if (byId != null) {
                         deptManger.setLeaderId(node.getLeaderId());
                         deptManger.setLeader(byId.getName());
-                        deptManger.setEmail(byId.getEmail());
+                        deptManger.setEmail(StringUtils.isEmpty(byId.getEmail())?"":byId.getEmail());
                         deptManger.setPhone(byId.getPhone());
 
                     }

@@ -10,7 +10,7 @@ spring:
       max-file-size: -1
       max-request-size: -1
   profiles:
-    active: dev
+    active: prod
   application:
     name: printes
   datasource:

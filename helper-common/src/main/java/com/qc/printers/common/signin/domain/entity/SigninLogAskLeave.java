@@ -27,5 +27,15 @@ public class SigninLogAskLeave implements Serializable {
     @NotNull
     private LocalDateTime endTime;
 
+    /**
+     * 请假理由
+     */
+    private String askLeaveReason;
+
+    /**
+     * 关联单据id，有就带着
+     */
+    private String askLeaveAboutActId;
+
     private LocalDateTime createTime;
 }

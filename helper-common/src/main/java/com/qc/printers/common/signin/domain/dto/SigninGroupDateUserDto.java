@@ -35,7 +35,7 @@ public class SigninGroupDateUserDto implements Serializable {
     private Integer bcCount;
 
     /**
-     * 昨天概况状态，缺勤或者正常，异常为存在迟到或者早退
+     * 某天概况状态，缺勤或者正常，异常为存在迟到或者早退
      * 根据所有班次的状态综合，全出勤为正常，迟到和早退存在但不存在缺勤就是异常，全正常为正常
      */
     private Integer state;
