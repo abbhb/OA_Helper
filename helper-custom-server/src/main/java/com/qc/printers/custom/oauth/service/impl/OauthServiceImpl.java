@@ -515,7 +515,9 @@ public class OauthServiceImpl implements OauthService {
         if (type==null){
             throw new CustomException("type为空");
         }
-        SysOauth sysOauth1 = sysOauthDao.getById(id);
+        LambdaQueryWrapper<SysOauth> sysOauthLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysOauthLambdaQueryWrapper.eq(SysOauth::getClientId,id);
+        SysOauth sysOauth1 = sysOauthDao.getOne(sysOauthLambdaQueryWrapper);
 
         return switch (type) {
             case 1 -> sysOauth1.getServiceAgreement();

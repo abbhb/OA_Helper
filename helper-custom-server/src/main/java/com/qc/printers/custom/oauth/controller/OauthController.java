@@ -325,9 +325,9 @@ public class OauthController {
      * @return string object 里面就是富文本内容
      */
     @NeedToken
-    @GetMapping("agreement_get/{id}/{type}")
-    public R<String> agreementGet(@PathVariable(name = "type",required = true) Integer type,@PathVariable(name = "id",required = true) Long id) {
-        return R.successOnlyObject(oauthService.agreementGet(id,type));
+    @GetMapping("agreement_get/{client_id}/{type}")
+    public R<String> agreementGet(@PathVariable(name = "type",required = true) Integer type,@PathVariable(name = "client_id",required = true) Long clientId) {
+        return R.successOnlyObject(oauthService.agreementGet(clientId,type));
     }
 
 
