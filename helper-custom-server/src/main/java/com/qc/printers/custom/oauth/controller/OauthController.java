@@ -326,7 +326,7 @@ public class OauthController {
      */
     @NeedToken
     @GetMapping("agreement_get/{id}/{type}")
-    public R<String> agreementUpdate(@PathVariable(name = "type",required = true) Integer type,@PathVariable(name = "id",required = true) Long id) {
+    public R<String> agreementGet(@PathVariable(name = "type",required = true) Integer type,@PathVariable(name = "id",required = true) Long id) {
         return R.successOnlyObject(oauthService.agreementGet(id,type));
     }
 
