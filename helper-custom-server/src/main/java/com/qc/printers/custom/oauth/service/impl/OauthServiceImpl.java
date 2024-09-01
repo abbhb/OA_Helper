@@ -508,7 +508,7 @@ public class OauthServiceImpl implements OauthService {
     }
 
     @Override
-    public String agreementGet(Long id, Integer type) {
+    public String agreementGet(String way,String id, Integer type) {
         if (id==null){
             throw new CustomException("无获取对象");
         }
@@ -516,7 +516,8 @@ public class OauthServiceImpl implements OauthService {
             throw new CustomException("type为空");
         }
         LambdaQueryWrapper<SysOauth> sysOauthLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        sysOauthLambdaQueryWrapper.eq(SysOauth::getClientId,id);
+        sysOauthLambdaQueryWrapper.eq(way.equals("cid"),SysOauth::getClientId,id);
+        sysOauthLambdaQueryWrapper.eq(way.equals("id"),SysOauth::getId,Long.valueOf(id));
         SysOauth sysOauth1 = sysOauthDao.getOne(sysOauthLambdaQueryWrapper);
 
         return switch (type) {

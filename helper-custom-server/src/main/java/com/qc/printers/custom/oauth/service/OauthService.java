@@ -49,5 +49,5 @@ public interface OauthService {
 
     void agreementUpdate(SysOauth sysOauth, Integer type);
 
-    String agreementGet(Long id, Integer type);
+    String agreementGet(String way,String id, Integer type);
 }
