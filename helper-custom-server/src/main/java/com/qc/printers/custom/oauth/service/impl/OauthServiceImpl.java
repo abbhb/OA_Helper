@@ -516,8 +516,10 @@ public class OauthServiceImpl implements OauthService {
             throw new CustomException("type为空");
         }
         LambdaQueryWrapper<SysOauth> sysOauthLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        sysOauthLambdaQueryWrapper.eq(way.equals("cid"),SysOauth::getClientId,id);
-        sysOauthLambdaQueryWrapper.eq(way.equals("id"),SysOauth::getId,Long.valueOf(id));
+        if (way.equals("cid"))
+        sysOauthLambdaQueryWrapper.eq(SysOauth::getClientId,id);
+        if (way.equals("id"))
+        sysOauthLambdaQueryWrapper.eq(SysOauth::getId,Long.valueOf(id));
         SysOauth sysOauth1 = sysOauthDao.getOne(sysOauthLambdaQueryWrapper);
 
         return switch (type) {
