@@ -486,4 +486,43 @@ public class OauthServiceImpl implements OauthService {
         return this.getUserInfo(accessToken, clientIdT);
     }
 
+    @Transactional
+    @Override
+    public void agreementUpdate(SysOauth sysOauth, Integer type) {
+        if (type==null){
+            throw new CustomException("type为空");
+        }
+        SysOauth sysOauth1 = sysOauthDao.getById(sysOauth.getId());
+        switch (type){
+            case 1:
+                sysOauth1.setServiceAgreement(sysOauth.getServiceAgreement());
+                sysOauthDao.updateById(sysOauth1);
+                break;
+            case 2:
+                sysOauth1.setServiceAgreement(sysOauth.getPrivacyShieldAgreement());
+                sysOauthDao.updateById(sysOauth1);
+                break;
+            default:
+                throw new CustomException("请传入type");
+        }
+    }
+
+    @Override
+    public String agreementGet(Long id, Integer type) {
+        if (id==null){
+            throw new CustomException("无获取对象");
+        }
+        if (type==null){
+            throw new CustomException("type为空");
+        }
+        SysOauth sysOauth1 = sysOauthDao.getById(id);
+
+        return switch (type) {
+            case 1 -> sysOauth1.getServiceAgreement();
+            case 2 -> sysOauth1.getPrivacyShieldAgreement();
+            default -> throw new CustomException("请传入type");
+        };
+    }
+
+
 }

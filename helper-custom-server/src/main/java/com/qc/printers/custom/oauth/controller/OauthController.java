@@ -302,4 +302,33 @@ public class OauthController {
         return R.successOnlyObject(oauthService.add(sysOauth));
     }
 
+    /**
+     * 服务协议/隐私保护协议更新
+     * @param sysOauth
+     * @param type 约束1：服务协议更新，2:隐私保护协议
+     * @return
+     */
+    @NeedToken
+    @PermissionCheck(role = "superadmin", permission = "sys:oauth:update")
+    @PutMapping("agreement_update/{type}")
+    public R<String> agreementUpdate(@RequestBody SysOauth sysOauth,@PathVariable(name = "type",required = true) Integer type) {
+        if (sysOauth.getId()==null){
+            return R.error("请传入操作对象");
+        }
+        oauthService.agreementUpdate(sysOauth,type);
+        return R.success("更新成功");
+    }
+
+    /**
+     * 服务协议/隐私保护协议获取
+     * @param type 约束1：服务协议，2:隐私保护协议
+     * @return string object 里面就是富文本内容
+     */
+    @NeedToken
+    @GetMapping("agreement_get/{id}/{type}")
+    public R<String> agreementUpdate(@PathVariable(name = "type",required = true) Integer type,@PathVariable(name = "id",required = true) Long id) {
+        return R.successOnlyObject(oauthService.agreementGet(id,type));
+    }
+
+
 }

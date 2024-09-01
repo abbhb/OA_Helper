@@ -46,4 +46,8 @@ public interface OauthService {
     OauthUserInfoResp getUserInfoOnlyAccessToken(String accessToken);
 
     OauthUserInfoResp getUserInfoNeedCheckOpenId(String accessToken, String openid, String clientId);
+
+    void agreementUpdate(SysOauth sysOauth, Integer type);
+
+    String agreementGet(Long id, Integer type);
 }

@@ -55,6 +55,18 @@ public class SysOauth implements Serializable {
 
     @JsonProperty("no_sert_redirect")
     private Integer noSertRedirect;
+
+    /**
+     * 服务协议
+     */
+    @JsonProperty("service_agreement")
+    private String serviceAgreement;
+
+    /**
+     * 隐私保护协议
+     */
+    @JsonProperty("privacy_shield_agreement")
+    private String privacyShieldAgreement;
     /**
      * 是否强制配置的回调地址，默认为0
      * 1为强制使用配置回调
