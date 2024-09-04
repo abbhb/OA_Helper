@@ -33,7 +33,7 @@ public class GlobalExceptionHandler {
             String msg = split[2] + "已存在";
             return R.error(msg);
         }
-        log.error("SQLIntegrityConstraintViolationException",ex);
+        log.error("SQLIntegrityConstraintViolationException: ", ex);
 
         return R.error("未知错误");
     }
@@ -60,13 +60,13 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(FrequencyControlException.class)
     public R<String> frequencyControlExceptionHandler(FrequencyControlException e, HttpServletResponse response) {
-        log.error("FrequencyControlException",e);
+        log.error("FrequencyControlException: ", e);
 
         return R.error(e.getErrorMsg());
     }
     @ExceptionHandler(BusinessException.class)
     public R<String> businessExceptionHandler(BusinessException e, HttpServletResponse response) {
-        log.error("BusinessException",e);
+        log.error("BusinessException: ", e);
 
         return R.error(e.getErrorMsg());
     }
@@ -91,14 +91,14 @@ public class GlobalExceptionHandler {
             log.error(e.getMessage(),e.getClass());
             return R.error("运行异常");
         }
-        log.error("RuntimeException",e);
+        log.error("RuntimeException: ", e);
 
         return R.error("运行异常183302-请联系管理员排查");
     }
 
     @ExceptionHandler(NullPointerException.class)
     public R<String> nullPointerExceptionHandler(NullPointerException e) {
-        log.error("空指针",e);
+        log.error("空指针: ", e);
         return R.error("空指针异常183301-请联系管理员排查");
     }
 }

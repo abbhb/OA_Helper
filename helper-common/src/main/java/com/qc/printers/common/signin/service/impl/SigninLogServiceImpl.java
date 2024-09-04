@@ -496,52 +496,7 @@ public class SigninLogServiceImpl implements SigninLogService {
             SigninBcTimeRuleDto bcTimeRule = this.getBcTimeRule(nowDateTime,bcRules);
             if (bcTimeRule.getState().equals(2)){
                 // 当前不在打卡时段，且找不到任何班次已经过去了的，直接返回全部没到就行，不用查表了
-                signinGroupDateRealResp.setKaoqingString("今日还未上班!");
-                signinGroupDateRealResp.setNumberOfChiDao(0);// 还没开始打卡，迟什么到
-                signinGroupDateRealResp.setNumberOfLeave(0);// 请假后续会补上
-                Integer numberOfLeave = 0;
-                signinGroupDateRealResp.setNumberOfZaoTUi(0);
-                signinGroupDateRealResp.setNumberOfActualArrival(0);
-                List<SigninLogRealYiQianDaoDto> signinLogRealYiQianDaoDtos = new ArrayList<>();
-                for (Long kqUserId : kqUserIds) {
-                    SigninLogRealYiQianDaoDto signinLogRealYiQianDaoDto = new SigninLogRealYiQianDaoDto();
-                    User byId = userDao.getById(kqUserId);
-                    if (byId==null){
-                        continue;// 人都不存在了
-                    }
-                    signinLogRealYiQianDaoDto.setName(byId.getName());
-                    signinLogRealYiQianDaoDto.setTag("缺勤");
-                    SysDept deptServiceById = iSysDeptService.getById(byId.getDeptId());
-                    if (deptServiceById==null){
-                        signinLogRealYiQianDaoDto.setDeptName("部门不存在");
-                    }else {
-                        signinLogRealYiQianDaoDto.setDeptName(deptServiceById.getDeptNameAll());
-                    }
-
-                    // 请假的
-                    // 以每个班次的上班时间和下班时间来看，有一个在请假就算该班次请假
-                    // 使用DateTimeFormatter解析时间字符串
-                    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-                    LocalTime sbtime = LocalTime.parse(bcTimeRule.getBcRule().getSbTime(), timeFormatter);
-                    LocalTime xbtime = LocalTime.parse(bcTimeRule.getBcRule().getXbTime(), timeFormatter);
-                    // 将LocalDate和LocalTime组合成LocalDateTime
-                    LocalDateTime sb_dateTime = now.atTime(sbtime);
-                    LocalDateTime xb_dateTime = now.atTime(xbtime);
-                    boolean userAskForLeave_s = this.getUserAskForLeave(kqUserId, sb_dateTime);
-                    boolean userAskForLeave_x = this.getUserAskForLeave(kqUserId, xb_dateTime);
-                    log.info("tag:请假-表示sb{}表示下班{}",userAskForLeave_s,userAskForLeave_x);
-
-                    if (userAskForLeave_s||userAskForLeave_x){
-                        // 这个班次用户已经请假了，直接不往后查
-                        signinLogRealYiQianDaoDto.setTag("请假");
-                        numberOfLeave+=1;
-                    }
-                    signinLogRealYiQianDaoDtos.add(signinLogRealYiQianDaoDto);
-                }
-                signinGroupDateRealResp.setWeiQianDao(signinLogRealYiQianDaoDtos);// 所有人
-                signinGroupDateRealResp.setYiQianDao(new ArrayList<>());// 空
-                signinGroupDateRealResp.setNumberOfPeopleSupposedToCome(signinLogRealYiQianDaoDtos.size());//应到
-                signinGroupDateRealResp.setNumberOfLeave(numberOfLeave);
+                returnProcessingBeforeWorkResults(signinGroupDateRealResp,kqUserIds);
                 return signinGroupDateRealResp;
             }
             if (bcTimeRule.getState().equals(1)){
@@ -581,56 +536,14 @@ public class SigninLogServiceImpl implements SigninLogService {
             }
             // 今日考勤数据
             List<BcRule> bcRules = JSON.parseArray(JSON.toJSONString(signinBc.getRules()), BcRule.class);
+            log.info("考勤统计bug排除-bcRules{},原始{}",bcRules,signinBc.getRules());
 
             SigninBcTimeRuleDto bcTimeRule = this.getBcTimeRule(nowDateTime, bcRules);
+            log.info("考勤统计bug排除-nowDateTimee具体{},{}",nowDateTime,bcRules);
 
             if (bcTimeRule.getState().equals(2)){
                 // 当前不在打卡时段，且找不到任何班次已经过去了的，直接返回全部没到就行，不用查表了
-                signinGroupDateRealResp.setKaoqingString("今日还未上班!");
-                signinGroupDateRealResp.setNumberOfChiDao(0);// 还没开始打卡，迟什么到
-                signinGroupDateRealResp.setNumberOfLeave(0);
-                Integer numberOfLeave = 0;
-                signinGroupDateRealResp.setNumberOfZaoTUi(0);
-                signinGroupDateRealResp.setNumberOfActualArrival(0);
-                List<SigninLogRealYiQianDaoDto> signinLogRealYiQianDaoDtos = new ArrayList<>();
-                for (Long kqUserId : kqUserIds) {
-                    SigninLogRealYiQianDaoDto signinLogRealYiQianDaoDto = new SigninLogRealYiQianDaoDto();
-                    User byId = userDao.getById(kqUserId);
-                    if (byId==null){
-                        continue;// 人都不存在了
-                    }
-
-                    signinLogRealYiQianDaoDto.setName(byId.getName());
-                    signinLogRealYiQianDaoDto.setTag("缺勤");
-                    SysDept deptServiceById = iSysDeptService.getById(byId.getDeptId());
-                    if (deptServiceById==null){
-                        signinLogRealYiQianDaoDto.setDeptName("部门不存在");
-                    }else {
-                        signinLogRealYiQianDaoDto.setDeptName(deptServiceById.getDeptNameAll());
-                    }
-                    // 请假的
-                    // 以每个班次的上班时间和下班时间来看，有一个在请假就算该班次请假
-                    // 使用DateTimeFormatter解析时间字符串
-                    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
-                    LocalTime sbtime = LocalTime.parse(bcTimeRule.getBcRule().getSbTime(), timeFormatter);
-                    LocalTime xbtime = LocalTime.parse(bcTimeRule.getBcRule().getXbTime(), timeFormatter);
-                    // 将LocalDate和LocalTime组合成LocalDateTime
-                    LocalDateTime sb_dateTime = now.atTime(sbtime);
-                    LocalDateTime xb_dateTime = now.atTime(xbtime);
-                    boolean userAskForLeave_s = this.getUserAskForLeave(kqUserId, sb_dateTime);
-                    boolean userAskForLeave_x = this.getUserAskForLeave(kqUserId, xb_dateTime);
-                    log.info("tag:请假-表示sb{}表示下班{}",userAskForLeave_s,userAskForLeave_x);
-                    if (userAskForLeave_s||userAskForLeave_x){
-                        // 这个班次用户已经请假了，直接不往后查
-                        signinLogRealYiQianDaoDto.setTag("请假");
-                        numberOfLeave+=1;
-                    }
-                    signinLogRealYiQianDaoDtos.add(signinLogRealYiQianDaoDto);
-                }
-                signinGroupDateRealResp.setWeiQianDao(signinLogRealYiQianDaoDtos);// 所有人
-                signinGroupDateRealResp.setYiQianDao(new ArrayList<>());// 空
-                signinGroupDateRealResp.setNumberOfLeave(numberOfLeave);// 请假的真实人数
-                signinGroupDateRealResp.setNumberOfPeopleSupposedToCome(signinLogRealYiQianDaoDtos.size());//应到
+                returnProcessingBeforeWorkResults(signinGroupDateRealResp, kqUserIds);
             }
             if (bcTimeRule.getState().equals(1)){
                 // 不在打卡时间段，但是找得到最近的上下班（当前时间不在某日的第一个打卡班次之前）
@@ -701,6 +614,61 @@ public class SigninLogServiceImpl implements SigninLogService {
         }
 
         return signinGroupDateRealResp;
+    }
+
+    /**
+     * 抽出来set传入的返回对象signinGroupDateRealResp
+     * 计算有考勤任务但是还没到第一个班次之前的返回
+     * @param signinGroupDateRealResp
+     * @param kqUserIds
+     */
+    private void returnProcessingBeforeWorkResults(SigninGroupDateRealResp signinGroupDateRealResp, List<Long> kqUserIds) {
+        signinGroupDateRealResp.setKaoqingString("今日还未上班!");
+        signinGroupDateRealResp.setNumberOfChiDao(0);// 还没开始打卡，迟什么到
+        signinGroupDateRealResp.setNumberOfLeave(0);
+        Integer numberOfLeave = 0;
+        signinGroupDateRealResp.setNumberOfZaoTUi(0);
+        signinGroupDateRealResp.setNumberOfActualArrival(0);
+        List<SigninLogRealYiQianDaoDto> signinLogRealYiQianDaoDtos = new ArrayList<>();
+        for (Long kqUserId : kqUserIds) {
+            SigninLogRealYiQianDaoDto signinLogRealYiQianDaoDto = new SigninLogRealYiQianDaoDto();
+            User byId = userDao.getById(kqUserId);
+            if (byId==null){
+                continue;// 人都不存在了
+            }
+
+            signinLogRealYiQianDaoDto.setName(byId.getName());
+            signinLogRealYiQianDaoDto.setTag("缺勤");
+            SysDept deptServiceById = iSysDeptService.getById(byId.getDeptId());
+            if (deptServiceById==null){
+                signinLogRealYiQianDaoDto.setDeptName("部门不存在");
+            }else {
+                signinLogRealYiQianDaoDto.setDeptName(deptServiceById.getDeptNameAll());
+            }
+            // 请假的，还没到任何一个班次，不考虑请假展示，没上班谈请假不对
+            // 以每个班次的上班时间和下班时间来看，有一个在请假就算该班次请假
+            // 使用DateTimeFormatter解析时间字符串
+//                    DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
+//                    log.info("考勤统计bug排除-bcrule具体{}",bcTimeRule);
+//                    LocalTime sbtime = LocalTime.parse(bcTimeRule.getBcRule().getSbTime(), timeFormatter);
+//                    LocalTime xbtime = LocalTime.parse(bcTimeRule.getBcRule().getXbTime(), timeFormatter);
+//                    // 将LocalDate和LocalTime组合成LocalDateTime
+//                    LocalDateTime sb_dateTime = now.atTime(sbtime);
+//                    LocalDateTime xb_dateTime = now.atTime(xbtime);
+//                    boolean userAskForLeave_s = this.getUserAskForLeave(kqUserId, sb_dateTime);
+//                    boolean userAskForLeave_x = this.getUserAskForLeave(kqUserId, xb_dateTime);
+//                    log.info("tag:请假-表示sb{}表示下班{}",userAskForLeave_s,userAskForLeave_x);
+//                    if (userAskForLeave_s||userAskForLeave_x){
+//                        // 这个班次用户已经请假了，直接不往后查
+//                        signinLogRealYiQianDaoDto.setTag("请假");
+//                        numberOfLeave+=1;
+//                    }
+            signinLogRealYiQianDaoDtos.add(signinLogRealYiQianDaoDto);
+        }
+        signinGroupDateRealResp.setWeiQianDao(signinLogRealYiQianDaoDtos);// 所有人
+        signinGroupDateRealResp.setYiQianDao(new ArrayList<>());// 空
+        signinGroupDateRealResp.setNumberOfLeave(0);// 请假的真实人数，无班次不谈请假
+        signinGroupDateRealResp.setNumberOfPeopleSupposedToCome(signinLogRealYiQianDaoDtos.size());//应到
     }
 
     @Transactional
@@ -906,6 +874,7 @@ public class SigninLogServiceImpl implements SigninLogService {
     }
 
     /**
+     * 仅适配实时接口，整体计算单独弄，这个会导致一些情况下规则为对应的班次null
      * @param currentDateTime 根据当前时间返回班次
      * @param bcRules 传入一个bc的规则列表解析
      * @return 返回提示当前处于什么班次,如果当前不在打卡时间段，那就返回最近的一次上班或者下班的结果
