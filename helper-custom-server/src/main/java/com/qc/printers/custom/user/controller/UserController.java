@@ -333,6 +333,17 @@ public class UserController {
         return R.success(roleService.getroleNameByKey(key));
     }
 
+    /**
+     *
+     * @param pageNum
+     * @param pageSize
+     * @param name
+     * @param mustHaveStudentId
+     * @param cascade
+     * @param deptId
+     * @param level 单个就直接模糊查询，多个都好分割in
+     * @return
+     */
     @GetMapping("/user_manger")
     @NeedToken
     @PermissionCheck(role = {"superadmin"}, permission = "sys:user:list")
@@ -342,9 +353,11 @@ public class UserController {
             , @RequestParam(required = false, name = "name") String name
             , @RequestParam(required = false, name = "mustHaveStudentId") Integer mustHaveStudentId
             , @RequestParam(required = false, name = "cascade", defaultValue = "0") Integer cascade
-            , @RequestParam(required = false, name = "deptId") Long deptId) {
+            , @RequestParam(required = false, name = "deptId") Long deptId
+            , @RequestParam(required = false, name = "level") String level
+    ) {
         log.info("用户管理获取所有用户");
-        return R.success(userService.getUserList(new User(),pageNum, pageSize, name,mustHaveStudentId, cascade, deptId));
+        return R.success(userService.getUserList(new User(),pageNum, pageSize, name,mustHaveStudentId, cascade, deptId,level));
     }
 
 
@@ -415,6 +428,16 @@ public class UserController {
     public R<UserInfoBaseExtDto> approvalUserinfoExtData(@PathVariable String taskId) {
         return R.successOnlyObject(userService.approvalUserinfoExtData(taskId));
     }
+
+
+
+    @NeedToken
+    @ApiOperation(value = "返回所有级，用于筛选", notes = "")
+    @GetMapping("/levels")
+    public R<List<String>> levels() {
+        return R.successOnlyObject(userService.levels());
+    }
+
 
 
     @NeedToken

@@ -417,7 +417,9 @@ public class UserServiceImpl implements UserService {
             , String name
             , Integer mustHaveStudentId
             , Integer cascade
-            , Long deptId) {
+            , Long deptId
+            , String level
+    ) {
         if (pageNum == null) {
             throw new IllegalArgumentException("传参错误");
         }
@@ -442,6 +444,14 @@ public class UserServiceImpl implements UserService {
                             .or()
                             .eq(User::getStudentId, "") // 学号为字符串""
                     );
+        }
+        if (StringUtils.isNotEmpty(level)){
+            String[] yearArray = level.split(",");
+            lambdaQueryWrapper.and(wrapper -> {
+                for (String year : yearArray) {
+                    wrapper.or().apply("SUBSTRING(student_id, 1, 4) = {0}", year.trim());
+                }
+            });
         }
         if (!cascade.equals(1)) {
             lambdaQueryWrapper.eq(User::getDeptId, deptId);
@@ -1533,5 +1543,20 @@ public class UserServiceImpl implements UserService {
         byId.setSalt(salt);
         userDao.updateById(byId);
         return ResetResp.builder().newPassword(newpassword).build();
+    }
+
+    @Override
+    public List<String> levels() {
+        List<User> list = userDao.list(new LambdaQueryWrapper<User>().select(User::getStudentId));
+        List<String> years = new ArrayList<>();
+
+        for (User user : list) {
+            String studentId = user.getStudentId();
+            if (studentId != null && studentId.matches("\\d{12}")) {
+                String year = studentId.substring(0, 4);
+                years.add(year);
+            }
+        }
+        return years;
     }
 }

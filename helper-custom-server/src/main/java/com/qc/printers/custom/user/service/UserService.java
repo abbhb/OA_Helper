@@ -40,7 +40,7 @@ public interface UserService {
 
     R<String> updateUser(String userid, String name, String username, String phone, String idNumber, String status, String grouping, String sex, String token);
 
-    PageData<UserResult> getUserList(User ua,Integer pageNum, Integer pageSize, String name, Integer mustHaveStudentId, Integer cascade, Long deptId);
+    PageData<UserResult> getUserList(User ua,Integer pageNum, Integer pageSize, String name, Integer mustHaveStudentId, Integer cascade, Long deptId,String level);
 
     R<String> deleteUsers(String id);
 
@@ -94,4 +94,6 @@ public interface UserService {
     String importUserData(List<User> dataList);
 
     ResetResp resetPassword(ResetReq resetReq);
+
+    List<String> levels();
 }
