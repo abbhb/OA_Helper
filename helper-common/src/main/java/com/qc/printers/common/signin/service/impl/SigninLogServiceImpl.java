@@ -3,8 +3,12 @@ package com.qc.printers.common.signin.service.impl;
 import com.alibaba.fastjson.JSON;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.qc.printers.common.activiti.entity.dto.workflow.StartProcessDto;
+import com.qc.printers.common.activiti.service.ProcessStartService;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.MyString;
+import com.qc.printers.common.common.annotation.RedissonLock;
+import com.qc.printers.common.common.utils.ThreadLocalUtil;
 import com.qc.printers.common.common.utils.oss.OssDBUtil;
 import com.qc.printers.common.config.system.signin.SigninTipMessageConfig;
 import com.qc.printers.common.signin.dao.*;
@@ -21,6 +25,7 @@ import com.qc.printers.common.signin.service.SigninDeviceMangerService;
 import com.qc.printers.common.signin.service.SigninLogService;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.dao.UserExtBaseDao;
+import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.SysDept;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.domain.entity.UserExtBase;
@@ -29,7 +34,14 @@ import com.qc.printers.common.user.domain.vo.response.ws.WSSigninPush;
 import com.qc.printers.common.user.service.ISysDeptService;
 import com.qc.printers.common.user.service.adapter.WSAdapter;
 import com.qc.printers.common.user.service.impl.PushService;
+import com.qc.printers.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.activiti.engine.HistoryService;
+import org.activiti.engine.RepositoryService;
+import org.activiti.engine.history.HistoricProcessInstance;
+import org.activiti.engine.history.HistoricProcessInstanceQuery;
+import org.activiti.engine.repository.ProcessDefinition;
+import org.activiti.engine.repository.ProcessDefinitionQuery;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -84,9 +96,18 @@ public class SigninLogServiceImpl implements SigninLogService {
     @Autowired
     private SigninLogAskLeaveDao signinLogAskLeaveDao;
 
+    @Autowired
+    private SigninRenewalDao signinRenewalDao;
+    @Autowired
+    private ProcessStartService processStartService;
+    @Autowired
+    private HistoryService historyService;
+    @Autowired
+    private RepositoryService repositoryService;
+
     /**
      * signinImage为base64
-     *
+     * 签到逻辑入库基础方法，必须接入此方法
      * @param request
      * @param signinLog
      * @return
@@ -181,6 +202,16 @@ public class SigninLogServiceImpl implements SigninLogService {
         if (signinBc==null){
             throw new CustomException("班次不存在");
         }
+        List<BcRule> bcRules1 = JSON.parseArray(signinBc.getRules().toString(), BcRule.class);
+        log.info("err{}", bcRules1);
+
+        bcRules1.sort(new Comparator<BcRule>() {
+            @Override
+            public int compare(BcRule p1, BcRule p2) {
+                return p1.getCount() - p2.getCount();
+            }
+        });
+        signinBc.setRules(bcRules1);
 
         // 忘了干啥的，反正总是0目前
         Integer signinType = rulesInfo.getSigninType();
@@ -208,6 +239,7 @@ public class SigninLogServiceImpl implements SigninLogService {
             LambdaQueryWrapper<SigninLogCli> signinLogCliLambdaQueryWrapper = new LambdaQueryWrapper<>();
             signinLogCliLambdaQueryWrapper.eq(SigninLogCli::getLogDatetime,date);
             signinLogCliLambdaQueryWrapper.eq(SigninLogCli::getUserId,user.getId());
+
             List<SigninLogCli> list = signinLogCliDao.list(signinLogCliLambdaQueryWrapper);
             if (list==null){
                 list = new ArrayList<>();
@@ -234,6 +266,7 @@ public class SigninLogServiceImpl implements SigninLogService {
                 //[fix:也不一定，说不定有傻逼请假了也来打卡，还迟到早退] 直接一开始就排除请假的
                 // 以每个班次的上班时间和下班时间来看，有一个在请假就算该班次请假
                 BcRule bcRule = signinBc.getRules().get(i - 1);
+
                 // 使用DateTimeFormatter解析时间字符串
                 DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss");
                 LocalTime sbtime = LocalTime.parse(bcRule.getSbTime(), timeFormatter);
@@ -270,6 +303,26 @@ public class SigninLogServiceImpl implements SigninLogService {
                 // 如果班次存在，也就是打过卡，看看上下班是不是都没异常，如果有上下班缺一个直接找请假，都不缺直接对比状态
 
                 Map<Integer, SigninLogCli> signinLogCliMap = signinLogCliBcCountMap.get(i);
+                // add: 上下班都存在结合处理表，如果有修改的状态机
+                if (signinLogCliMap.containsKey(0)){
+                    // shang班状态是否被纠正
+                    SigninLogCli signinLogCli12312 = signinLogCliMap.get(0);
+
+                    SigninLogCliErr rfewgwe23123error = getRfewgwe23123error(signinLogCli12312.getId());
+                    if (rfewgwe23123error!=null){
+                        signinLogCli12312.setState(rfewgwe23123error.getNewState());
+                        signinLogCliMap.put(0,signinLogCli12312);
+                    }
+                }
+                if (signinLogCliMap.containsKey(1)){
+                    // 下班状态是否被纠正
+                    SigninLogCli signinLogCli2141241241 = signinLogCliMap.get(1);
+                    SigninLogCliErr rfewgwe23123error = getRfewgwe23123error(signinLogCli2141241241.getId());
+                    if (rfewgwe23123error!=null){
+                        signinLogCli2141241241.setState(rfewgwe23123error.getNewState());
+                        signinLogCliMap.put(1,signinLogCli2141241241);
+                    }
+                }
                 // 上下班分别key为0或1
                 // 首先是上下班是否都存在
                 if (signinLogCliMap.containsKey(0)&&signinLogCliMap.containsKey(1)){
@@ -372,6 +425,16 @@ public class SigninLogServiceImpl implements SigninLogService {
         signinGroupDateResp.setNumberOfError(userErrorLogList.size());
         signinGroupDateResp.setNumberOfFullAttendance(signinGroupDateResp.getNumberOfPeopleSupposedToCome()-signinGroupDateResp.getNumberOfError());
         return signinGroupDateResp;
+    }
+
+    private SigninLogCliErr getRfewgwe23123error(Long chuliId) {
+        LambdaQueryWrapper<SigninLogCliErr> signinLogCliErrLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        signinLogCliErrLambdaQueryWrapper
+                .eq(SigninLogCliErr::getSigninLogCliId, chuliId)
+                .orderByDesc(SigninLogCliErr::getUpdateTime)
+                // 限制结果为1条，即最新的一条
+                .last("LIMIT 1");
+        return signinLogCliErrDao.getOne(signinLogCliErrLambdaQueryWrapper);
     }
 
     /**
@@ -698,6 +761,110 @@ public class SigninLogServiceImpl implements SigninLogService {
         return addLogExtInfo;
     }
 
+    @RedissonLock(key = "#userId")
+    @Transactional(rollbackFor = Exception.class)
+    @Override
+    public void replacementVisaApprovalByService(Long userId, LocalDateTime time, String actId,String reason) {
+        if (userId==null){
+            throw new CustomException("请提供补签的对象");
+        }
+        if (time==null){
+            throw new CustomException("补签必须提供时间");
+        }
+        if (time.isAfter(LocalDateTime.now())){
+            throw new CustomException("补签不能补签当前时间之后！无法完成你的请求");
+        }
+        User byId = userDao.getById(userId);
+        if (byId==null){
+            throw new CustomException("对象不存在");
+        }
+        if (StringUtils.isEmpty(byId.getStudentId())){
+            throw new CustomException("学号不存在");
+        }
+
+        SigninLog signinLog = new SigninLog();
+        signinLog.setSigninImage(null);
+        signinLog.setSigninWay("renewal");
+        signinLog.setRemark("补签，act单号"+actId);
+        signinLog.setSigninTime(time);
+        signinLog.setStudentId(byId.getStudentId());
+        signinLogDao.save(signinLog);
+
+        addSigninLogCliByLog(signinLog);
+
+        SigninRenewal signinRenewal = SigninRenewal.builder()
+                .renewalTime(time)
+                .createTime(LocalDateTime.now())
+                .renewalReason(reason)
+                .signinLogId(signinLog.getId())
+                .renewalAboutActId(actId).userId(userId).build();
+        signinRenewalDao.save(signinRenewal);
+
+    }
+
+    /**
+     * 发起补签流程
+     * @param signinRenewals
+     * @return
+     */
+    @Transactional
+    @Override
+    public String logRenewalSignin(List<SigninRenewal> signinRenewals) {
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+        String userId = String.valueOf(currentUser.getId());
+        if (signinRenewals==null){
+            throw new CustomException("单据内容不存在");
+        }
+        for (SigninRenewal signinRenewal : signinRenewals) {
+            if (signinRenewal.getRenewalTime()==null){
+                throw new CustomException("存在为空的补签时间");
+            }
+            if (StringUtils.isEmpty(signinRenewal.getRenewalReason())){
+                throw new CustomException("必须包含补签理由!");
+            }
+        }
+        ProcessDefinitionQuery query = repositoryService.createProcessDefinitionQuery();
+        query.processDefinitionKey("Process_system_2");
+        query.latestVersion();
+        ProcessDefinition processDefinition = query.singleResult();
+        if (processDefinition==null){
+            throw new CustomException("审批流程被挂起或不存在，请确保此key存在");
+        }
+
+        if (processDefinition.isSuspended()){
+            throw new CustomException("审批流程被挂起");
+        }
+        String deploymentId = processDefinition.getId();
+
+        // 首先判断当前有没有进行中的审批，还没结束
+        HistoricProcessInstanceQuery query2 = historyService.createHistoricProcessInstanceQuery()
+                .startedBy(userId)
+                .notDeleted();
+        // 根据流程key查询 注意是等于不是模糊查询
+        List<HistoricProcessInstance> processSystemList = query2.processDefinitionId(deploymentId).unfinished().list();
+        HistoricProcessInstance processSystem1 = null;
+
+        if (processSystemList!=null&&processSystemList.size()!=0){
+            processSystem1 = processSystemList.get(0);
+        }
+        if (processSystem1!=null){
+            throw new CustomException("当前已经在有进行中的单据在审批了，可以尝试取消或者联系管理完成审批再尝试~");
+        }
+        if (org.apache.commons.lang.StringUtils.isEmpty(deploymentId)){
+            throw new CustomException("系统异常");
+        }
+        StartProcessDto startProcessDto = new StartProcessDto();
+        startProcessDto.setDefinitionId(deploymentId);
+        Map<String,Object> map = new HashMap<>();
+        // 往map里存入对象
+        map.put("bq_signin_list_json", JsonUtils.toStr(signinRenewals));
+        startProcessDto.setVariables(map);
+
+        processStartService.startProcess(startProcessDto,userId);
+        return "补签申请成功";
+
+    }
+
     private void signinPushToLed(WSSigninPush wsSigninPush,Long targetId) {
         if (!signinTipMessageConfig.isEnable())return;// 一旦使用也会有初始化的过程，无需再判断其他
         pushService.sendPushMsg(WSAdapter.buildSigninPushSend(wsSigninPush),Long.valueOf(signinTipMessageConfig.getUserId()));
@@ -750,6 +917,7 @@ public class SigninLogServiceImpl implements SigninLogService {
                     weiqiandaoList.add(signinLogRealYiQianDaoDto);
                     continue;
                 }
+
                 // 没请假的继续
                 LambdaQueryWrapper<SigninLogCli> signinLogCliLambdaQueryWrapper = new LambdaQueryWrapper<>();
                 signinLogCliLambdaQueryWrapper.eq(SigninLogCli::getLogDatetime, now);
@@ -762,11 +930,16 @@ public class SigninLogServiceImpl implements SigninLogService {
                     // 数据都不存在，可不缺勤
                     signinLogRealYiQianDaoDto.setTag("缺勤");
                     weiqiandaoList.add(signinLogRealYiQianDaoDto);
-
                     continue;
                 }
                 numberOfActualArrival+=1;// 只要不是请假和缺勤就是实到
                 SigninLogCli signinLogCli = list.get(0);
+                // 存在数据就需要结合处理表
+                SigninLogCliErr rfewgwe23123error = getRfewgwe23123error(signinLogCli.getId());
+                if (rfewgwe23123error!=null){
+                    signinLogCli.setState(rfewgwe23123error.getNewState());
+                }
+
                 if (signinLogCli.getState().equals(0)){
                     signinLogRealYiQianDaoDto.setTag("出勤");
                     yiqiandaoList.add(signinLogRealYiQianDaoDto);
@@ -843,6 +1016,12 @@ public class SigninLogServiceImpl implements SigninLogService {
                 }
                 numberOfActualArrival+=1;// 只要不是请假和缺勤就是实到
                 SigninLogCli signinLogCli = list.get(0);
+                // 存在数据就需要结合处理表
+                SigninLogCliErr rfewgwe23123error = getRfewgwe23123error(signinLogCli.getId());
+                if (rfewgwe23123error!=null){
+                    signinLogCli.setState(rfewgwe23123error.getNewState());
+                }
+
                 if (signinLogCli.getState().equals(0)){
                     signinLogRealYiQianDaoDto.setTag("出勤");
                     yiqiandaoList.add(signinLogRealYiQianDaoDto);
@@ -886,10 +1065,6 @@ public class SigninLogServiceImpl implements SigninLogService {
         BcRule jieguo = null;
         BcRule closestPastShift = null;
         String closestPastShiftType = null;  // 用于记录最近班次是上班还是下班
-
-
-
-
         long minTimeDifference = Long.MAX_VALUE;
         for (BcRule shift : bcRules) {
             // 一个时间段不会存在多个重复的打卡，起码在一个考勤组内，打卡时间段必须错开!
@@ -979,8 +1154,8 @@ public class SigninLogServiceImpl implements SigninLogService {
         DateTimeFormatter formatterasd = DateTimeFormatter.ofPattern("HH:mm:ss");
 
         // 使用 formatter 对象将 LocalDateTime 格式化为指定格式的字符串
-        String formattedDateTimeasd = signinLog.getSigninTime().format(formatterasd);
-        signinLogCli.setLogTime(formattedDateTimeasd);
+        String signinFormatTime = signinLog.getSigninTime().format(formatterasd);
+        signinLogCli.setLogTime(signinFormatTime);
         signinLogCli.setLogDatetime(signinLog.getSigninTime().toLocalDate());
         // 开始找与该用户匹配的规则
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
@@ -1081,15 +1256,16 @@ public class SigninLogServiceImpl implements SigninLogService {
             }
             // 保证起始时间和截止签到时间都在一天内
             // 忽略日期部分，将日期部分设置为相同的值
-            LocalDateTime timeOnlyCurrent = signinTime.withYear(2000).withMonth(1).withDayOfMonth(1);
-            LocalDateTime timeOnlyStart = modifiedDateTime.withYear(2000).withMonth(1).withDayOfMonth(1);
-            LocalDateTime timeOnlySB = dateTime.withYear(2000).withMonth(1).withDayOfMonth(1);
-            LocalDateTime timeOnlyEnd = modifiedDateTimeEnd.withYear(2000).withMonth(1).withDayOfMonth(1);
+            LocalDateTime timeOnlyCurrent = signinTime.withYear(2000).withMonth(1).withDayOfMonth(1).withNano(0);
+            LocalDateTime timeOnlyStart = modifiedDateTime.withYear(2000).withMonth(1).withDayOfMonth(1).withNano(0);
+            LocalDateTime timeOnlySB = dateTime.withYear(2000).withMonth(1).withDayOfMonth(1).withNano(0);
+            LocalDateTime timeOnlyEnd = modifiedDateTimeEnd.withYear(2000).withMonth(1).withDayOfMonth(1).withNano(0);
             // 比较当前时间与起始时间和结束时间的关系
             int resultStart = timeOnlyCurrent.compareTo(timeOnlyStart);
             int resultEnd = timeOnlyCurrent.compareTo(timeOnlyEnd);
             //上班
-            if (resultStart >= 0 && resultEnd <= 0) {
+            // fix:不允许出现两边都是闭区间
+            if (resultStart >= 0 && resultEnd < 0) {
                 SigninLogCli signinLogCli1 = new SigninLogCli();
                 BeanUtils.copyProperties(signinLogCli, signinLogCli1);
                 signinLogCli1.setStartEnd(0);
@@ -1128,7 +1304,9 @@ public class SigninLogServiceImpl implements SigninLogService {
             String[] splitXB = xbTime.split(":");
 
 
-            LocalDateTime dateTimeXB = currentDateTime.withHour(Integer.valueOf(splitXB[0])).withMinute(Integer.valueOf(splitXB[1])).withSecond(Integer.valueOf(splitXB[2]));
+
+
+            LocalDateTime dateTimeXB = currentDateTime.withHour(Integer.valueOf(splitXB[0])).withMinute(Integer.valueOf(splitXB[1])).withSecond(Integer.valueOf(splitXB[2])).withNano(0);
 
 
             LocalDateTime modifiedDateTimeXB = dateTimeXB.minusSeconds(Duration.ofMinutes(xbStartTime).getSeconds());
@@ -1145,17 +1323,18 @@ public class SigninLogServiceImpl implements SigninLogService {
                 continue;
                 // 不能跨日,假日期，但是跨日肯定不对
             }
-            LocalDateTime timeOnlyXBStart = modifiedDateTimeXB.withYear(2000).withMonth(1).withDayOfMonth(1);
-            LocalDateTime timeOnlydateTimeXBBB = dateTimeXB.withYear(2000).withMonth(1).withDayOfMonth(1);
-            LocalDateTime timeOnlyXBEnd = modifiedDateTimeXBEnd.withYear(2000).withMonth(1).withDayOfMonth(1);
+            LocalDateTime timeOnlyXBStart = modifiedDateTimeXB.withYear(2000).withMonth(1).withDayOfMonth(1).withNano(0);
+            LocalDateTime timeOnlydateTimeXBBB = dateTimeXB.withYear(2000).withMonth(1).withDayOfMonth(1).withNano(0);
+            LocalDateTime timeOnlyXBEnd = modifiedDateTimeXBEnd.withYear(2000).withMonth(1).withDayOfMonth(1).withNano(0);
             // 比较当前时间与起始时间和结束时间的关系
             int resultStartXB = timeOnlyCurrent.compareTo(timeOnlyXBStart);
             int resultEndXB = timeOnlyCurrent.compareTo(timeOnlyXBEnd);
-            if (resultStartXB >= 0 && resultEndXB <= 0) {
+            // 下班，此处考虑
+            // add: 如果连班为true，则添加下一班次上班的记录，无原始记录
+            // fix: 不允许出现两边都是闭区间
+            if (resultStartXB >= 0 && resultEndXB < 0) {
                 // 下班在时间段里
                 // 下班记录逻辑，在具体跟上班或下班时间判断早退还是迟到啥的
-
-
                 SigninLogCli signinLogCli1 = new SigninLogCli();
                 BeanUtils.copyProperties(signinLogCli, signinLogCli1);
                 signinLogCli1.setStartEnd(1);
@@ -1178,7 +1357,7 @@ public class SigninLogServiceImpl implements SigninLogService {
                     if (signinLogCliDaoOne.getState().equals(2)) {
                         LambdaUpdateWrapper<SigninLogCli> signinLogCliLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
                         signinLogCliLambdaUpdateWrapper.eq(SigninLogCli::getId, signinLogCliDaoOne.getId());
-                        signinLogCliLambdaUpdateWrapper.set(SigninLogCli::getLogTime, signinLog.getSigninTime().getHour() + ":" + signinLog.getSigninTime().getMinute() + ":" + signinLog.getSigninTime().getSecond());
+                        signinLogCliLambdaUpdateWrapper.set(SigninLogCli::getLogTime, signinFormatTime);
                         signinLogCliLambdaUpdateWrapper.set(SigninLogCli::getState, signinLogCli1.getState());
                         signinLogCliLambdaUpdateWrapper.set(SigninLogCli::getFromLog, signinLogCli1.getFromLog());
                         // 更新旷班时间，如果不早退就设置时间为0
@@ -1191,14 +1370,31 @@ public class SigninLogServiceImpl implements SigninLogService {
                     }
                     continue;
                 }
-                signinLogCli1.setStateTime(signinLogCli1.getState().equals(2) ? Math.abs((int) ChronoUnit.MINUTES.between(currentDateTime, timeOnlydateTimeXBBB)) : 0);
+                signinLogCli1.setStateTime(signinLogCli1.getState().equals(2) ? Math.abs((int) ChronoUnit.MINUTES.between(timeOnlyCurrent, timeOnlydateTimeXBBB)) : 0);
                 log.info("记录{}",signinLogCli1);
-
                 signinLogCliDao.save(signinLogCli1);
+                // 连班是否有 存在自动打卡
+                if (rules.get(i).getLianban()){
+                    SigninLogCli signinLogCli2 = new SigninLogCli();
+                    BeanUtils.copyProperties(signinLogCli, signinLogCli2);
+                    if (signinLogCli1.getBcCount()+1> rules.size()){
+                        log.error("ERROR","连班：{}",3600500);
+                        return;
+                    }
+                    if (!signinLogCli1.getState().equals(0)){
+                        log.info("INFO","无法连班，当前不是正常下班signinLogCli1:{}", signinLogCli1);
+                        return;
+                    }
+                    signinLogCli2.setBcCount(signinLogCli1.getBcCount()+1);
+                    signinLogCli2.setState(0);
+                    signinLogCli2.setStartEnd(0);
+                    signinLogCliDao.save(signinLogCli2);                }
                 break;
                 // 在之间，记录,同班次不可能出现上班和下班交叉，直接进入下一班此查找
             }
         }
 
     }
+
+
 }

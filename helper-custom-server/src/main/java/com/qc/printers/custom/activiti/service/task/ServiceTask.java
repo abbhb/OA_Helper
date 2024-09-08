@@ -3,8 +3,10 @@ package com.qc.printers.custom.activiti.service.task;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.qc.printers.common.signin.domain.entity.SigninLogAskLeave;
+import com.qc.printers.common.signin.domain.entity.SigninRenewal;
 import com.qc.printers.common.signin.domain.resp.FaceFileResp;
 import com.qc.printers.common.signin.service.SigninLogAskLeaveService;
+import com.qc.printers.common.signin.service.SigninLogService;
 import com.qc.printers.common.signin.service.SigninUserDataMangerService;
 import com.qc.printers.common.user.domain.dto.UserInfoBaseExtDto;
 import com.qc.printers.custom.user.service.UserService;
@@ -33,6 +35,9 @@ public class ServiceTask {
     @Autowired
     private SigninLogAskLeaveService signinLogAskLeaveService;
 
+    @Autowired
+    private SigninLogService signinLogService;
+
     public void hello(String initiator) {
         System.out.println("===myBean执行====");
         System.out.println("你好：" + initiator);//打印   你好：中国
@@ -56,6 +61,25 @@ public class ServiceTask {
         LocalDateTime end_ = LocalDateTime.parse(jiezhi, formatter);
         signinLogAskLeaveService.addAskLeave(new SigninLogAskLeave(Long.valueOf(initiator),start_,end_));
     }
+
+    /**
+     * 补签任务
+     * @param execution
+     */
+    @Transactional
+    public void renewalSignin(DelegateExecution execution) {
+        System.out.println("===补签任务执行====");
+        String initiator = (String) execution.getVariable("initiator");
+
+        List<SigninRenewal> signinRenewals = JsonUtils.toList((String) execution.getVariable("bq_signin_list_json"), SigninRenewal.class);
+        for (SigninRenewal signinRenewal : signinRenewals) {
+            signinLogService.replacementVisaApprovalByService(Long.valueOf(initiator),signinRenewal.getRenewalTime(),execution.getProcessInstanceId(),signinRenewal.getRenewalReason());
+        }
+
+
+    }
+
+
 
     /**
      * 更新人脸

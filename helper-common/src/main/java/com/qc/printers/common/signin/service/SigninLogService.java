@@ -2,6 +2,7 @@ package com.qc.printers.common.signin.service;
 
 import com.qc.printers.common.signin.domain.entity.SigninLog;
 import com.qc.printers.common.signin.domain.entity.SigninLogCli;
+import com.qc.printers.common.signin.domain.entity.SigninRenewal;
 import com.qc.printers.common.signin.domain.resp.AddLogExtInfo;
 import com.qc.printers.common.signin.domain.resp.SigninGroupDateRealResp;
 import com.qc.printers.common.signin.domain.resp.SigninGroupDateResp;
@@ -41,4 +42,14 @@ public interface SigninLogService {
     SigninGroupDateRealResp exportSigninGroupRealTime(String groupId);
 
     AddLogExtInfo addSigninlogByDevicePlus(HttpServletRequest request, SigninLog signinLog);
+
+    /**
+     * 服务单补签
+     * @param userId
+     * @param time 时间
+     * @param actId 单据号
+     */
+    void replacementVisaApprovalByService(Long userId,LocalDateTime time,String actId,String reason);
+
+    String logRenewalSignin(List<SigninRenewal> signinRenewals);
 }

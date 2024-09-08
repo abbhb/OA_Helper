@@ -1,6 +1,9 @@
 package com.qc.printers.common.signin.domain.entity;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
@@ -8,6 +11,9 @@ import java.time.LocalDateTime;
 /**
  * 用户申请补签
  */
+@AllArgsConstructor
+@NoArgsConstructor
+@Builder
 @Data
 public class SigninRenewal implements Serializable {
 
@@ -24,6 +30,7 @@ public class SigninRenewal implements Serializable {
     private String renewalReason;
 
     private String renewalAboutActId;
+    private String signinLogId;
 
 
 }

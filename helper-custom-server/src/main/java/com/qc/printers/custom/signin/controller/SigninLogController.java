@@ -1,7 +1,9 @@
 package com.qc.printers.custom.signin.controller;
 
 import com.qc.printers.common.common.R;
+import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.signin.domain.entity.SigninLog;
+import com.qc.printers.common.signin.domain.entity.SigninRenewal;
 import com.qc.printers.common.signin.domain.resp.AddLogExtInfo;
 import com.qc.printers.common.signin.domain.resp.SigninGroupDateRealResp;
 import com.qc.printers.common.signin.service.SigninLogService;
@@ -14,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
+import java.util.List;
 
 @RestController
 @RequestMapping("/signin_log")
@@ -74,6 +77,18 @@ public class SigninLogController {
     public R<SigninGroupDateRealResp> exportSigninGroupRealTime(String groupId) {
         log.info("groupId={}", groupId);
         return R.success(signinLogService.exportSigninGroupRealTime(groupId));
+    }
+
+    /**
+     * 补签
+     * @return
+     */
+    @NeedToken
+    @PostMapping("/log_renewal_signin")
+//    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin_group:add")
+    public R<String> logRenewalSignin(@RequestBody List<SigninRenewal> signinRenewals) {
+        log.info("补签={}", signinRenewals);
+        return R.success(signinLogService.logRenewalSignin(signinRenewals));
     }
 
 
