@@ -14,6 +14,7 @@ public class MetaNode implements Serializable {
 
     /**
      * 额外，标记菜单类型
+     * M目录 C菜单 F按钮
      */
     private String type;
 }
