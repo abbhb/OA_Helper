@@ -81,7 +81,7 @@ public class LogAspect {
             //操作用户 --登录时有把用户的信息保存在session中，可以直接取出
             User currentUser = ThreadLocalUtil.getCurrentUser();//线程安全
             sysLog.setUserId(String.valueOf(currentUser.getId()));
-            sysLog.setIp(ServletUtil.getClientIP(request)); //操作IP IPUtils工具类网上大把的，比如工具类集锦的hutool.jar
+            sysLog.setIp(ServletUtil.getClientIPByHeader(request,"X-Real-IP")); //操作IP IPUtils工具类网上大把的，比如工具类集锦的hutool.jar
             sysLog.setUrl(request.getRequestURI()); // 请求URI
             // 方法请求的参数
             Map<String, String> rtnMap = converMap(request.getParameterMap());
