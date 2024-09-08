@@ -11,4 +11,9 @@ public class MetaNode implements Serializable {
     private Integer order;
     private boolean isShow;
     private boolean isFrame;
+
+    /**
+     * 额外，标记菜单类型
+     */
+    private String type;
 }

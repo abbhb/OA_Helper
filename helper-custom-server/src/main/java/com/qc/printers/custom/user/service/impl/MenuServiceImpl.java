@@ -48,6 +48,7 @@ public class MenuServiceImpl implements MenuService {
             metaNode.setIcon(sysMenu.getIcon());
             metaNode.setOrder(sysMenu.getOrderNum());
             metaNode.setShow(sysMenu.getIsShow().equals(1));
+            metaNode.setType(sysMenu.getType());
             metaNode.setFrame(sysMenu.getIsFrame().equals(1));
             metaNode.setLocale(sysMenu.getLocale());
             MenuResult menuResult = new MenuResult();
@@ -63,6 +64,8 @@ public class MenuServiceImpl implements MenuService {
                 metaNode2.setIcon(sysMenu2.getIcon());
                 metaNode2.setOrder(sysMenu2.getOrderNum());
                 metaNode2.setShow(sysMenu2.getIsShow().equals(1));
+                metaNode2.setType(sysMenu2.getType());
+
                 metaNode2.setFrame(sysMenu2.getIsFrame().equals(1));
                 menuResultNode.setName(sysMenu2.getName());
                 menuResultNode.setPath(sysMenu2.getPath());
