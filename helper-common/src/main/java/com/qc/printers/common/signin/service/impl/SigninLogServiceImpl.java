@@ -1374,7 +1374,7 @@ public class SigninLogServiceImpl implements SigninLogService {
                 log.info("记录{}",signinLogCli1);
                 signinLogCliDao.save(signinLogCli1);
                 // 连班是否有 存在自动打卡
-                if (rules.get(i).getLianban()){
+                if (rules.get(i)!=null && rules.get(i).getLianban()!=null && rules.get(i).getLianban()){
                     SigninLogCli signinLogCli2 = new SigninLogCli();
                     BeanUtils.copyProperties(signinLogCli, signinLogCli2);
                     if (signinLogCli1.getBcCount()+1> rules.size()){

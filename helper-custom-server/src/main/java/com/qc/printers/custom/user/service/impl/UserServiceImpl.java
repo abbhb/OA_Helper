@@ -3,6 +3,7 @@ package com.qc.printers.custom.user.service.impl;
 import com.auth0.jwt.interfaces.Claim;
 import com.auth0.jwt.interfaces.DecodedJWT;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.qc.printers.common.activiti.entity.dto.workflow.StartProcessDto;
@@ -1547,16 +1548,23 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public List<String> levels() {
-        List<User> list = userDao.list(new LambdaQueryWrapper<User>().select(User::getStudentId));
-        List<String> years = new ArrayList<>();
+        QueryWrapper<User> select = new QueryWrapper<User>().select("student_id");
+        List<User> list = userDao.list(select);
+        Set<String> years = new HashSet<>();
 
         for (User user : list) {
+            if (user==null){
+                log.error("ERROR","error-user,null:{}",user);
+                continue;
+            }
             String studentId = user.getStudentId();
             if (studentId != null && studentId.matches("\\d{12}")) {
                 String year = studentId.substring(0, 4);
                 years.add(year);
             }
         }
-        return years;
+        List<String> list1 = new ArrayList<>(years.stream().toList());
+        list1.sort(Comparator.reverseOrder());
+        return list1;
     }
 }

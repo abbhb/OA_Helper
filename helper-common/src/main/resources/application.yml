@@ -25,6 +25,7 @@ spring:
     port: ${helper.redis.port}
     timeout: 1800000
     host: ${helper.redis.ip}
+
   mail:
     #smtp服务主机  127.0.0.1 本机服务
     host: ${helper.email.smtp.host}
@@ -84,6 +85,7 @@ study:
 
 rocketmq:
   name-server: ${helper.rocketmq.ip}:${helper.rocketmq.port}
+
   # 默认的消息组
   producer:
     group: chatGroup
@@ -99,6 +101,7 @@ rocketmq:
     customized-trace-topic: RMQ_SYS_TRACE_TOPIC # 自定义消息轨迹的 Topic 。默认为 RMQ_SYS_TRACE_TOPIC 。
   # Consumer 配置项
   consumer:
+
     #access-key: admin # Access Key ，可阅读 https://github.com/apache/rocketmq/blob/master/docs/cn/acl/user_guide.md 文档
     #secret-key: aizhineng1404 # Secret Key
     listeners: # 配置某个消费分组，是否监听指定 Topic 。结构为 Map<消费者分组, <Topic, Boolean>> 。默认情况下，不配置表示监听。
