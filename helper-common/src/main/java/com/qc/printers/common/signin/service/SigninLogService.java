@@ -1,11 +1,15 @@
 package com.qc.printers.common.signin.service;
 
+import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.signin.domain.entity.SigninLog;
 import com.qc.printers.common.signin.domain.entity.SigninLogCli;
 import com.qc.printers.common.signin.domain.entity.SigninRenewal;
+import com.qc.printers.common.signin.domain.req.IndexPageDataWithuserReq;
 import com.qc.printers.common.signin.domain.resp.AddLogExtInfo;
 import com.qc.printers.common.signin.domain.resp.SigninGroupDateRealResp;
 import com.qc.printers.common.signin.domain.resp.SigninGroupDateResp;
+import com.qc.printers.common.signin.domain.resp.SigninLogForSelfResp;
+import org.springframework.format.annotation.DateTimeFormat;
 
 import javax.servlet.http.HttpServletRequest;
 import java.time.LocalDate;
@@ -52,4 +56,14 @@ public interface SigninLogService {
     void replacementVisaApprovalByService(Long userId,LocalDateTime time,String actId,String reason);
 
     String logRenewalSignin(List<SigninRenewal> signinRenewals);
+
+    /**
+     * 获取用户个人考勤日展示
+     * @param userId 用户id
+     * @param date 日期
+     * @return
+     */
+    SigninLogForSelfResp getUserDaySelf(Long userId,LocalDate date);
+
+    PageData<SigninLogForSelfResp> indexPageDataWithuser(IndexPageDataWithuserReq indexPageDataWithuserReq);
 }

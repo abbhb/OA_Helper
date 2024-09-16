@@ -2,10 +2,13 @@ package com.qc.printers.custom.signin.controller;
 
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
+import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.signin.domain.entity.SigninLog;
 import com.qc.printers.common.signin.domain.entity.SigninRenewal;
+import com.qc.printers.common.signin.domain.req.IndexPageDataWithuserReq;
 import com.qc.printers.common.signin.domain.resp.AddLogExtInfo;
 import com.qc.printers.common.signin.domain.resp.SigninGroupDateRealResp;
+import com.qc.printers.common.signin.domain.resp.SigninLogForSelfResp;
 import com.qc.printers.common.signin.service.SigninLogService;
 import com.qc.printers.common.signin.domain.resp.SigninGroupDateResp;
 import io.swagger.annotations.Api;
@@ -15,7 +18,9 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import javax.validation.Valid;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @RestController
@@ -77,6 +82,12 @@ public class SigninLogController {
     public R<SigninGroupDateRealResp> exportSigninGroupRealTime(String groupId) {
         log.info("groupId={}", groupId);
         return R.success(signinLogService.exportSigninGroupRealTime(groupId));
+    }
+
+    @NeedToken
+    @GetMapping("/index_page_data_withuser")
+    public R<PageData<SigninLogForSelfResp>> indexPageDataWithuser(@Valid IndexPageDataWithuserReq indexPageDataWithuserReq) {
+        return R.success(signinLogService.indexPageDataWithuser(indexPageDataWithuserReq));
     }
 
     /**

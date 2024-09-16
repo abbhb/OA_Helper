@@ -1,15 +1,26 @@
 package com.qc.printers.common.signin.domain.dto;
 
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * 专门为统计数据降低粒度
  */
 @Data
+@AllArgsConstructor
+@NoArgsConstructor
 public class SigninLogCliBcDto implements Serializable {
+
+    public SigninLogCliBcDto(Long userId, LocalDate logDatetime, Integer bcCount) {
+        this.userId = userId;
+        this.logDatetime = logDatetime;
+        this.bcCount = bcCount;
+    }
 
     private Long userId;
     /**
@@ -18,6 +29,7 @@ public class SigninLogCliBcDto implements Serializable {
     private LocalDate logDatetime;
 
     /**
+     * 一个班次的聚合状态 所以此处不会出现1，2，只能概括为5
      * 状态,0正常，1为迟到，2为早退
      * ext- 以下字段为库里没有，但是业务层使用
      * 0 正常
@@ -32,16 +44,16 @@ public class SigninLogCliBcDto implements Serializable {
      */
     private Integer bcCount;
 
-    /**
-     * 当天具体签到时间字符串,当state为5，这两个时间不为0就是sb迟到或者下班早退分钟,缺勤或者请假都不展示这两个字段
-     */
-    private String sblogTime;
-
-    private String xblogTime;
 
     /**
-     * 状态时间，例如早退多少分钟
+     * 上班item
      */
-    private Integer xbzaotui;
-    private Integer sbchidao;
+    private SigninLogCliBcItem sbItem = new SigninLogCliBcItem();
+
+    /**
+     * 下班item
+     */
+    private SigninLogCliBcItem xbItem = new SigninLogCliBcItem();
 }
+
+

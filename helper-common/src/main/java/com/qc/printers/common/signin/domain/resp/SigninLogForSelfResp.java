@@ -19,13 +19,32 @@ import java.util.List;
 @NoArgsConstructor
 @Builder
 public class SigninLogForSelfResp implements Serializable {
+
+    /**
+     * 是否今日需要考勤
+     */
+    private Boolean needSB;
     // 某一天
     private String currentDate;
+    /**
+     * 今天星期几
+     */
+    private String currentXQ;
 
     /**
      * 当天存在几班
      */
     private Integer bcCount;
+    private Long userId;
+    /**
+     * 状态,0正常，1为迟到，2为早退
+     * ext- 以下字段为库里没有，但是业务层使用
+     * 0 正常
+     * 3 为缺勤
+     * 4 为请假的记录
+     * 5 为上下班有迟到早退但不算缺勤的时候
+     */
+    private Integer state;
 
     /**
      * 异常原因，无则空，append往后添加即可

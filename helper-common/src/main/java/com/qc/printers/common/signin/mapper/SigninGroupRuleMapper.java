@@ -6,6 +6,8 @@ import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Mapper
@@ -17,4 +19,7 @@ public interface SigninGroupRuleMapper extends BaseMapper<SigninGroupRule> {
     List<SigninGroupRule> listSigninGroupByJsonKey(@Param("value") String value);
 
     SigninGroupRule getSigninGroupByUserIdWithTime(@Param("time") String time, @Param("time2") String time2, @Param("userId") String userId);
+
+
+    LocalDate getUserLastDateTime(@Param("userId") String userId);
 }

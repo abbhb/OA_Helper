@@ -22,4 +22,16 @@
           AND (end_time <![CDATA[ >= ]]> #{time2} OR end_time IS NULL)
         ORDER BY start_time DESC LIMIT 1;
     </select>
+
+<!--    LocalDate getUserLastDateTime(@Param("userId") Long userId);-->
+    <select id="getUserLastDateTime" resultType="java.time.LocalDate">
+        -- git的格式化会导致异常 -> 容易多个空格
+        SELECT
+            MIN(start_time) AS earliest_start_time
+        FROM
+            signin_group_rule
+        WHERE JSON_CONTAINS(rules_info -> '$.userIds', #{userId})
+        ORDER BY earliest_start_time ASC
+            limit 1
+    </select>
 </mapper>

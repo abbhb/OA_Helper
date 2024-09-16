@@ -24,13 +24,23 @@ public class SigninRenewal implements Serializable {
 
     private LocalDateTime renewalTime;
 
+    /**
+     * 补签发起时间，在流程开始时创建
+     */
     private LocalDateTime createTime;
+
+    private LocalDateTime updateTime;
 
 
     private String renewalReason;
 
     private String renewalAboutActId;
     private String signinLogId;
+
+    /**
+     * 当前补签状态，1为通过，0为流程中，2为拒绝
+     */
+    private Integer state;
 
 
 }
