@@ -1338,7 +1338,7 @@ public class SigninLogServiceImpl implements SigninLogService {
                 LocalDateTime xb_dateTime = now.atTime(xbtime);
                 boolean userAskForLeave_s = this.getUserAskForLeave(kqUserId, sb_dateTime);
                 boolean userAskForLeave_x = this.getUserAskForLeave(kqUserId, xb_dateTime);
-                log.info("tag:请假-表示sb{}表示下班{}",userAskForLeave_s,userAskForLeave_x);
+//                log.info("tag:请假-表示sb{}表示下班{}",userAskForLeave_s,userAskForLeave_x);
 
                 if (userAskForLeave_s||userAskForLeave_x){
                     // 这个班次用户已经请假了，直接不往后查

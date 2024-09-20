@@ -506,7 +506,7 @@ public class UserServiceImpl implements UserService {
                 user1.setEmail("");
             }
             if (StringUtils.isEmpty(user1.getStudentId())){
-                user1.setStudentId("");
+                user1.setStudentId(null);
             }
 
             //Todo:需要优化，将部门整个进缓存，在查询不到或者更改时更新单个缓存
@@ -890,7 +890,7 @@ public class UserServiceImpl implements UserService {
         user.setStatus(1);
         user.setSex("未知");
         user.setPhone("");
-        user.setStudentId("");
+        user.setStudentId(null);
         userDao.save(user);
         RegisterResp registerResp = new RegisterResp();
         String token = JWTUtil.getToken(String.valueOf(user.getId()));
@@ -1083,7 +1083,7 @@ public class UserServiceImpl implements UserService {
         user.setStatus(1);
         user.setSex("未知");
         user.setPhone("");
-        user.setStudentId("");
+        user.setStudentId(null);
         userDao.save(user);
         LoginRes loginRes1 = new LoginRes();
         String token = JWTUtil.getToken(String.valueOf(user.getId()));

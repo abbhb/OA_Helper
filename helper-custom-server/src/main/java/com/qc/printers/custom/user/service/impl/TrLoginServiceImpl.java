@@ -266,7 +266,7 @@ public class TrLoginServiceImpl implements TrLoginService {
         userNew.setStatus(1);
         userNew.setSex("未知");
         userNew.setPhone("");
-        userNew.setStudentId("");
+        userNew.setStudentId(null);
         userDao.save(userNew);
         LoginRes loginRes1 = new LoginRes();
         String token = JWTUtil.getToken(String.valueOf(userNew.getId()));

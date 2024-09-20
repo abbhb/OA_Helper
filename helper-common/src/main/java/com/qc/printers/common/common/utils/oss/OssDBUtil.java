@@ -22,6 +22,32 @@ public class OssDBUtil {
 
 
         Matcher matcher = pattern.matcher(url);
+        // https优先级必须更高，否则报错
+        if (url.startsWith("https")) {
+            Pattern patternS = Pattern.compile(regexS);
+            Matcher matcherS = patternS.matcher(url);
+            // 提取匹配的结果
+            List<String[]> resultList = new ArrayList<>();
+            while (matcher.find()) {
+                String domain = matcher.group(1);
+                String bucketName = matcher.group(2);
+                String resourceName = matcher.group(3);
+                String[] result = {domain, bucketName, resourceName};
+                resultList.add(result);
+            }
+
+//        // 打印结果
+//        for (String[] result : resultList) {
+//            System.out.println("Domain: " + result[0]);
+//            System.out.println("Bucket Name: " + result[1]);
+//            System.out.println("Resource Name: " + result[2]);
+//        }
+            if (resultList.size() < 1) {
+                throw new CustomException("业务异常");
+            }
+
+            return resultList.get(0)[1] + "/" + resultList.get(0)[2];
+        }
 
         if (url.startsWith("http")) {
             Pattern patternS = Pattern.compile(regex);
@@ -48,31 +74,7 @@ public class OssDBUtil {
 
             return resultList.get(0)[1] + "/" + resultList.get(0)[2];
         }
-        if (url.startsWith("https")) {
-            Pattern patternS = Pattern.compile(regexS);
-            Matcher matcherS = patternS.matcher(url);
-            // 提取匹配的结果
-            List<String[]> resultList = new ArrayList<>();
-            while (matcher.find()) {
-                String domain = matcher.group(1);
-                String bucketName = matcher.group(2);
-                String resourceName = matcher.group(3);
-                String[] result = {domain, bucketName, resourceName};
-                resultList.add(result);
-            }
 
-//        // 打印结果
-//        for (String[] result : resultList) {
-//            System.out.println("Domain: " + result[0]);
-//            System.out.println("Bucket Name: " + result[1]);
-//            System.out.println("Resource Name: " + result[2]);
-//        }
-            if (resultList.size() < 1) {
-                throw new CustomException("业务异常");
-            }
-
-            return resultList.get(0)[1] + "/" + resultList.get(0)[2];
-        }
 
         return url;
     }
