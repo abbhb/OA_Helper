@@ -67,7 +67,7 @@ mybatis-plus:
 
 # ====================== ↓↓↓↓↓↓ MinIO文件服务器 ↓↓↓↓↓↓ ======================
 minio:
-  url: http://easyus.top:9090
+  url: https://oss.easyus.top
   accessKey: N2T6ZfARSupeUYbn
   secretKey: nqcG5pG9Qc104lHrWgVZCYrc2JZSyS0v
   bucketName: aistudio
@@ -128,7 +128,7 @@ my-consul:
 # oauth的配置
 oauth:
   use: true
-  frontAddress: http://easyus.top:8081
+  frontAddress: https://i.easyus.top
 # 验证码
 vail-code:
   # 滑块验证码验证
