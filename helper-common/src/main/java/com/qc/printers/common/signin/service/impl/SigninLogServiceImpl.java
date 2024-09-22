@@ -1156,7 +1156,7 @@ public class SigninLogServiceImpl implements SigninLogService {
 
             boolean userAskForLeave_s = this.getUserAskForLeave(userId, sb_dateTime);
             boolean userAskForLeave_x = this.getUserAskForLeave(userId, xb_dateTime);
-            log.info("tag:请假-表示sb{}表示下班{}",userAskForLeave_s,userAskForLeave_x);
+//            log.info("tag:请假-表示sb{}表示下班{}",userAskForLeave_s,userAskForLeave_x);
 
             if (userAskForLeave_s||userAskForLeave_x){
                 SigninLogCliBcDto signinLogCli = new SigninLogCliBcDto();

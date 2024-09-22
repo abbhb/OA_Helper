@@ -1,26 +1,15 @@
-package com.qc.printers.common.common.utils.oss;
+package com.qc.printers.custom.user;
 
-import com.qc.printers.common.common.CustomException;
-import com.qc.printers.common.config.MinioStaticConfiguration;
-import org.apache.commons.lang.StringUtils;
-
-import java.util.ArrayList;
-import java.util.List;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
-public class OssDBUtil {
+public class RegexTest {
+    public static final String regex = "https?://([^:/]+)(?::\\d+)?/([^/]+)/([^/?]+)";
+//    public static final String regexS = "https?://([^:/]+)(?::\\d+)?/([^/]+)/([^/?]+)";
+    public static final String regexS = "https?://([^:/]+)(?::\\\\d+)?/(.*)/(.*)";
 
-    public static final String regexS = "https?://([^:/]+)(?::\\d+)?/([^/]+)/([^/?]+)";
-
-    public static String toDBUrl(String url) {
-        if (StringUtils.isEmpty(url)) {
-            return url;
-        }
-
-        if (!url.startsWith("http")) {
-            return url;
-        }
+    public static void main(String[] args) {
+        String url = "http://oss.easyoa.fun/aistuido/12e12/11/22/3/gtest.png";
 
         // 正则表达式匹配主机名和路径
         Pattern pattern = Pattern.compile("^(https?://[^/]+)(.*)$");
@@ -45,22 +34,12 @@ public class OssDBUtil {
                 }
             }
 
-            return firstPathPart + "/" + secondPathPart;
-
+            System.out.println("Host and port: " + host);
+            System.out.println("First path part: " + firstPathPart);
+            System.out.println("Second path part: " + secondPathPart);
+        } else {
+            System.out.println("Invalid URL format");
         }
-        throw new CustomException("异常的url-3800500");
+
     }
-
-    public static String toUseUrl(String url){
-        if (StringUtils.isEmpty(url)){
-            return url;
-        }
-        if (url.startsWith("http")){
-            return url;
-        }
-        return MinioStaticConfiguration.MINIO_URL + "/" + url;
-    }
-
-
-
 }
