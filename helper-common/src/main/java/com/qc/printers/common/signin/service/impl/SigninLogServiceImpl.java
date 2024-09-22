@@ -777,6 +777,8 @@ public class SigninLogServiceImpl implements SigninLogService {
         if (!xqToId.containsKey(String.valueOf(date.getDayOfWeek().getValue()))){
             // 今日无需考勤
             signinLogForSelfResp.setNeedSB(false);
+            signinLogForSelfResp.setState(0);
+
             return signinLogForSelfResp;
         }
         // 今天这个考勤组的的班次id
@@ -984,21 +986,22 @@ public class SigninLogServiceImpl implements SigninLogService {
                 signinLogCliBcDto1.getXbItem().setTimeY(LocalDateTime.of(date,LocalTime.parse(bcRules1.get(bcCount-1).getXbTime())));
             }
 
-            Integer zuizhongzhuangtao = 0;// 默认正常
-            Integer stateS = signinLogCliBcDto1.getSbItem().getState();// 上班状态
-            Integer stateX = signinLogCliBcDto1.getXbItem().getState();// 下班状态
-            // 上班迟到1，下班早退2最终状态5，迟到早退
-            if (((stateS.equals(1)||stateS.equals(2)||stateS.equals(5))&&(stateX.equals(1)||stateX.equals(2)||stateX.equals(5)))){
-                zuizhongzhuangtao = 5;
-            }
-            if (stateS.equals(3)||stateX.equals(3)){
-                zuizhongzhuangtao = 3;
-            }
-            // 暂时有一班请假算请假
-            if (stateS.equals(4)||stateX.equals(4)){
-                zuizhongzhuangtao = 4;
-            }
-            signinLogCliBcDto1.setState(zuizhongzhuangtao);
+            // 本来就是各班次内层
+//            Integer zuizhongzhuangtao = 0;// 默认正常
+//            Integer stateS = signinLogCliBcDto1.getSbItem().getState();// 上班状态
+//            Integer stateX = signinLogCliBcDto1.getXbItem().getState();// 下班状态
+//            // 上班迟到1，下班早退2最终状态5，迟到早退
+//            if (((stateS.equals(1)||stateS.equals(2)||stateS.equals(5))&&(stateX.equals(1)||stateX.equals(2)||stateX.equals(5)))){
+//                zuizhongzhuangtao = 5;
+//            }
+//            if (stateS.equals(3)||stateX.equals(3)){
+//                zuizhongzhuangtao = 3;
+//            }
+//            // 暂时有一班请假算请假
+//            if (stateS.equals(4)||stateX.equals(4)){
+//                zuizhongzhuangtao = 4;
+//            }
+//            signinLogCliBcDto1.setState(zuizhongzhuangtao);
         }
 
 
