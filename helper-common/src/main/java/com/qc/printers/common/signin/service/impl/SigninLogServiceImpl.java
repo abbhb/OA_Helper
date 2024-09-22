@@ -1101,15 +1101,15 @@ public class SigninLogServiceImpl implements SigninLogService {
         Long userId = currentUser.getId();
         LocalDate startEnd = oldUserDate(userId);
         if (indexPageDataWithuserReq.getStart()!=null){
-            if (!LocalDate.from(indexPageDataWithuserReq.getStart()).isBefore(startEnd)){
-                startEnd = LocalDate.from(indexPageDataWithuserReq.getStart());
+            if (!indexPageDataWithuserReq.getStart().isBefore(startEnd)){
+                startEnd = indexPageDataWithuserReq.getStart();
             }
         }
         PageData<LocalDate> pagedData = getPagedData(indexPageDataWithuserReq.getPageNum(),
                 indexPageDataWithuserReq.getPageSize(),
                 startEnd,
-                LocalDate.from(indexPageDataWithuserReq.getEnd() != null ?
-                        indexPageDataWithuserReq.getEnd() : LocalDateTime.now()));
+                indexPageDataWithuserReq.getEnd() != null ?
+                        indexPageDataWithuserReq.getEnd() : LocalDate.now());
 
         PageData<SigninLogForSelfResp> signinLogServicePageData = new PageData<>();
         signinLogServicePageData.setRecords(new ArrayList<>());

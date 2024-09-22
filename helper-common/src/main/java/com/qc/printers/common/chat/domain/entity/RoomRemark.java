@@ -11,13 +11,10 @@ import java.io.Serializable;
 
 @Data
 @EqualsAndHashCode(callSuper = false)
-@TableName("room_remark")
 public class RoomRemark implements Serializable {
-    private static final long serialVersionUID = 1L;
     /**
      * id
      */
-    @TableId(value = "id", type = IdType.AUTO)
     private Long id;
 
     /**

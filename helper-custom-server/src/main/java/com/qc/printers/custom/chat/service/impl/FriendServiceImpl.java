@@ -305,7 +305,13 @@ public class FriendServiceImpl implements FriendService {
         );
         // 查询所有的群聊
         List<Long> myAllGroupIds = groupMemberMapper.selectGroupIdsByUid(userId);
-        List<RoomGroup> roomGroups = roomGroupDao.listByIds(myAllGroupIds);
+        List<RoomGroup> roomGroups = null;
+        if (myAllGroupIds!=null&&myAllGroupIds.size()>0){
+            roomGroups = roomGroupDao.listByIds(myAllGroupIds);
+
+        }else {
+            roomGroups = new ArrayList<>();
+        }
         List<GroupRemarkDTO> groupRemarkDTOS = roomGroups.stream().map(roomGroup -> {
             GroupRemarkDTO remarkDTO = new GroupRemarkDTO();
             BeanUtils.copyProperties(roomGroup, remarkDTO);
