@@ -2,8 +2,6 @@ package com.qc.printers.common.print.consumer;
 
 import com.qc.printers.common.common.MyString;
 import com.qc.printers.common.common.constant.MQConstant;
-import com.qc.printers.common.common.event.print.FileToPDFSuccessEvent;
-import com.qc.printers.common.common.event.print.PDFToImageEvent;
 import com.qc.printers.common.common.event.print.PDFToImageSuccessEvent;
 import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.print.domain.dto.PrinterRedis;

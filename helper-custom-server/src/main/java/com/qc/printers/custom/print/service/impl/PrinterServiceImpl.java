@@ -722,18 +722,18 @@ public class PrinterServiceImpl implements PrinterService {
             // 都找得到最好
             printerRedis.setIsCanGetImage(1);
             printerRedis.setImageDownloadUrl(pdfImageZU);
+            RedisUtils.set(MyString.print + printer.getId(), printerRedis, 2400L, TimeUnit.SECONDS);
+            return String.valueOf(printer.getId());
         }
         //统一使用png
         OssResp preSignedObjectUrl = minIoUtil.getPreSignedObjectUrl(new OssReq("temp-image", printer.getName() + ".png", printer.getId(), false));
         printerRedis.setImageUploadUrl(preSignedObjectUrl.getUploadUrl());
         printerRedis.setImageDownloadUrl(preSignedObjectUrl.getDownloadUrl());
         printerRedis.setIsCanGetImage(0);
-        // 生成缩略图
-        applicationEventPublisher.publishEvent(new PDFToImageEvent(this, printer.getId()));
-
         //40分钟后过期
         RedisUtils.set(MyString.print + printer.getId(), printerRedis, 2400L, TimeUnit.SECONDS);
-
+        // 生成缩略图
+        applicationEventPublisher.publishEvent(new PDFToImageEvent(this, printer.getId()));
         return String.valueOf(printer.getId());
     }
 
