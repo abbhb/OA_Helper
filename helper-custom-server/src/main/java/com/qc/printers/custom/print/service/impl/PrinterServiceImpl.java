@@ -32,6 +32,7 @@ import com.qc.printers.common.print.domain.dto.DiffItem;
 import com.qc.printers.common.print.domain.dto.PrintDeviceDto;
 import com.qc.printers.common.print.domain.dto.PrinterRedis;
 import com.qc.printers.common.print.domain.entity.Printer;
+import com.qc.printers.common.print.domain.enums.FileTypeEnum;
 import com.qc.printers.common.print.domain.vo.CountTop10VO;
 import com.qc.printers.common.print.domain.vo.request.PreUploadPrintFileReq;
 import com.qc.printers.common.print.domain.vo.response.UnoServiceInfo;
@@ -349,7 +350,12 @@ public class PrinterServiceImpl implements PrinterService {
     public String uploadPrintFile(MultipartFile file, String hash) {
         String originalFilename = file.getOriginalFilename();
 
-        FileVerificationEngine fileVerificationEngine = FileVerificationEngineFactory.getStrategyNoNull(originalFilename.substring(originalFilename.lastIndexOf(".") + 1));
+        FileVerificationEngine fileVerificationEngine = FileVerificationEngineFactory
+                .getStrategyNoNull(
+                        FileTypeEnum.of(originalFilename.substring(
+                                originalFilename.lastIndexOf(".") + 1
+                        )).getType()
+                );
         fileVerificationEngine.check(file);// 统一校验文件，有异常此处就直接抛出
 
         if (StringUtils.isEmpty(hash)){
