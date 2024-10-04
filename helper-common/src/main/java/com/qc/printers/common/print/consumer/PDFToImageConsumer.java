@@ -2,12 +2,17 @@ package com.qc.printers.common.print.consumer;
 
 import com.qc.printers.common.common.MyString;
 import com.qc.printers.common.common.constant.MQConstant;
+import com.qc.printers.common.common.event.print.FileToPDFSuccessEvent;
+import com.qc.printers.common.common.event.print.PDFToImageEvent;
+import com.qc.printers.common.common.event.print.PDFToImageSuccessEvent;
 import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.print.domain.dto.PrinterRedis;
 import com.qc.printers.common.print.domain.vo.response.data.PrintDataImageFromPDFResp;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Component;
 
 import java.util.concurrent.TimeUnit;
@@ -24,6 +29,8 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 public class PDFToImageConsumer implements RocketMQListener<PrintDataImageFromPDFResp> {
 
+    @Autowired
+    private ApplicationEventPublisher applicationEventPublisher;
     @Override
     public void onMessage(PrintDataImageFromPDFResp printDataImageFromPDFResp) {
         PrinterRedis printerRedis = RedisUtils.get(MyString.print + printDataImageFromPDFResp.getId(), PrinterRedis.class);
@@ -40,6 +47,7 @@ public class PDFToImageConsumer implements RocketMQListener<PrintDataImageFromPD
             printerRedis.setIsCanGetImage(1);
             printerRedis.setImageDownloadUrl(printDataImageFromPDFResp.getFilePDFImageUrl());
             RedisUtils.set(MyString.print + printDataImageFromPDFResp.getId(), printerRedis, RedisUtils.getExpire(MyString.print + printDataImageFromPDFResp.getId()), TimeUnit.SECONDS);
+            applicationEventPublisher.publishEvent(new PDFToImageSuccessEvent(this, Long.valueOf(printDataImageFromPDFResp.getId())));
         } else {
             // 失败
             printerRedis.setIsCanGetImage(2);

@@ -4,6 +4,8 @@ import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.common.domain.vo.ValueLabelResult;
 import com.qc.printers.common.print.domain.vo.CountTop10VO;
+import com.qc.printers.common.print.domain.vo.request.PreUploadPrintFileReq;
+import com.qc.printers.common.print.domain.vo.response.UnoServiceInfo;
 import com.qc.printers.custom.print.domain.vo.PrinterResult;
 import com.qc.printers.custom.print.domain.vo.request.PrintFileReq;
 import com.qc.printers.custom.print.domain.vo.response.*;
@@ -30,7 +32,7 @@ public interface PrinterService {
     R<Integer> addPrinterLog(MultipartFile file, Integer pageStart, Integer pageEnd, Integer copiesNum, String username, Integer duplex, String fileName);
 
 
-    String uploadPrintFile(MultipartFile file);
+    String uploadPrintFile(MultipartFile file, String hash);
 
     String uploadPrintFileForWin(MultipartFile file, PrintFileReq printFileReq,Integer total);
 
@@ -47,4 +49,7 @@ public interface PrinterService {
 
     void cancelPrint(String id, String deviceId);
 
+    String preUploadPrintFile(PreUploadPrintFileReq printFileReq);
+
+    UnoServiceInfo unoServiceInfo();
 }

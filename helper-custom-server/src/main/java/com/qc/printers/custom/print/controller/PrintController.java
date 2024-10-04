@@ -9,6 +9,8 @@ import com.qc.printers.common.common.service.CommonService;
 import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.print.domain.entity.PrintDocumentTypeStatistic;
 import com.qc.printers.common.print.domain.vo.CountTop10VO;
+import com.qc.printers.common.print.domain.vo.request.PreUploadPrintFileReq;
+import com.qc.printers.common.print.domain.vo.response.UnoServiceInfo;
 import com.qc.printers.custom.print.domain.vo.PrinterResult;
 import com.qc.printers.custom.print.domain.vo.request.PrintFileReq;
 import com.qc.printers.custom.print.domain.vo.request.QueryHistoryPrintsReq;
@@ -126,14 +128,27 @@ public class PrintController {
         return printerService.getTodayPrintCount();
     }
 
+
+    /**
+     * 此接口升级，兼容性添加hash，如果没传就后端动态添加
+     * @param file
+     * @param hash 默认认为前端应该携带md5的hash值
+     * @return
+     */
     @CrossOrigin("*")
     @NeedToken
     @PostMapping("/uploadPrintFile")
     @ApiOperation("上传需要打印的文件")
-    public R<String> uploadPrintFile(MultipartFile file) {
-        return R.successOnlyObject(printerService.uploadPrintFile(file));
+    public R<String> uploadPrintFile(MultipartFile file,@RequestParam(name = "hash",required = false) String hash) {
+        return R.successOnlyObject(printerService.uploadPrintFile(file,hash));
     }
-
+    @CrossOrigin("*")
+    @NeedToken
+    @PostMapping("/pre-uploadPrintFile")
+    @ApiOperation("打印预处理")
+    public R<String> preUploadPrintFile(@RequestBody PreUploadPrintFileReq printFileReq) {
+        return R.successOnlyObject(printerService.preUploadPrintFile(printFileReq));
+    }
 
     /**
      * 这个接口会直接开始打印，用于win客户端
@@ -191,6 +206,15 @@ public class PrintController {
     @ApiOperation("设备轮询接口，获取哪些打印机注册了服务，且正常")
     public R<PrintDeviceInfoResp> printDeviceInfoPolling(@PathVariable("id") String id) {
         return R.success(printerService.printDeviceInfoPolling(id));
+    }
+
+
+    @CrossOrigin("*")
+    @NeedToken
+    @GetMapping("/uno_service_info polling")
+    @ApiOperation("转换消费者指标等信息")
+    public R<UnoServiceInfo> unoServiceInfo() {
+        return R.success(printerService.unoServiceInfo());
     }
 
     @CrossOrigin("*")

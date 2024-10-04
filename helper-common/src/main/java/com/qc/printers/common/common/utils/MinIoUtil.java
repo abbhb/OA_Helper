@@ -8,10 +8,8 @@ import com.qc.printers.common.common.utils.oss.OssDBUtil;
 import com.qc.printers.common.common.utils.oss.domain.OssReq;
 import com.qc.printers.common.common.utils.oss.domain.OssResp;
 import com.qc.printers.common.config.MinIoProperties;
-import io.minio.GetPresignedObjectUrlArgs;
-import io.minio.MinioClient;
-import io.minio.ObjectStat;
-import io.minio.PutObjectOptions;
+import io.minio.*;
+import io.minio.errors.*;
 import io.minio.http.Method;
 import io.minio.messages.Bucket;
 import lombok.SneakyThrows;
@@ -24,8 +22,11 @@ import org.springframework.web.multipart.MultipartFile;
 
 import javax.annotation.PostConstruct;
 import javax.servlet.http.HttpServletResponse;
+import java.io.IOException;
 import java.io.InputStream;
 import java.net.URLEncoder;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
@@ -87,6 +88,10 @@ public class MinIoUtil {
             minioClient.makeBucket(bucketName);
         }
     }
+    @SneakyThrows(Exception.class)
+    public static ObjectStat statObject(String bucketName, String objectName) {
+        return minioClient.statObject(bucketName,objectName);
+    }
 
     /**
      * 获取全部bucket
@@ -143,7 +148,7 @@ public class MinIoUtil {
      *            桶名
      * @param file:
      *            文件
-     * @return: java.lang.String : 文件url地址
+     * @return: java.lang.String : 文件url地址,会带签名
      * @date : 2020/8/16 23:40
      */
     @SneakyThrows(Exception.class)

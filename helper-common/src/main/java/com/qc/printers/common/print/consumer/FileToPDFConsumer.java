@@ -3,6 +3,7 @@ package com.qc.printers.common.print.consumer;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.MyString;
 import com.qc.printers.common.common.constant.MQConstant;
+import com.qc.printers.common.common.event.print.FileToPDFSuccessEvent;
 import com.qc.printers.common.common.event.print.PDFToImageEvent;
 import com.qc.printers.common.common.event.print.PrintErrorEvent;
 import com.qc.printers.common.common.utils.RedisUtils;
@@ -43,6 +44,7 @@ public class FileToPDFConsumer implements RocketMQListener<PrintDataFromPDFResp>
             RedisUtils.set(MyString.print + printDataFromPDFResp.getId(), printerRedis, RedisUtils.getExpire(MyString.print + printDataFromPDFResp.getId()), TimeUnit.SECONDS);
             //这里成功了再获取缩略图
             applicationEventPublisher.publishEvent(new PDFToImageEvent(this, Long.valueOf(printDataFromPDFResp.getId())));
+            applicationEventPublisher.publishEvent(new FileToPDFSuccessEvent(this, Long.valueOf(printDataFromPDFResp.getId())));
         } else {
             // 失败
             // 发送异常处理事件

@@ -17,6 +17,8 @@ public class FileMD5 {
         return md5HashCode(fis);
     }
 
+
+
     /**
      * 保证文件的MD5值为32位
      * @param filePath	文件路径

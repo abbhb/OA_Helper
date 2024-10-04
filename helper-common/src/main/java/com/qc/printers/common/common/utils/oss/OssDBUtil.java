@@ -17,6 +17,8 @@ public class OssDBUtil {
         if (StringUtils.isEmpty(url)) {
             return url;
         }
+        String[] split = url.split("\\?");
+        url = split[0];// 如果有签名信息除掉，入库数据无需携带签名
 
         if (!url.startsWith("http")) {
             return url;
@@ -48,6 +50,7 @@ public class OssDBUtil {
             return firstPathPart + "/" + secondPathPart;
 
         }
+
         throw new CustomException("异常的url-3800500");
     }
 

@@ -67,10 +67,10 @@ mybatis-plus:
 
 # ====================== ↓↓↓↓↓↓ MinIO文件服务器 ↓↓↓↓↓↓ ======================
 minio:
-  url: https://oss.easyus.top
-  accessKey: N2T6ZfARSupeUYbn
-  secretKey: nqcG5pG9Qc104lHrWgVZCYrc2JZSyS0v
-  bucketName: aistudio
+  url: ${helper.minio.address}
+  accessKey: ${helper.minio.accessKey}
+  secretKey: ${helper.minio.secretKey}
+  bucketName: ${helper.minio.bucketName}
 
 # ====================== ↓↓↓↓↓↓ CAS认证相关配置 ↓↓↓↓↓↓ #############################################
 # cas:废弃，之前用作接入第三方oauth2登录

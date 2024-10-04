@@ -1,6 +1,7 @@
 package com.qc.printers.custom.print.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ecwid.consul.v1.health.model.HealthService;
 import com.qc.printers.common.chat.domain.enums.MessageTypeEnum;
@@ -13,9 +14,11 @@ import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.common.domain.vo.ValueLabelResult;
 import com.qc.printers.common.common.event.print.FileToPDFEvent;
+import com.qc.printers.common.common.event.print.PDFToImageEvent;
 import com.qc.printers.common.common.event.print.PrintPDFEvent;
 import com.qc.printers.common.common.service.CommonService;
 import com.qc.printers.common.common.service.ConsulService;
+import com.qc.printers.common.common.utils.FileMD5;
 import com.qc.printers.common.common.utils.MinIoUtil;
 import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
@@ -25,12 +28,17 @@ import com.qc.printers.common.common.utils.oss.domain.OssResp;
 import com.qc.printers.common.config.MinIoProperties;
 import com.qc.printers.common.config.system.SystemMessageConfig;
 import com.qc.printers.common.print.domain.dto.CancelPrintDto;
+import com.qc.printers.common.print.domain.dto.DiffItem;
 import com.qc.printers.common.print.domain.dto.PrintDeviceDto;
 import com.qc.printers.common.print.domain.dto.PrinterRedis;
 import com.qc.printers.common.print.domain.entity.Printer;
 import com.qc.printers.common.print.domain.vo.CountTop10VO;
+import com.qc.printers.common.print.domain.vo.request.PreUploadPrintFileReq;
+import com.qc.printers.common.print.domain.vo.response.UnoServiceInfo;
 import com.qc.printers.common.print.mapper.PrinterMapper;
 import com.qc.printers.common.print.service.IPrinterService;
+import com.qc.printers.common.print.service.engine.FileVerificationEngine;
+import com.qc.printers.common.print.service.engine.FileVerificationEngineFactory;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.User;
@@ -44,19 +52,36 @@ import com.qc.printers.custom.print.domain.vo.response.*;
 import com.qc.printers.custom.print.service.PrinterService;
 import com.qc.printers.custom.print.service.strategy.AbstratePrintDataHandler;
 import com.qc.printers.custom.print.service.strategy.PrintDataHandlerFactory;
+import com.qc.printers.custom.user.domain.entity.UniquekerLoginUrl;
+import io.minio.errors.MinioException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEventPublisher;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpEntity;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
+import javax.imageio.ImageIO;
+import java.awt.image.BufferedImage;
+import java.io.FileInputStream;
+import java.io.IOException;
+import java.net.URLDecoder;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.concurrent.TimeUnit;
+
+import static com.qc.printers.common.common.constant.MQConstant.*;
 
 @Service
 @Slf4j
@@ -67,6 +92,9 @@ public class PrinterServiceImpl implements PrinterService {
 
     @Autowired
     private ConsulService consulService;
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     @Autowired
     private IUserService iUserService;
@@ -318,20 +346,39 @@ public class PrinterServiceImpl implements PrinterService {
     //todo:可以通过策略模式或者模板模式优化
     @Transactional
     @Override
-    public String uploadPrintFile(MultipartFile file) {
+    public String uploadPrintFile(MultipartFile file, String hash) {
         String originalFilename = file.getOriginalFilename();
-        if (originalFilename.contains("\\?") || originalFilename.contains("？")) {
-            throw new CustomException("文件名里不允许包含？请修改后在打印");
-        }
-        String supportFileExt = "pdf,doc,docx,xls,xlsx,ppt,pptx,txt,jpg,jpeg,png,bmp";
-        // 判断文件拓展名是否再支持的列表里
-        if (!supportFileExt.contains(originalFilename.substring(originalFilename.lastIndexOf(".") + 1))) {
-            throw new CustomException(file.getOriginalFilename() + ",不支持该文件，请先转成pdf!");
+
+        FileVerificationEngine fileVerificationEngine = FileVerificationEngineFactory.getStrategyNoNull(originalFilename.substring(originalFilename.lastIndexOf(".") + 1));
+        fileVerificationEngine.check(file);// 统一校验文件，有异常此处就直接抛出
+
+        if (StringUtils.isEmpty(hash)){
+            // 本地计算hash-md5
+            // 获取系统中的临时目录
+            Path tempDir = Paths.get(System.getProperty("java.io.tmpdir"));
+
+            // 临时文件使用 UUID 随机命名
+            Path tempFile = tempDir.resolve(Paths.get(UUID.randomUUID().toString()));
+
+            try {
+                // copy 到临时文件
+                file.transferTo(tempFile);
+                hash = FileMD5.md5HashCode32(new FileInputStream(tempFile.toFile()));
+                log.info("打印文件上传：Hash:{}",hash);
+                // 一般以前端的hash为准
+            } catch (IOException e) {
+                log.error("ERROR","error:{}",e);
+                throw new CustomException("文件hash计算异常");
+            } finally {
+                // 始终删除临时文件
+                try {
+                    Files.delete(tempFile);
+                } catch (IOException e) {
+                    log.error("ERROR","临时文件删除失败，问题不大");
+                }
+            }
         }
 
-        if (file.isEmpty()) {
-            throw new CustomException("文件为空");
-        }
         //先将文件上传到minio，这一步失败直接返回错误
         String fileUrl = MinIoUtil.upload(minIoProperties.getBucketName(), file);
         if (StringUtils.isEmpty(fileUrl)) {
@@ -339,8 +386,12 @@ public class PrinterServiceImpl implements PrinterService {
         }
         //同步数据
         Printer printer = new Printer();
+
         printer.setUrl(OssDBUtil.toDBUrl(fileUrl));
         printer.setIsPrint(0);
+        if (StringUtils.isNotEmpty(hash)){
+            printer.setContentHash(hash);
+        }
         printer.setName(file.getOriginalFilename());
         boolean save = iPrinterService.save(printer);
         if (!save) {
@@ -485,13 +536,13 @@ public class PrinterServiceImpl implements PrinterService {
             throw new IllegalArgumentException("无法定位任务");
         }
         if (printFileReq.getIsDuplex() == null) {
-            throw new IllegalArgumentException("王子(公主)殿下，您是要横着还是竖着呢？");
+            throw new IllegalArgumentException("您是要横着还是竖着呢？");
         }
         if (printFileReq.getStartNum() == null) {
-            throw new IllegalArgumentException("王子(公主)殿下，您要从哪里打印到哪里呢？");
+            throw new IllegalArgumentException("您要从哪里打印到哪里呢？");
         }
         if (printFileReq.getEndNum() == null) {
-            throw new IllegalArgumentException("王子(公主)殿下，您要从哪里打印到哪里呢？");
+            throw new IllegalArgumentException("您要从哪里打印到哪里呢？");
         }
         PrinterRedis printerRedis = RedisUtils.get(MyString.print + printFileReq.getId(), PrinterRedis.class);
         if (printerRedis == null) {
@@ -557,5 +608,236 @@ public class PrinterServiceImpl implements PrinterService {
         chatService.sendMsg(chatMessageReq, Long.valueOf(systemMessageConfig.getUserId()));
 
     }
+
+    @Transactional
+    @Override
+    public String preUploadPrintFile(PreUploadPrintFileReq printFileReq) {
+        if (StringUtils.isEmpty(printFileReq.getHash())){
+            throw new CustomException("hash为空-走后续的正常流程");
+        }
+        if (StringUtils.isEmpty(printFileReq.getOriginFileName())){
+            throw new CustomException("原始文件名获取失败-走后续的正常流程");
+        }
+
+        LambdaQueryWrapper<Printer> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.select(Printer::getId,Printer::getPdfUrl,Printer::getPdfImage,Printer::getOriginFilePages);
+        lambdaQueryWrapper.eq(Printer::getContentHash,printFileReq.getHash());
+        List<Printer> list = iPrinterService.list(lambdaQueryWrapper);
+        if (list.isEmpty()){
+            throw new CustomException("不具备快速打印条件，跳过");
+        }
+        List<Integer> pdfPagesList = list.stream().map(Printer::getOriginFilePages).toList();
+        List<String> pdfImageList = list.stream().map(Printer::getPdfImage).toList();
+        if (list.isEmpty()||pdfPagesList.isEmpty()||pdfImageList.isEmpty()){
+            throw new CustomException("不具备快速打印条件");
+        }
+        // 检查所有页数是否相等
+        boolean pagesEqual = pdfPagesList.stream().distinct().count() == 1;
+        if (!pagesEqual) {
+            log.info("具体pdf页数：{}",pdfPagesList);
+            // 清除该hash所有相关hash
+            LambdaUpdateWrapper<Printer> printerLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+            printerLambdaUpdateWrapper.set(Printer::getContentHash,null);
+            printerLambdaUpdateWrapper.eq(Printer::getContentHash,printFileReq.getHash());
+            iPrinterService.update(printerLambdaUpdateWrapper);
+            throw new CustomException("相同文件的PDF 页数不一致,此hash不具备可用性，清理");
+        }
+        List<Long> needDeleteId = new ArrayList<>();
+        // 找到存在的 PDF URL
+        Integer pdfZ = 0;
+        Printer pdfZU = null;
+        for (Printer pdf : list) {
+            boolean b = false;
+            if (StringUtils.isNotEmpty(pdf.getPdfUrl())){
+                b = fileExists(pdf.getPdfUrl());
+            }
+            if (b){
+                pdfZ = 1;
+                pdfZU = pdf;
+                break;
+            }
+            needDeleteId.add(pdf.getId());
+        }
+        if (pdfZ==0){
+            LambdaUpdateWrapper<Printer> printerLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+            printerLambdaUpdateWrapper.set(Printer::getContentHash,null);
+            printerLambdaUpdateWrapper.in(needDeleteId.size()>1,Printer::getId,needDeleteId);
+            printerLambdaUpdateWrapper.eq(needDeleteId.size()==1,Printer::getId,needDeleteId.get(0));
+            iPrinterService.update(printerLambdaUpdateWrapper);
+            throw new CustomException("找不到可用pdf文件");
+        }
+        // 找到存在的 PNG 文件
+        needDeleteId = new ArrayList<>();
+        // 找到存在的 PDF URL
+        Integer pdfImageZ = 0;
+        String pdfImageZU = "";
+        for (Printer pdf : list) {
+            boolean b = false;
+            if (StringUtils.isNotEmpty(pdf.getPdfImage())){
+                 b = fileExists(pdf.getPdfImage());
+            }
+            if (b){
+                pdfImageZ = 1;
+                pdfImageZU = pdf.getPdfImage();
+                break;
+            }
+            needDeleteId.add(pdf.getId());
+        }
+        if (pdfImageZ==0){
+            LambdaUpdateWrapper<Printer> printerLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+            printerLambdaUpdateWrapper.set(Printer::getPdfImage,null);
+            printerLambdaUpdateWrapper.in(needDeleteId.size()>1,Printer::getId,needDeleteId);
+            printerLambdaUpdateWrapper.eq(needDeleteId.size()==1,Printer::getId,needDeleteId.get(0));
+            iPrinterService.update(printerLambdaUpdateWrapper);
+            // 找不到缩略图无所谓，中间态也算更快了
+        }
+        // 接下来肯定是最少包含存在的pdf文件了，直接创建任务即可
+        Printer printer = new Printer();
+        printer.setUrl(OssDBUtil.toDBUrl(pdfZU.getUrl()));
+        printer.setIsPrint(0);
+        printer.setCreateTime(LocalDateTime.now());
+        printer.setCreateUser(ThreadLocalUtil.getCurrentUser().getId());
+        if (StringUtils.isNotEmpty(printFileReq.getHash())){
+            printer.setContentHash(printFileReq.getHash());
+        }
+        printer.setName(printFileReq.getOriginFileName());
+        printer.setOriginFilePages(pdfZU.getOriginFilePages());
+        boolean save = iPrinterService.save(printer);
+        if (!save) {
+            throw new CustomException("数据同步异常");
+        }
+        PrinterRedis printerRedis = new PrinterRedis();
+        BeanUtils.copyProperties(printer, printerRedis);
+        printerRedis.setNeedPrintPagesIndex(1);//从第一页开始
+        printerRedis.setPageNums(0);
+        printerRedis.setSTU(3);
+
+        if (pdfImageZ==1 && pdfZ==1){
+            // 都找得到最好
+            printerRedis.setIsCanGetImage(1);
+            printerRedis.setImageDownloadUrl(pdfImageZU);
+        }
+        //统一使用png
+        OssResp preSignedObjectUrl = minIoUtil.getPreSignedObjectUrl(new OssReq("temp-image", printer.getName() + ".png", printer.getId(), false));
+        printerRedis.setImageUploadUrl(preSignedObjectUrl.getUploadUrl());
+        printerRedis.setImageDownloadUrl(preSignedObjectUrl.getDownloadUrl());
+        printerRedis.setIsCanGetImage(0);
+        // 生成缩略图
+        applicationEventPublisher.publishEvent(new PDFToImageEvent(this, printer.getId()));
+
+        //40分钟后过期
+        RedisUtils.set(MyString.print + printer.getId(), printerRedis, 2400L, TimeUnit.SECONDS);
+
+        return String.valueOf(printer.getId());
+    }
+
+    @Override
+    public UnoServiceInfo unoServiceInfo() {
+        // 检查各组件状态
+        // 从网络请求
+        try {
+            HttpHeaders headers = new HttpHeaders();
+            headers.set("Accept", "application/json");
+            HttpEntity entity = new HttpEntity(headers);
+            ParameterizedTypeReference<R<List<DiffItem>>> responseType = new ParameterizedTypeReference<R<List<DiffItem>>>() {};
+            ResponseEntity<R<List<DiffItem>>> resp = restTemplate.exchange("http://127.0.0.1:18454/myself_rocketmq", HttpMethod.GET, entity, responseType);
+            if (!resp.getBody().getCode().equals(1)){
+                throw new CustomException("状态异常");
+            }
+            List<DiffItem> list = resp.getBody().getData();
+            Integer fileToPdfDiffNumber = 0;
+            Integer fileToPdfConsumerNumber = 0;
+
+            Integer pdfToImageDiffNumber = 0;
+            Integer pdfToImageConsumerNumber = 0;
+            String chulijianyi = "";
+
+            for (DiffItem diffItem : list) {
+                if (diffItem.getGroup().contains(SEND_FILE_TOPDF_GROUP)){
+                    fileToPdfConsumerNumber = diffItem.getCountOfOnlineConsumers();
+                    fileToPdfDiffNumber = diffItem.getDiff();
+                }
+                if (diffItem.getGroup().contains(SEND_PDF_IMAGE_GROUP)){
+                    pdfToImageConsumerNumber = diffItem.getCountOfOnlineConsumers();
+                    pdfToImageDiffNumber = diffItem.getDiff();
+                }
+            }
+            if (fileToPdfDiffNumber>5){
+                chulijianyi+= "[严重]请检查转pdf程序是不是大量掉线或被异常任务阻塞;";
+            }
+            if (fileToPdfConsumerNumber<2){
+                chulijianyi+= "[严重]转pdf程序存活数小于2个;";
+            }
+            if (pdfToImageDiffNumber>3){
+                chulijianyi+= "[一般]转缩略图任务缓慢;";
+            }
+            if (fileToPdfDiffNumber>3){
+                chulijianyi+= "[一般]文件转PDF任务缓慢;";
+            }
+            if (pdfToImageDiffNumber>5){
+                chulijianyi+= "[严重]请检查转缩略图程序是不是大量掉线或被异常任务阻塞;";
+            }
+            if (pdfToImageConsumerNumber<2){
+                chulijianyi+= "[严重]转缩略图程序存活数小于2个;";
+            }
+            return UnoServiceInfo.builder()
+                    .toPDFConsumerNumber(fileToPdfConsumerNumber)
+                    .toImageConsumerNumber(pdfToImageConsumerNumber)
+                    .toImageDiffNumber(fileToPdfDiffNumber)
+                    .toPDFDiffNumber(pdfToImageDiffNumber)
+                    .chulijianyi(chulijianyi)
+                    .build();
+
+
+        }catch (Exception exception){
+            log.error("ERROR","获取打印转换节点相关指标失败,err:{}",exception);
+            return UnoServiceInfo.builder()
+                    .toPDFConsumerNumber(0)
+                    .toImageConsumerNumber(0)
+                    .toImageDiffNumber(0)
+                    .toPDFDiffNumber(0)
+                    .chulijianyi("监控启动中;")
+                    .build();
+        }
+
+    }
+
+    // 检查文件是否存在的方法
+    public static boolean fileExists(String url) {
+        if (url == null || url.isEmpty()) {
+            return false;
+        }
+
+        // 仅检查后缀为 .pdf 或 .png 的文件
+        if (!(url.toLowerCase().endsWith(".pdf") || url.toLowerCase().endsWith(".png"))) {
+            return false;
+        }
+
+        try {
+            String[] split = url.split("/");
+            StringBuilder obj = new StringBuilder();
+            int i = 0;
+            for (String s : split) {
+                i+=1;
+                if (i==1)continue;
+                if (i!=2) obj.append("/");
+                obj.append(s);
+            }
+            // 解析 URL，假设 MinIO 中的 bucket 名称和对象名称从 URL 提取
+            String bucketName = split[0];
+            bucketName = URLDecoder.decode(bucketName,"UTF-8" );
+
+            String objectName = obj.toString();
+            objectName = URLDecoder.decode(objectName,"UTF-8" );
+
+            // 获取对象的状态
+            MinIoUtil.statObject(bucketName,objectName);
+            return true; // 如果成功获取到对象状态，则文件存在
+        } catch (Exception e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
 
 }
