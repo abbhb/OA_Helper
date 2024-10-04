@@ -626,7 +626,6 @@ public class PrinterServiceImpl implements PrinterService {
         }
 
         LambdaQueryWrapper<Printer> lambdaQueryWrapper = new LambdaQueryWrapper<>();
-        lambdaQueryWrapper.select(Printer::getId,Printer::getPdfUrl,Printer::getPdfImage,Printer::getOriginFilePages);
         lambdaQueryWrapper.eq(Printer::getContentHash,printFileReq.getHash());
         List<Printer> list = iPrinterService.list(lambdaQueryWrapper);
         if (list.isEmpty()){
@@ -701,12 +700,20 @@ public class PrinterServiceImpl implements PrinterService {
         Printer printer = new Printer();
         printer.setUrl(OssDBUtil.toDBUrl(pdfZU.getUrl()));
         printer.setIsPrint(0);
+        printer.setPdfUrl(OssDBUtil.toDBUrl(pdfZU.getPdfUrl()));
         printer.setCreateTime(LocalDateTime.now());
         printer.setCreateUser(ThreadLocalUtil.getCurrentUser().getId());
         if (StringUtils.isNotEmpty(printFileReq.getHash())){
             printer.setContentHash(printFileReq.getHash());
         }
+        if (pdfImageZ.equals(1)){
+            // 形成闭环
+            printer.setPdfImage(pdfImageZU);
+        }
         printer.setName(printFileReq.getOriginFileName());
+        if (pdfZU.getOriginFilePages()==null){
+            throw new CustomException("重要参数缺式");
+        }
         printer.setOriginFilePages(pdfZU.getOriginFilePages());
         boolean save = iPrinterService.save(printer);
         if (!save) {
@@ -715,13 +722,13 @@ public class PrinterServiceImpl implements PrinterService {
         PrinterRedis printerRedis = new PrinterRedis();
         BeanUtils.copyProperties(printer, printerRedis);
         printerRedis.setNeedPrintPagesIndex(1);//从第一页开始
-        printerRedis.setPageNums(0);
         printerRedis.setSTU(3);
+        printerRedis.setPageNums(printer.getOriginFilePages());
 
-        if (pdfImageZ.equals(1) && pdfZ.equals(1)){
+        if (pdfImageZ.equals(1)){
             // 都找得到最好
             printerRedis.setIsCanGetImage(1);
-            printerRedis.setImageDownloadUrl(pdfImageZU);
+            printerRedis.setImageDownloadUrl(OssDBUtil.toUseUrl(pdfImageZU));
             RedisUtils.set(MyString.print + printer.getId(), printerRedis, 2400L, TimeUnit.SECONDS);
             return String.valueOf(printer.getId());
         }

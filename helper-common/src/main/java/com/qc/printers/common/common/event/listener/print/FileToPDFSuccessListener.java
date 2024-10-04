@@ -1,5 +1,6 @@
 package com.qc.printers.common.common.event.listener.print;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.qc.printers.common.common.MyString;
 import com.qc.printers.common.common.event.print.FileToPDFSuccessEvent;
 import com.qc.printers.common.common.utils.RedisUtils;
@@ -28,6 +29,7 @@ public class FileToPDFSuccessListener {
         Printer printer = iPrinterService.getById(printId);
         PrinterRedis printerRedis = RedisUtils.get(MyString.print + printId, PrinterRedis.class);
         printer.setPdfUrl(OssDBUtil.toDBUrl(printerRedis.getPdfUrl()));
+        printer.setOriginFilePages(printerRedis.getPageNums());
         iPrinterService.updateById(printer);
     }
 }

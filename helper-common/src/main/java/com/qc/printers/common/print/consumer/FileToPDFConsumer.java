@@ -1,5 +1,6 @@
 package com.qc.printers.common.print.consumer;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.MyString;
 import com.qc.printers.common.common.constant.MQConstant;
@@ -8,6 +9,7 @@ import com.qc.printers.common.common.event.print.PDFToImageEvent;
 import com.qc.printers.common.common.event.print.PrintErrorEvent;
 import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.print.domain.dto.PrinterRedis;
+import com.qc.printers.common.print.domain.entity.Printer;
 import com.qc.printers.common.print.domain.vo.response.data.PrintDataFromPDFResp;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
@@ -38,6 +40,7 @@ public class FileToPDFConsumer implements RocketMQListener<PrintDataFromPDFResp>
             if (printerRedis == null) {
                 throw new CustomException("异常");
             }
+
             printerRedis.setPageNums(printDataFromPDFResp.getPageNums());
             printerRedis.setSTU(3);
             printerRedis.setPdfUrl(printDataFromPDFResp.getFilePDFUrl());
