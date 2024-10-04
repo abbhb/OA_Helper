@@ -92,3 +92,6 @@ print_send_msg_r:16 16 6
 websocket_push:4 4 6
 test:16 16 6
 
+
+### 全业务ssl部署建议
+let's Encrypt可以三个月申请一次ssl证书

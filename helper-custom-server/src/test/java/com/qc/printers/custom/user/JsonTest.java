@@ -30,7 +30,7 @@ public class JsonTest {
 
     @Test
     public void testString2() {
-        boolean b = PrinterServiceImpl.fileExists("aistudio/test/概率题1720671870125.pdf");
+        boolean b = PrinterServiceImpl.fileExists("aistudio/pdf/2024-10/1842153300155273218/251d5170-d554-4e4f-8b15-14d918a499e4.pdf");
 //        List<FaceFileResp> list = JSONUtil.toList(s, FaceFileResp.class);
         log.info("{}", b);
     }

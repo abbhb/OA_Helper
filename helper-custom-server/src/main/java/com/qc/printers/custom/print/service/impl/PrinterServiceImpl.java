@@ -638,7 +638,7 @@ public class PrinterServiceImpl implements PrinterService {
             throw new CustomException("不具备快速打印条件");
         }
         // 检查所有页数是否相等
-        boolean pagesEqual = pdfPagesList.stream().distinct().count() == 1;
+        boolean pagesEqual = pdfPagesList.stream().distinct().count() == 1L;
         if (!pagesEqual) {
             log.info("具体pdf页数：{}",pdfPagesList);
             // 清除该hash所有相关hash
@@ -664,7 +664,7 @@ public class PrinterServiceImpl implements PrinterService {
             }
             needDeleteId.add(pdf.getId());
         }
-        if (pdfZ==0){
+        if (pdfZ.equals(0)){
             LambdaUpdateWrapper<Printer> printerLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
             printerLambdaUpdateWrapper.set(Printer::getContentHash,null);
             printerLambdaUpdateWrapper.in(needDeleteId.size()>1,Printer::getId,needDeleteId);
@@ -689,7 +689,7 @@ public class PrinterServiceImpl implements PrinterService {
             }
             needDeleteId.add(pdf.getId());
         }
-        if (pdfImageZ==0){
+        if (pdfImageZ.equals(0)){
             LambdaUpdateWrapper<Printer> printerLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
             printerLambdaUpdateWrapper.set(Printer::getPdfImage,null);
             printerLambdaUpdateWrapper.in(needDeleteId.size()>1,Printer::getId,needDeleteId);
@@ -718,7 +718,7 @@ public class PrinterServiceImpl implements PrinterService {
         printerRedis.setPageNums(0);
         printerRedis.setSTU(3);
 
-        if (pdfImageZ==1 && pdfZ==1){
+        if (pdfImageZ.equals(1) && pdfZ.equals(1)){
             // 都找得到最好
             printerRedis.setIsCanGetImage(1);
             printerRedis.setImageDownloadUrl(pdfImageZU);
