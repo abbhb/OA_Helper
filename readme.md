@@ -95,3 +95,25 @@ test:16 16 6
 
 ### 全业务ssl部署建议
 let's Encrypt可以三个月申请一次ssl证书
+
+### 转pdf节点快速启动
+#### 1.windows
+windows有特意开发的windows版，比较复杂
+具体搭建方式见[github-abbhb-PrintNode](https://github.com/abbhb/PrintNode)
+#### 2.全系统x86支持
+环境需求：
+- docker
+1.拉取镜像
+```shell
+#内网极速拉取
+docker pull 10.15.247.193/test/file2pdf_node:latest
+#外网dockerhub拉取
+docker pull abbhb/file2pdf_node:latest
+```
+2.启动
+```shell
+docker run -itd --name file2pdf_node_1 file2pdf_node:latest
+docker run -itd --name file2pdf_node_2 file2pdf_node:latest
+docker run -itd --name file2pdf_node_3 file2pdf_node:latest
+# 可以结合机器资源启动多个
+```
