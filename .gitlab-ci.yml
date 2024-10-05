@@ -10,15 +10,15 @@ variables:
   HARBOR_USERNAME: $HARBOR_USERNAME
   HARBOR_PASSWORD: $HARBOR_PASSWORD
   MAVEN_CLI_OPTS: "-s $CI_PROJECT_DIR/docs/settings.xml"
-  MAVEN_OPTS: "-Dmaven.repo.local=.m2"
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/docs/.m2"
   HARBOR_IMAGE: ${HARBOR_REPO}/easyoaserver
   DOCKERFILE_PATH: "."
 
 
 cache:
   paths:
-    - .m2/repository/
-    - target/
+    - $CI_PROJECT_DIR/docs/.m2/repository/
+    - helper-custom-server/target/helper-custom-server-1.0-SNAPSHOT.jar
 
 build:
   stage: build
@@ -29,7 +29,7 @@ build:
     - mvn ${MAVEN_CLI_OPTS} clean package
   artifacts:
     paths:
-      - target/
+      - ./helper-custom-server/target/helper-custom-server-1.0-SNAPSHOT.jar
 
 dockerize:
   stage: dockerize
