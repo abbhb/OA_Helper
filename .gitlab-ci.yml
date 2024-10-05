@@ -2,26 +2,18 @@
 stages:
   - build
   - dockerize
-  - deploy
+#  - deploy
 
 variables:
   HARBOR_REPO: ${HARBOR_REGISTRY}/${HARBOR_PROJECT}/easyoa-server
   DOCKER_IMAGE_TAG: $CI_COMMIT_REF_SLUG
   HARBOR_USERNAME: $HARBOR_USERNAME
   HARBOR_PASSWORD: $HARBOR_PASSWORD
-  SSH_PRIVATE_KEY: $DEPLOY_KEY
   MAVEN_CLI_OPTS: "-s $CI_PROJECT_DIR/docs/settings.xml"
   MAVEN_OPTS: "-Dmaven.repo.local=.m2"
   HARBOR_IMAGE: ${HARBOR_REPO}/easyoaserver
   DOCKERFILE_PATH: "."
-  SSH_HOST: $DEPLOY_HOST # 定义 SSH_HOST 环境变量
-  SSH_USER: $DEPLOY_USER # 定义 SSH_USER 环境变量
 
-before_script:
-  - mkdir -p ~/.ssh
-  - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-  - chmod 700 ~/.ssh
-  - chmod 600 ~/.ssh/id_rsa
 
 cache:
   paths:
@@ -31,7 +23,6 @@ cache:
 build:
   stage: build
   image: maven:3.6.3-openjdk-17 # 使用 Maven 3.6.3 和 Java 17 的官方镜像
-
   tags:
     - aifile
   script:
@@ -43,33 +34,28 @@ build:
 dockerize:
   stage: dockerize
   tags:
-    - aifile-shell
-  image: docker:dind
-  services:
-    - name: 'docker:20.10.6-dind'
-      command: [ '--tls=false', '--host=tcp://0.0.0.0:2375' ]
-      alias: docker
-#  variables:
-#    DOCKER_HOST: tcp://docker:2375
-  script:
-    - docker build -t $HARBOR_IMAGE:$DOCKER_IMAGE_TAG $DOCKERFILE_PATH
-    - docker login -u "$HARBOR_USERNAME" -p "$HARBOR_PASSWORD" $HARBOR_REPO
-    - docker push $HARBOR_IMAGE:$DOCKER_IMAGE_TAG
-
-deploy:
-  stage: deploy
-  tags:
     - aifile
+  image: docker:stable
+
   script:
-    - mkdir -p ~/.ssh
-    - echo "$SSH_PRIVATE_KEY" > ~/.ssh/id_rsa
-    - chmod 700 ~/.ssh
-    - chmod 600 ~/.ssh/id_rsa
-    - eval $(ssh-agent -s) # 启动 ssh-agent
-    - ssh-add ~/.ssh/id_rsa
-    - ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "docker login -u $HARBOR_USERNAME -p $HARBOR_PASSWORD $HARBOR_REPO"
-    - ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "docker pull $HARBOR_IMAGE:$DOCKER_IMAGE_TAG"
-    - ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "docker stop easyoa-server || true && docker rm easyoa-server || true"
-    - ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "docker run -d --name easyoa-server $HARBOR_IMAGE:$DOCKER_IMAGE_TAG"
-  only:
-    - master
+    - docker build -t easy-oa-server:latest $DOCKERFILE_PATH
+    - docker login -u "$HARBOR_USERNAME" -p "$HARBOR_PASSWORD" $HARBOR_REPO
+    - docker tag easy-oa-server:latest $HARBOR_IMAGE:$DOCKER_IMAGE_TAG
+    - docker tag easy-oa-server:latest $HARBOR_IMAGE:latest
+    - docker push $HARBOR_IMAGE:$DOCKER_IMAGE_TAG
+    - docker push $HARBOR_IMAGE:latest
+
+#deploy:
+#  stage: deploy
+#  tags:
+#    - aifile
+#  script:
+#
+#    - eval $(ssh-agent -s) # 启动 ssh-agent
+#    - ssh-add ~/.ssh/id_rsa
+#    - ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "docker login -u $HARBOR_USERNAME -p $HARBOR_PASSWORD $HARBOR_REPO"
+#    - ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "docker pull $HARBOR_IMAGE:$DOCKER_IMAGE_TAG"
+#    - ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "docker stop easyoa-server || true && docker rm easyoa-server || true"
+#    - ssh -o StrictHostKeyChecking=no $SSH_USER@$SSH_HOST "docker run -d --name easyoa-server $HARBOR_IMAGE:$DOCKER_IMAGE_TAG"
+#  only:
+#    - master
