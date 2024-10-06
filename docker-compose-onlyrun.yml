@@ -1,0 +1,32 @@
+version: '3.8'
+
+services:
+  easy-oa-server:
+    container_name: Easy-oa-server
+    image: 10.15.247.193/test/easyoa-server/easyoaserver:4.0.0
+    restart: always
+    ports:
+      - "55550:55550"
+      - "8090:8090"
+      - "9999:9999"
+
+
+  logstash:
+    container_name: logstash_easy_oa
+    build:
+      dockerfile: Dockerfile
+      context: ./logstash
+    restart: always
+    depends_on:
+      - easy-oa-server
+    network_mode: service:easy-oa-server
+
+  rocketmq-exporter:
+    container_name: rocketmq_exporter_self
+    build:
+      dockerfile: Dockerfile
+      context: ./rocketmq-exporter
+    restart: always
+    depends_on:
+      - easy-oa-server
+    network_mode: service:easy-oa-server
