@@ -6,9 +6,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-
       args:
-        redispassword: ${redispassword}
         minioaccessKey: ${minioaccessKey}
         miniosecretKey: ${miniosecretKey}
         emailpassword: ${emailpassword}

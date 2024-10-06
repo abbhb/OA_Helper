@@ -11,7 +11,6 @@ variables:
   HARBOR_PASSWORD: $HARBOR_PASSWORD
   MAVEN_CLI_OPTS: "-s $CI_PROJECT_DIR/docs/settings.xml"
   HARBOR_IMAGE: ${HARBOR_REPO}/easyoaserver
-  REDIS_PASSWORD: $REDIS_PASSWORD
   MINIO_ACCESS_KEY: $MINIO_ACCESS_KEY
   MINIO_SECRET: $MINIO_SECRET
   EMAIL_PASSWORD: $EMAIL_PASSWORD
@@ -38,7 +37,7 @@ dockerize:
     - server-easyoa
   script:
     - chmod +x create_env.sh
-    - ./create_env.sh ${REDIS_PASSWORD} ${MINIO_ACCESS_KEY} ${MINIO_SECRET} ${EMAIL_PASSWORD} ${MYSQL_PASSWORD}
+    - ./create_env.sh ${MINIO_ACCESS_KEY} ${MINIO_SECRET} ${EMAIL_PASSWORD} ${MYSQL_PASSWORD}
     - docker-compose up -d
 #    - docker login -u "$HARBOR_USERNAME" -p "$HARBOR_PASSWORD" $HARBOR_REPO
 #    - docker tag easy-oa-server:latest $HARBOR_IMAGE:$DOCKER_IMAGE_TAG

@@ -1,6 +1,5 @@
 FROM openjdk:17-ea-13-oraclelinux7
 LABEL authors="qc200"
-ARG redispassword
 ARG minioaccessKey
 ARG miniosecretKey
 ARG emailpassword
@@ -18,4 +17,4 @@ EXPOSE 8090
 EXPOSE 9999
 
 
-CMD ["java", "-jar","-Duser.timezone=Asia/Shanghai", "helper-custom-server-1.0-SNAPSHOT.jar","--helper.mysql.password=${mysqlpassword}","--helper.redis.password=${redispassword}","--helper.email.password=${emailpassword}","--helper.minio.accessKey=${minioaccessKey}","--helper.minio.secretKey=${miniosecretKey}"]
+CMD ["java", "-jar","-Duser.timezone=Asia/Shanghai", "helper-custom-server-1.0-SNAPSHOT.jar","--helper.mysql.password=${mysqlpassword}","--helper.email.password=${emailpassword}","--helper.minio.accessKey=${minioaccessKey}","--helper.minio.secretKey=${miniosecretKey}"]
