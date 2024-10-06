@@ -3,7 +3,14 @@ version: '3.8'
 services:
   easy-oa-server:
     container_name: Easy-oa-server
-    image: 10.15.247.193/test/easyoa-server/easyoaserver:4.0.0
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        minioaccessKey: ${minioaccessKey}
+        miniosecretKey: ${miniosecretKey}
+        emailpassword: ${emailpassword}
+        mysqlpassword: ${mysqlpassword}
     restart: always
     ports:
       - "55550:55550"
