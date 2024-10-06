@@ -24,7 +24,7 @@ build:
   stage: build
   image: maven:3.6.3-openjdk-17 # 使用 Maven 3.6.3 和 Java 17 的官方镜像
   tags:
-    - aifile
+    - aifile-docekr
   script:
     - mvn ${MAVEN_CLI_OPTS} clean package
   artifacts:
@@ -34,9 +34,8 @@ build:
 dockerize:
   stage: dockerize
   tags:
-    - aifile
-  image: docker:stable
-
+    - aifile-docekr
+  image: docker:24.0.5
   script:
     - docker build -t easy-oa-server:latest $DOCKERFILE_PATH
     - docker login -u "$HARBOR_USERNAME" -p "$HARBOR_PASSWORD" $HARBOR_REPO
@@ -48,7 +47,7 @@ dockerize:
 #deploy:
 #  stage: deploy
 #  tags:
-#    - aifile
+#    - aifile-docekr
 #  script:
 #
 #    - eval $(ssh-agent -s) # 启动 ssh-agent
