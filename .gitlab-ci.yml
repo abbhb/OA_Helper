@@ -11,8 +11,11 @@ variables:
   HARBOR_PASSWORD: $HARBOR_PASSWORD
   MAVEN_CLI_OPTS: "-s $CI_PROJECT_DIR/docs/settings.xml"
   HARBOR_IMAGE: ${HARBOR_REPO}/easyoaserver
-  DOCKERFILE_PATH: "."
-
+  REDIS_PASSWORD: $REDIS_PASSWORD
+  MINIO_ACCESS_KEY: $MINIO_ACCESS_KEY
+  MINIO_SECRET: $MINIO_SECRET
+  EMAIL_PASSWORD: $EMAIL_PASSWORD
+  MYSQL_PASSWORD: $MYSQL_PASSWORD
 
 cache:
   paths:
@@ -24,7 +27,7 @@ build:
   tags:
     - aifile-docekr
   script:
-    - mvn ${MAVEN_CLI_OPTS} clean package
+      - mvn ${MAVEN_CLI_OPTS} clean package
   artifacts:
     paths:
       - ./helper-custom-server/target/helper-custom-server-1.0-SNAPSHOT.jar
@@ -32,15 +35,16 @@ build:
 dockerize:
   stage: dockerize
   tags:
-    - aifile-docekr
-  image: docker:24.0.5
+    - server-easyoa
   script:
-    - docker build -t easy-oa-server:latest $DOCKERFILE_PATH
-    - docker login -u "$HARBOR_USERNAME" -p "$HARBOR_PASSWORD" $HARBOR_REPO
-    - docker tag easy-oa-server:latest $HARBOR_IMAGE:$DOCKER_IMAGE_TAG
-    - docker tag easy-oa-server:latest $HARBOR_IMAGE:latest
-    - docker push $HARBOR_IMAGE:$DOCKER_IMAGE_TAG
-    - docker push $HARBOR_IMAGE:latest
+    - chmod +x create_env.sh
+    - ./create_env.sh ${REDIS_PASSWORD} ${MINIO_ACCESS_KEY} ${MINIO_SECRET} ${EMAIL_PASSWORD} ${MYSQL_PASSWORD}
+    - docker-compose up -d
+#    - docker login -u "$HARBOR_USERNAME" -p "$HARBOR_PASSWORD" $HARBOR_REPO
+#    - docker tag easy-oa-server:latest $HARBOR_IMAGE:$DOCKER_IMAGE_TAG
+#    - docker tag easy-oa-server:latest $HARBOR_IMAGE:latest
+#    - docker push $HARBOR_IMAGE:$DOCKER_IMAGE_TAG
+#    - docker push $HARBOR_IMAGE:latest
 
 #deploy:
 #  stage: deploy

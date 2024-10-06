@@ -3,8 +3,19 @@ version: '3.8'
 services:
   easy-oa-server:
     container_name: Easy-oa-server
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+      args:
+        redispassword: ${redispassword}
+        minioaccessKey: ${minioaccessKey}
+        miniosecretKey: ${miniosecretKey}
+        emailpassword: ${emailpassword}
+        mysqlpassword: ${mysqlpassword}
     restart: always
+    env_file:
+      - .env
     ports:
       - "55550:55550"
       - "8090:8090"
