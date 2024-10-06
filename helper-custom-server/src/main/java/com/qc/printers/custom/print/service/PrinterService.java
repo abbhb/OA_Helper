@@ -52,4 +52,6 @@ public interface PrinterService {
     String preUploadPrintFile(PreUploadPrintFileReq printFileReq);
 
     UnoServiceInfo unoServiceInfo();
+
+    String deleteHistoryPrints(Long id);
 }

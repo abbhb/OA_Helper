@@ -1,16 +1,21 @@
 package com.qc.printers.custom.signin.controller;
 
+import com.fasterxml.jackson.annotation.JsonFormat;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.annotation.PermissionCheck;
+import com.qc.printers.common.holidays.domain.Holidays;
 import com.qc.printers.common.signin.domain.dto.SigninGroupDto;
 import com.qc.printers.common.signin.service.SigninGroupService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.*;
 
+import javax.validation.Valid;
+import java.time.LocalDate;
 import java.util.List;
 
 //@ResponseBody+@Controller
@@ -62,5 +67,44 @@ public class SigninGroupController {
         return R.success(signinGroupService.listSigninGroup());
     }
 
+    /*
+     * 节假日相关
+     */
+    @GetMapping("/list_holidays/{group_id}")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin-group-holiday:list")
+    @NeedToken
+    @ApiOperation(value = "获取考勤组节假日信息")
+    public R<List<Holidays>> listHolidays(@PathVariable("group_id") Long groupId,
+                                          @RequestParam
+                                          @DateTimeFormat(pattern = "yyyy-MM-dd")
+                                          @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
+                                          LocalDate startDate,
+                                          @RequestParam
+                                          @DateTimeFormat(pattern = "yyyy-MM-dd")
+                                          @JsonFormat(pattern = "yyyy-MM-dd", timezone = "GMT+8")
+                                          LocalDate endDate) {
+        log.info("获取考勤组节假日信息,group_id:{},startDate:{},endDate:{}",groupId,startDate,endDate);
+        return R.success(signinGroupService.listHolidays(groupId,startDate,endDate));
+    }
+
+    @PostMapping("/update_holidays/{group_id}")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin-group-holiday:update")
+    @NeedToken
+    @ApiOperation(value = "更新考勤组节假日信息")
+    public R<String> updateHolidays(@PathVariable("group_id") Long groupId,
+                                    @RequestBody
+                                    Holidays holidays) {
+        log.info("更新考勤组节假日信息,group_id:{},holidays:{}",groupId,holidays);
+        return R.success(signinGroupService.updateHolidays(groupId,holidays));
+    }
+
+    @DeleteMapping("/delete_holidays/{group_id}/{id}")
+    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin-group-holiday:delete")
+    @NeedToken
+    @ApiOperation(value = "删除考勤组节假日信息")
+    public R<String> deleteHolidays(@PathVariable("group_id") Long groupId,@PathVariable("id") Long id) {
+        log.info("删除考勤组节假日信息,group_id:{}",groupId);
+        return R.success(signinGroupService.deleteHolidays(groupId,id));
+    }
 
 }

@@ -154,6 +154,7 @@ public class PrinterServiceImpl implements PrinterService {
         lambdaQueryWrapper.orderByDesc(Printer::getCreateTime);
         lambdaQueryWrapper.eq(Printer::getCreateUser, currentUser.getId());
         lambdaQueryWrapper.eq(onlyPrinted.equals(1), Printer::getIsPrint, onlyPrinted);
+        lambdaQueryWrapper.eq(Printer::getIsDelete, 0);
         lambdaQueryWrapper.like(!StringUtils.isEmpty(name), Printer::getName, name);
         //创建时间大于startTime
         lambdaQueryWrapper.ge(startDate != null, Printer::getCreateTime, startDate);
@@ -215,6 +216,7 @@ public class PrinterServiceImpl implements PrinterService {
         lambdaQueryWrapper.orderByDesc(Printer::getCreateTime);
         lambdaQueryWrapper.like(!StringUtils.isEmpty(name), Printer::getName, name);
         lambdaQueryWrapper.eq(onlyPrinted.equals(1), Printer::getIsPrint, onlyPrinted);
+        lambdaQueryWrapper.eq(Printer::getIsDelete, 0);
         lambdaQueryWrapper.in(onlyUser != null && onlyUser.size() > 0, Printer::getCreateUser, onlyUser);
         //创建时间大于startTime
         lambdaQueryWrapper.ge(startDate != null, Printer::getCreateTime, startDate);
@@ -813,6 +815,18 @@ public class PrinterServiceImpl implements PrinterService {
                     .build();
         }
 
+    }
+
+    @Transactional
+    @Override
+    public String deleteHistoryPrints(Long id) {
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+        LambdaUpdateWrapper<Printer> queryWrapper = new LambdaUpdateWrapper<>();
+        queryWrapper.eq(Printer::getId,id);
+        queryWrapper.eq(Printer::getCreateUser,currentUser.getId());// 防止越权删除
+        queryWrapper.set(Printer::getIsDelete,1);
+        iPrinterService.update(queryWrapper);
+        return "删除成功";
     }
 
     // 检查文件是否存在的方法

@@ -1,5 +1,6 @@
 package com.qc.printers.custom.print.controller;
 
+import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.MyString;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
@@ -118,6 +119,15 @@ public class PrintController {
             return R.error("传参错误");
         }
         return printerService.listPrinter(pageNum, pageSize, data.getName(), data.getOnlyPrinted() == null ? 1 : data.getOnlyPrinted(), data.getStartDate(), data.getEndDate());
+    }
+
+    @DeleteMapping("/deleteHistoryPrints/{id}")
+    @NeedToken
+    public R<String> deleteHistoryPrints(@PathVariable("id") Long id) {
+        if (id == null) {
+            throw new CustomException("传参错误");
+        }
+        return R.success(printerService.deleteHistoryPrints(id));
     }
 
     //获取当日打印数
