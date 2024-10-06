@@ -1,0 +1,30 @@
+2024-10-06 15:02:33 ERROR http-nio-55550-exec-3 com.qc.printers.common.common.GlobalExceptionHandler Failed to convert value of type 'java.lang.String' to required type 'java.time.LocalDate'; nested exception is org.springframework.core.convert.ConversionFailedException: Failed to convert from type [java.lang.String] to type [@org.springframework.web.bind.annotation.RequestParam java.time.LocalDate] for value '2024-10-06'; nested exception is java.lang.IllegalArgumentException: Parse attempt failed for value [2024-10-06]
+2024-10-06 15:06:30 ERROR scheduling-1 com.alibaba.druid.pool.DruidAbstractDataSource discard long time none received connection. , jdbcUrl : jdbc:mysql://192.168.12.12:3306/easy_oa?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true, jdbcUrl : jdbc:mysql://192.168.12.12:3306/easy_oa?serverTimezone=Asia/Shanghai&useUnicode=true&characterEncoding=utf-8&zeroDateTimeBehavior=convertToNull&useSSL=false&allowPublicKeyRetrieval=true, lastPacketReceivedIdleMillis : 114988
+2024-10-06 15:12:18 ERROR redisson-timer-4-1 org.redisson.client.handler.PingConnectionHandler Unable to send PING command over channel: [id: 0x95a9fc08, L:/198.18.0.1:7299 - R:/192.168.12.12:6379]
+org.redisson.client.RedisTimeoutException: Command execution timeout for command: (PING), params: [], Redis client: [addr=redis://192.168.12.12:6379]
+	at org.redisson.client.RedisConnection.lambda$async$1(RedisConnection.java:207)
+	at io.netty.util.HashedWheelTimer$HashedWheelTimeout.expire(HashedWheelTimer.java:672)
+	at io.netty.util.HashedWheelTimer$HashedWheelBucket.expireTimeouts(HashedWheelTimer.java:747)
+	at io.netty.util.HashedWheelTimer$Worker.run(HashedWheelTimer.java:472)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.base/java.lang.Thread.run(Thread.java:842)
+2024-10-06 15:12:18 ERROR redisson-timer-4-1 org.redisson.client.handler.PingConnectionHandler Unable to send PING command over channel: [id: 0x5409c6eb, L:/198.18.0.1:7295 - R:/192.168.12.12:6379]
+org.redisson.client.RedisTimeoutException: Command execution timeout for command: (PING), params: [], Redis client: [addr=redis://192.168.12.12:6379]
+	at org.redisson.client.RedisConnection.lambda$async$1(RedisConnection.java:207)
+	at io.netty.util.HashedWheelTimer$HashedWheelTimeout.expire(HashedWheelTimer.java:672)
+	at io.netty.util.HashedWheelTimer$HashedWheelBucket.expireTimeouts(HashedWheelTimer.java:747)
+	at io.netty.util.HashedWheelTimer$Worker.run(HashedWheelTimer.java:472)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.base/java.lang.Thread.run(Thread.java:842)
+2024-10-06 15:12:18 ERROR redisson-timer-4-1 org.redisson.client.handler.PingConnectionHandler Unable to send PING command over channel: [id: 0xc3418372, L:/198.18.0.1:7288 - R:/192.168.12.12:6379]
+org.redisson.client.RedisTimeoutException: Command execution timeout for command: (PING), params: [], Redis client: [addr=redis://192.168.12.12:6379]
+	at org.redisson.client.RedisConnection.lambda$async$1(RedisConnection.java:207)
+	at io.netty.util.HashedWheelTimer$HashedWheelTimeout.expire(HashedWheelTimer.java:672)
+	at io.netty.util.HashedWheelTimer$HashedWheelBucket.expireTimeouts(HashedWheelTimer.java:747)
+	at io.netty.util.HashedWheelTimer$Worker.run(HashedWheelTimer.java:472)
+	at io.netty.util.concurrent.FastThreadLocalRunnable.run(FastThreadLocalRunnable.java:30)
+	at java.base/java.lang.Thread.run(Thread.java:842)
+2024-10-06 15:18:00 ERROR http-nio-55550-exec-6 com.qc.printers.common.common.GlobalExceptionHandler Failed to convert value of type 'java.lang.String' to required type 'java.time.LocalDate'; nested exception is org.springframework.core.convert.ConversionFailedException: Failed to convert from type [java.lang.String] to type [@org.springframework.web.bind.annotation.RequestParam @org.springframework.format.annotation.DateTimeFormat @com.fasterxml.jackson.annotation.JsonFormat java.time.LocalDate] for value '2024-10-6'; nested exception is java.lang.IllegalArgumentException: Parse attempt failed for value [2024-10-6]
+2024-10-06 15:37:09 ERROR http-nio-55550-exec-10 com.qc.printers.common.common.aspect.LogAspect Cannot invoke "com.alibaba.fastjson.JSONObject.toJSONString()" because "jsonObject" is null
+2024-10-06 15:37:09 ERROR http-nio-55550-exec-10 com.qc.printers.common.common.aspect.LogAspect Cannot invoke "Object.toString()" because the return value of "com.qc.printers.common.common.R.getData()" is null
+2024-10-06 15:37:09 ERROR http-nio-55550-exec-10 com.qc.printers.common.common.aspect.LogAspect 日誌記錄異常，請檢查返回值是否是Map <String, Object>類型
