@@ -40,7 +40,7 @@ dockerize:
     - export miniosecretKey=$MINIO_SECRET
     - export emailpassword=$EMAIL_PASSWORD
     - export mysqlpassword=$MYSQL_PASSWORD
-    - docker-compose up -d
+    - docker-compose up -d --force-recreate
 #    - docker login -u "$HARBOR_USERNAME" -p "$HARBOR_PASSWORD" $HARBOR_REPO
 #    - docker tag easy-oa-server:latest $HARBOR_IMAGE:$DOCKER_IMAGE_TAG
 #    - docker tag easy-oa-server:latest $HARBOR_IMAGE:latest
