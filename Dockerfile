@@ -15,6 +15,9 @@ COPY helper-custom-server/target/helper-custom-server-1.0-SNAPSHOT.jar /app
 EXPOSE 55550
 EXPOSE 8090
 EXPOSE 9999
-
+ENV emailpassword=${emailpassword}
+ENV mysqlpassword=${mysqlpassword}
+ENV minioaccessKey=${minioaccessKey}
+ENV miniosecretKey=${miniosecretKey}
 
 CMD ["java", "-jar","-Duser.timezone=Asia/Shanghai", "helper-custom-server-1.0-SNAPSHOT.jar","--helper.mysql.password=${mysqlpassword}","--helper.email.password=${emailpassword}","--helper.minio.accessKey=${minioaccessKey}","--helper.minio.secretKey=${miniosecretKey}"]
