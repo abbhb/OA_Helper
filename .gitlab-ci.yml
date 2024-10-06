@@ -36,8 +36,10 @@ dockerize:
   tags:
     - server-easyoa
   script:
-    - chmod +x create_env.sh
+    - chmod 777 create_env.sh
     - ./create_env.sh ${MINIO_ACCESS_KEY} ${MINIO_SECRET} ${EMAIL_PASSWORD} ${MYSQL_PASSWORD}
+    - ll
+    - cat .env
     - docker-compose up -d
 #    - docker login -u "$HARBOR_USERNAME" -p "$HARBOR_PASSWORD" $HARBOR_REPO
 #    - docker tag easy-oa-server:latest $HARBOR_IMAGE:$DOCKER_IMAGE_TAG
