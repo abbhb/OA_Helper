@@ -86,6 +86,12 @@ public class Printer implements Serializable {
      * 1：为打印成功
      */
     private Integer isPrint;
+    /**
+     * 用户标记删除 默认为0
+     * 0未删除
+     * 1已删除
+     */
+    private Integer isDelete = 0;
 
 
 }

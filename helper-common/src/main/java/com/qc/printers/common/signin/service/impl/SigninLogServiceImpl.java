@@ -14,6 +14,8 @@ import com.qc.printers.common.common.utils.DateUtils;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
 import com.qc.printers.common.common.utils.oss.OssDBUtil;
 import com.qc.printers.common.config.system.signin.SigninTipMessageConfig;
+import com.qc.printers.common.holidays.dao.HolidaysDao;
+import com.qc.printers.common.holidays.domain.Holidays;
 import com.qc.printers.common.signin.dao.*;
 import com.qc.printers.common.signin.domain.dto.*;
 import com.qc.printers.common.signin.domain.entity.*;
@@ -81,6 +83,8 @@ public class SigninLogServiceImpl implements SigninLogService {
     private SigninGroupRuleDao signinGroupRuleDao;
 
 
+    @Autowired
+    private HolidaysDao holidaysDao;
 
     @Autowired
     private ISysDeptService iSysDeptService;
@@ -305,6 +309,21 @@ public class SigninLogServiceImpl implements SigninLogService {
         return signinLogCliErrDao.getOne(signinLogCliErrLambdaQueryWrapper);
     }
 
+    private boolean isNeedSB(HashMap<String,Long> xqToId,LocalDate date,Long groupId){
+        String xingqiji = String.valueOf(date.getDayOfWeek().getValue());
+        if (!xqToId.containsKey(xingqiji)){
+            return false;// 无需上班
+        }
+        // 如果是节假日且不是工作日也无需上班
+        LambdaQueryWrapper<Holidays> holidaysLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        holidaysLambdaQueryWrapper.eq(Holidays::getDateD,date);
+        holidaysLambdaQueryWrapper.eq(Holidays::getSigninGroupId,groupId);
+        holidaysLambdaQueryWrapper.eq(Holidays::getWorkingDay,0);
+        if (holidaysDao.count(holidaysLambdaQueryWrapper)>0){
+            return false;
+        }
+        return true;
+    }
     /**
      * 实时大屏结果
      * @param groupId
@@ -335,13 +354,9 @@ public class SigninLogServiceImpl implements SigninLogService {
             }
         }
         // 昨日考勤信息直接调方法拿,但是昨日会不会也无考勤
-        String zuorixingqiji = String.valueOf(now.getDayOfWeek().getValue());
-        if (!zuorixingqiji.equals("1")){
-            zuorixingqiji =String.valueOf(now.getDayOfWeek().getValue()-1);
-        }else {
-            zuorixingqiji = "7";
-        }
-        if ((!xqToId.containsKey(zuorixingqiji))&&(!xqToId.containsKey(String.valueOf(now.getDayOfWeek().getValue())))){
+        LocalDate zuori = now.minusDays(1);
+
+        if (!isNeedSB(xqToId,now,one.getGroupId())&&!isNeedSB(xqToId,zuori,one.getGroupId())){
             // 昨日也无需考勤
             signinGroupDateRealResp.setKaoqingString("今日无考勤任务!");
 
@@ -358,7 +373,7 @@ public class SigninLogServiceImpl implements SigninLogService {
         }
         // 今天这个考勤组的的班次id
         Long bcId = xqToId.get(String.valueOf(now.getDayOfWeek().getValue()));
-        if ((xqToId.containsKey(zuorixingqiji))&&(!xqToId.containsKey(String.valueOf(now.getDayOfWeek().getValue())))){
+        if (!isNeedSB(xqToId,now,one.getGroupId())&&isNeedSB(xqToId,zuori,one.getGroupId())){
             // 昨日有考勤任务&&今日无
             signinGroupDateRealResp.setKaoqingString("今日无考勤任务!");
             signinGroupDateRealResp.setNumberOfZaoTUi(0);
@@ -413,7 +428,7 @@ public class SigninLogServiceImpl implements SigninLogService {
             // 需要把昨日的数据填上
             return signinGroupDateRealResp;
         }
-        if ((!xqToId.containsKey(zuorixingqiji))&&(xqToId.containsKey(String.valueOf(now.getDayOfWeek().getValue())))){
+        if (isNeedSB(xqToId,now,one.getGroupId())&&!isNeedSB(xqToId,zuori,one.getGroupId())){
             // 昨日无考勤任务&&今日有
             signinGroupDateRealResp.setZuoRiChuQingLv("100");
             signinGroupDateRealResp.setZuoRiQueQing(new ArrayList<>());
@@ -460,7 +475,7 @@ public class SigninLogServiceImpl implements SigninLogService {
 
             return signinGroupDateRealResp;
         }
-        if ((xqToId.containsKey(zuorixingqiji))&&(xqToId.containsKey(String.valueOf(now.getDayOfWeek().getValue())))){
+        if (isNeedSB(xqToId,now,one.getGroupId())&&isNeedSB(xqToId,zuori,one.getGroupId())){
             // 昨日有考勤任务&&今日也有
             SigninBc signinBc = signinBcDao.getById(bcId);
             if (signinBc==null){
@@ -1143,7 +1158,7 @@ public class SigninLogServiceImpl implements SigninLogService {
         for (int i = 1; i <= signinBc.getEveryDay(); i++) {
             // 几个班次就到几
 
-            //[fix:也不一定，说不定有傻逼请假了也来打卡，还迟到早退] 直接一开始就排除请假的
+            //[fix:也不一定，说不定有请假了也来打卡，还迟到早退] 直接一开始就排除请假的
             // 以每个班次的上班时间和下班时间来看，有一个在请假就算该班次请假
 
             BcRule bcRule = signinBc.getRules().get(i - 1);

@@ -2,6 +2,8 @@ package com.qc.printers.common.signin.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.qc.printers.common.common.CustomException;
+import com.qc.printers.common.holidays.dao.HolidaysDao;
+import com.qc.printers.common.holidays.domain.Holidays;
 import com.qc.printers.common.signin.dao.SigninGroupDao;
 import com.qc.printers.common.signin.dao.SigninGroupRuleDao;
 import com.qc.printers.common.signin.domain.dto.SigninGroupDto;
@@ -26,6 +28,9 @@ public class SigninGroupServiceImpl implements SigninGroupService {
 
     @Autowired
     private SigninGroupRuleDao signinGroupRuleDao;
+
+    @Autowired
+    private HolidaysDao holidaysDao;
 
     @Transactional
     public void check(SigninGroupDto signinGroupDto) {
@@ -214,5 +219,54 @@ public class SigninGroupServiceImpl implements SigninGroupService {
         SigninGroupRule signinGroupRule = signinGroupRuleDao.getOne(signinGroupRuleLambdaQueryWrapper);
         signinGroupDto.setSigninGroupRule(signinGroupRule);
         return signinGroupDto;
+    }
+
+    @Override
+    public List<Holidays> listHolidays(Long groupId, LocalDate startDate, LocalDate endDate) {
+        LambdaQueryWrapper<Holidays> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        // 添加查询条件，假设Holidays类中有一个名为dateD的LocalDate类型字段
+        lambdaQueryWrapper
+                .ge(Holidays::getDateD, startDate) // 大于等于startDate
+                .le(Holidays::getDateD, endDate); // 小于等于endDate
+
+        lambdaQueryWrapper.eq(Holidays::getSigninGroupId, groupId);
+
+
+        return holidaysDao.list(lambdaQueryWrapper);
+    }
+
+    /**
+     * 更新节假日信息
+     * @param groupId
+     * @param holidays
+     * @return
+     */
+    @Transactional
+    @Override
+    public String updateHolidays(Long groupId,Holidays data) {
+        if (data.getDateD()==null){
+            throw new CustomException("日期不能为空");
+        }
+        LambdaQueryWrapper<Holidays> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.eq(Holidays::getSigninGroupId,groupId);
+        lambdaQueryWrapper.eq(Holidays::getDateD,data.getDateD());
+        Holidays holidays = holidaysDao.getOne(lambdaQueryWrapper);
+        if (holidays==null){
+            holidays = new Holidays();
+        }
+        holidays.setDateD(data.getDateD());
+        holidays.setSigninGroupId(groupId);
+        holidays.setWorkingDay(data.getWorkingDay());
+        holidays.setName(data.getName());
+        holidaysDao.saveOrUpdate(holidays);
+        return "更新成功";
+    }
+
+    @Transactional
+    @Override
+    public String deleteHolidays(Long groupId,Long id) {
+        if (groupId == null || id == null)throw new CustomException("必须传回id");
+        holidaysDao.removeById(id);
+        return "删除成功";
     }
 }
