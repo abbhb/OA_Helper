@@ -12,8 +12,6 @@ services:
         emailpassword: ${emailpassword}
         mysqlpassword: ${mysqlpassword}
     restart: always
-    env_file:
-      - .env
     ports:
       - "55550:55550"
       - "8090:8090"
