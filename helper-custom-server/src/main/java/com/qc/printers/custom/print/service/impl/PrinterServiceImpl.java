@@ -821,6 +821,13 @@ public class PrinterServiceImpl implements PrinterService {
     @Override
     public String deleteHistoryPrints(Long id) {
         UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+        Printer pr = iPrinterService.getById(id);
+        if (pr==null){
+            throw new CustomException("请不要多次点击");
+        }
+        if (!pr.getCreateUser().equals(currentUser.getId())){
+            throw new CustomException("仅允许删除自己的记录!");
+        }
         LambdaUpdateWrapper<Printer> queryWrapper = new LambdaUpdateWrapper<>();
         queryWrapper.eq(Printer::getId,id);
         queryWrapper.eq(Printer::getCreateUser,currentUser.getId());// 防止越权删除
