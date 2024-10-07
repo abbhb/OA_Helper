@@ -789,7 +789,7 @@ public class SigninLogServiceImpl implements SigninLogService {
                 xqToId.put(s,kqsjRule.getBcId());
             }
         }
-        if (!xqToId.containsKey(String.valueOf(date.getDayOfWeek().getValue()))){
+        if (isNeedSB(xqToId,date,signinGroupByUserIdWithTime.getGroupId())){
             // 今日无需考勤
             signinLogForSelfResp.setNeedSB(false);
             signinLogForSelfResp.setState(0);
