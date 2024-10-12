@@ -725,6 +725,9 @@ public class PrinterServiceImpl implements PrinterService {
         BeanUtils.copyProperties(printer, printerRedis);
         printerRedis.setNeedPrintPagesIndex(1);//从第一页开始
         printerRedis.setSTU(3);
+        printerRedis.setPdfUrl(OssDBUtil.toUseUrl(printer.getPdfUrl()));
+        printerRedis.setUrl(OssDBUtil.toUseUrl(printer.getUrl()));
+        printerRedis.setPdfImage(OssDBUtil.toUseUrl(printer.getPdfImage()));
         printerRedis.setPageNums(printer.getOriginFilePages());
 
         if (pdfImageZ.equals(1)){
