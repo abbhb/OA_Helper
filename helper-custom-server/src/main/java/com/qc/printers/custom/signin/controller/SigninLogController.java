@@ -97,7 +97,7 @@ public class SigninLogController {
      */
     @NeedToken
     @GetMapping("/get_my_group_id")
-    public R<String> indexPageDataWithuser() {
+    public R<String> getMyGroupId() {
         return R.successOnlyObject(signinLogService.getMyGroupId());
     }
 
