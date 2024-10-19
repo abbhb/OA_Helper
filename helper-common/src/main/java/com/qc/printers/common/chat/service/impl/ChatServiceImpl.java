@@ -197,19 +197,19 @@ public class ChatServiceImpl implements ChatService {
         List<ChatMemberResp> resultList = new ArrayList<>();//最终列表
         Boolean isLast = Boolean.FALSE;
         if (activeStatusEnum == ChatActiveStatusEnum.ONLINE) {//在线列表
-            CursorPageBaseResp<User> cursorPage = userDao.getCursorPage(memberUidList, new CursorPageBaseReq(request.getPageSize(), timeCursor), ChatActiveStatusEnum.ONLINE);
+            CursorPageBaseResp<User> cursorPage = userDao.getCursorPage(memberUidList, new CursorPageBaseReq(request.getPageSize(), timeCursor), ChatActiveStatusEnum.ONLINE,request.getSearch());
             resultList.addAll(MemberAdapter.buildMember(cursorPage.getList()));//添加在线列表
             if (cursorPage.getIsLast()) {//如果是最后一页,从离线列表再补点数据
                 activeStatusEnum = ChatActiveStatusEnum.OFFLINE;
                 Integer leftSize = request.getPageSize() - cursorPage.getList().size();
-                cursorPage = userDao.getCursorPage(memberUidList, new CursorPageBaseReq(leftSize, null), ChatActiveStatusEnum.OFFLINE);
+                cursorPage = userDao.getCursorPage(memberUidList, new CursorPageBaseReq(leftSize, null), ChatActiveStatusEnum.OFFLINE,request.getSearch());
                 resultList.addAll(MemberAdapter.buildMember(cursorPage.getList()));//添加离线线列表
             }
 
             timeCursor = cursorPage.getCursor();
             isLast = cursorPage.getIsLast();
         } else if (activeStatusEnum == ChatActiveStatusEnum.OFFLINE) {//离线列表
-            CursorPageBaseResp<User> cursorPage = userDao.getCursorPage(memberUidList, new CursorPageBaseReq(request.getPageSize(), timeCursor), ChatActiveStatusEnum.OFFLINE);
+            CursorPageBaseResp<User> cursorPage = userDao.getCursorPage(memberUidList, new CursorPageBaseReq(request.getPageSize(), timeCursor), ChatActiveStatusEnum.OFFLINE,request.getSearch());
             resultList.addAll(MemberAdapter.buildMember(cursorPage.getList()));//添加离线线列表
             timeCursor = cursorPage.getCursor();
             isLast = cursorPage.getIsLast();

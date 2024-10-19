@@ -49,9 +49,10 @@ public class UserDao extends ServiceImpl<UserMapper, User> {
     }
 
 
-    public CursorPageBaseResp<User> getCursorPage(List<Long> memberUidList, CursorPageBaseReq request, ChatActiveStatusEnum online) {
+    public CursorPageBaseResp<User> getCursorPage(List<Long> memberUidList, CursorPageBaseReq request, ChatActiveStatusEnum online,String search) {
         return CursorUtils.getCursorPageByMysql(this, request, wrapper -> {
             wrapper.eq(User::getActiveStatus, online.getStatus());//筛选上线或者离线的
+            wrapper.and(StringUtils.isNotEmpty(search),userLambdaQueryWrapper -> userLambdaQueryWrapper.like(User::getStudentId,search).or().like(User::getName,search).or().like(User::getUsername,search));
             wrapper.in(CollectionUtils.isNotEmpty(memberUidList), User::getId, memberUidList);//普通群对uid列表做限制
             wrapper.orderByDesc(User::getLoginDate);
         }, User::getLoginDate);

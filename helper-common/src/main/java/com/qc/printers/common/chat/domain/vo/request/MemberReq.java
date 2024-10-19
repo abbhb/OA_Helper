@@ -19,4 +19,11 @@ import lombok.NoArgsConstructor;
 public class MemberReq extends CursorPageBaseReq {
     @ApiModelProperty("房间号")
     private Long roomId = 1L;
+
+    /**
+     * 支持多字段模糊匹配
+     * 存在才启用
+     */
+    @ApiModelProperty("万能搜索")
+    private String search;
 }
