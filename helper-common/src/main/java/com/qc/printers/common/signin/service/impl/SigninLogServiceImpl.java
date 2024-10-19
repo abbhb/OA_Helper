@@ -1142,6 +1142,18 @@ public class SigninLogServiceImpl implements SigninLogService {
         return signinLogServicePageData;
     }
 
+    @Override
+    public String getMyGroupId() {
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd");
+        String formattedDateTime = LocalDate.now().format(formatter);
+        SigninGroupRule signinGroupByUserIdWithTime = signinGroupRuleMapper.getSigninGroupByUserIdWithTime(formattedDateTime, formattedDateTime, String.valueOf(currentUser.getId()));
+        if (signinGroupByUserIdWithTime==null){
+            throw new CustomException("当前未处于任何的考勤组");
+        }
+        return String.valueOf(signinGroupByUserIdWithTime.getGroupId());
+    }
+
 
     /**
      * 通过原始cli数据列表和班次得到处理后的对象列表-方便后续修改统计算法

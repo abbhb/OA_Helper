@@ -91,6 +91,17 @@ public class SigninLogController {
     }
 
     /**
+     * 目前系统设计里，一个用户最多同时属于一个考勤组
+     * @param
+     * @return
+     */
+    @NeedToken
+    @GetMapping("/get_my_group_id")
+    public R<String> indexPageDataWithuser() {
+        return R.successOnlyObject(signinLogService.getMyGroupId());
+    }
+
+    /**
      * 补签
      * @return
      */

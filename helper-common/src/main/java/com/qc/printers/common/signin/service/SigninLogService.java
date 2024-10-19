@@ -66,4 +66,6 @@ public interface SigninLogService {
     SigninLogForSelfResp getUserDaySelf(Long userId,LocalDate date);
 
     PageData<SigninLogForSelfResp> indexPageDataWithuser(IndexPageDataWithuserReq indexPageDataWithuserReq);
+
+    String getMyGroupId();
 }
