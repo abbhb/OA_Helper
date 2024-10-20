@@ -22,7 +22,7 @@ import java.util.List;
 @NoArgsConstructor
 public class SummeryInfoReq implements Serializable {
     @ApiModelProperty(value = "用户信息入参")
-    @Size(max = 50)
+    @Size(max = 100)
     private List<infoReq> reqList;
 
     @Data
