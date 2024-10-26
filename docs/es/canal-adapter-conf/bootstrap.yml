@@ -1,0 +1,6 @@
+canal:
+  manager:
+    jdbc:
+      url: jdbc:mysql://192.168.12.12:13306/canal_manager?useUnicode=true&characterEncoding=UTF-8
+      username: root
+      password: aizhineng1404

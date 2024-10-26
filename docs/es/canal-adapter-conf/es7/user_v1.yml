@@ -1,0 +1,14 @@
+dataSourceKey: defaultDS
+destination: example
+groupId: g1
+esVersion: es7
+esMapping:
+  _index: user_v1
+  _id: _id
+  upsert: true
+#  pk: id
+  sql: "SELECT a.id AS _id,a.name,a.username,a.email,a.sex,a.avatar,a.student_id,a.dept_id,a.status,a.phone,a.create_user,a.create_time,a.update_time,b.dept_name FROM user a left join sys_dept b on a.dept_id=b.id"
+#  objFields:
+#    _labels: array:;
+#  etlCondition: "where a.c_time>={}"
+  commitBatch: 3000

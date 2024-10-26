@@ -1,134 +1,22 @@
 # es相关内容
-
-
-## user表缓存
+mysql需开启binlog
+依赖
+cannal-server1.1.6
 ```shell
+docker run -p 11111:11111 --name canal \\n-e canal.destinations=example \\n-e canal.instance.master.address=192.168.12.12:13306  \\n-e canal.instance.dbUsername=canal  \\n-e canal.instance.dbPassword=canal  \\n-e canal.instance.connectionCharset=UTF-8 \\n-e canal.instance.tsdb.enable=true \\n-e canal.instance.gtidon=false  \\n-e canal.instance.filter.regex=.\*\\\\..\* \\n--network host \\n--restart=always \\n-d canal/canal-server:v1.1.6
+```
+canal-adapter1.1.6
 
-PUT /user_v1
-{
-   "settings": {
-    "index": {
-      "max_ngram_diff": 10
-    },
-    "analysis": {
-      "tokenizer": {
-        "pinyin_tokenizer": {
-          "type": "pinyin",
-          "first_letter": "prefix",
-          "padding_char": " "
-        }
-      },
-      "filter": {
-        "pinyin_ngram_filter": {
-          "type": "ngram",
-          "min_gram": 2,
-          "max_gram": 10
-        },
-        "pinyin_edge_ngram_filter": {
-          "type": "edge_ngram",
-          "min_gram": 1,
-          "max_gram": 1
-        },
-        "lowercase": {
-          "type": "lowercase"
-        }
-      },
-      "analyzer": {
-        "pinyin_full_analyzer": {
-          "tokenizer": "pinyin_tokenizer",
-          "filter": ["lowercase", "pinyin_ngram_filter"]
-        },
-        "pinyin_short_analyzer": {
-          "tokenizer": "pinyin_tokenizer",
-          "filter": ["lowercase", "pinyin_edge_ngram_filter"]
-        },
-        "ik_smart_analyzer": {
-          "tokenizer": "ik_smart",
-          "filter": ["lowercase"]
-        }
-      }
-    }
-  },
-  "mappings": {
-    "properties": {
-      "id": {
-        "type": "keyword"
-      },
-      "name": {
-        "type": "text",
-        "fields": {
-         "full_pinyin": {
-            "type": "text",
-            "analyzer": "pinyin_full_analyzer"
-          },
-          "short_pinyin": {
-            "type": "text",
-            "analyzer": "pinyin_short_analyzer"
-          },
-          "ik_smart": {
-            "type": "text",
-            "analyzer": "ik_smart_analyzer"
-          }
-        }
-      },
-      "username": {
-        "type": "text"
-      },
-      "email": {
-        "type": "keyword"
-      },
-      "sex": {
-        "type": "keyword"
-      },
-      "avatar": {
-        "type": "text"
-      },
-      "student_id": {
-        "type": "keyword"
-      },
-      "dept_id": {
-        "type": "keyword"
-      },
-      "status": {
-        "type": "keyword"
-      },
-      "phone": {
-        "type": "keyword"
-      },
-      "create_user": {
-        "type": "keyword"
-      },
-      "dept_name": {
-        "type": "text",
-        "fields": {
-          "full_pinyin": {
-            "type": "text",
-            "analyzer": "pinyin_full_analyzer"
-          },
-          "short_pinyin": {
-            "type": "text",
-            "analyzer": "pinyin_short_analyzer"
-          },
-          "ik_smart": {
-            "type": "text",
-            "analyzer": "ik_smart_analyzer"
-          }
-        }
-      },
-      "create_time": {
-        "type": "date",
-        "format": "epoch_millis||strict_date_optional_time||yyyy-MM-dd'T'HH:mm:ss.SSSZ"
-      },
-      "update_time": {
-        "type": "date",
-        "format": "epoch_millis||strict_date_optional_time||yyyy-MM-dd'T'HH:mm:ss.SSSZ"
-      }
-    }
-  }
-}
+同级目录下提供的conf均为对应组件所需conf
 
-DELETE /user_v1
+## 全量同步接口
+```shell
+curl http://localhost:18081/etl/es7/user_v1.yml -X POST\n
+```
 
+
+## user表缓存 es索引结构
+```shell
 PUT /user_v1
 {
   "settings": {
@@ -319,7 +207,10 @@ PUT /user_v1
   }
 }
 
-# 查询
+```
+
+## es测试搜索接口
+```shell
 GET /user_v1/_search
 {
   "from": 0,
@@ -367,6 +258,5 @@ GET /user_v1/_search
     }
   }
 }
-
 
 ```
