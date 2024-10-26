@@ -96,6 +96,7 @@ public class SysDept implements Serializable {
     private Long updateUser;
 
     /**
+     * 表里不存在该字段
      * 用于拼接数据权限等额外sql
      */
     @TableField(exist = false)

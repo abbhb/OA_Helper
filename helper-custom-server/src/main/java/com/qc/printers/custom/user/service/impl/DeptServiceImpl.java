@@ -228,6 +228,8 @@ public class DeptServiceImpl implements DeptService {
                 sysDeptLeaderRoleDao.save(sysDeptLeaderRole);
             }
         }
+        // 修复祖籍中包含该部门的部门的信息
+        fixDataWithParent(deptManger.getId());
         return "更新成功";
     }
 
@@ -309,6 +311,35 @@ public class DeptServiceImpl implements DeptService {
         List<DeptManger> deptMangers = deptMangerHierarchyBuilder.buildHierarchy();
         sortRecursion(deptMangers);
         return deptMangers;
+    }
+
+    @Transactional
+    @Override
+    public void fixDataWithParent(Long deptId) {
+        if (deptId==null){
+            throw new CustomException("必须提供一个需要修补的部门id");
+        }
+        LambdaQueryWrapper<SysDept> sysDeptLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysDeptLambdaQueryWrapper.like(SysDept::getAncestors,String.valueOf(deptId));
+        List<SysDept> list = iSysDeptService.list(sysDeptLambdaQueryWrapper);
+        for (SysDept sysDept : list) {
+
+            String deptNameAll = "[" + sysDept.getDeptName() + "]";
+            Long parentIds = sysDept.getParentId();
+            while (!parentIds.equals(0L)) {
+
+                SysDept byId = iSysDeptService.getById(parentIds);
+                if (byId == null) {
+                    break;
+                }
+                parentIds = byId.getParentId();
+                deptNameAll = "[" + byId.getDeptName() + "]-" + deptNameAll;
+            }
+            sysDept.setDeptNameAll(deptNameAll);
+            sysDept.setAncestors(getAncestrs(sysDept.getParentId()));
+            iSysDeptService.updateById(sysDept);
+        }
+
     }
 
 

@@ -17,4 +17,10 @@ public interface DeptService {
     List<DeptManger> getDeptListOnlyTree();
 
     List<DeptManger> listForBPM(String name);
+
+    /**
+     * @param deptId 涉及到的部门id
+     * 部门表全表扫描逐行进行递归查询祖籍关系，修复信息（慎用，尽量业务量小的时候执行）
+     */
+    void fixDataWithParent(Long deptId);
 }
