@@ -249,6 +249,11 @@ public class ChatServiceImpl implements ChatService {
         return contact.getLastMsgId();
     }
 
+    /**
+     * 全员群的在线总人数
+     * @return
+     */
+
     @Override
     public ChatMemberStatisticResp getMemberStatistic() {
         System.out.println(Thread.currentThread().getName());

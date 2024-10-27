@@ -132,11 +132,16 @@ public class WSAdapter {
         wsBaseResp.setType(WSRespTypeEnum.ONLINE_OFFLINE_NOTIFY.getType());
         WSOnlineOfflineNotify onlineOfflineNotify = new WSOnlineOfflineNotify();
         onlineOfflineNotify.setChangeList(Collections.singletonList(buildOfflineInfo(user)));
-        assembleNum(onlineOfflineNotify);
+//        assembleNum(onlineOfflineNotify);
         wsBaseResp.setData(onlineOfflineNotify);
         return wsBaseResp;
     }
 
+    /**
+     * 原全员群的在线总人数获取方法，弃用
+     * @param onlineOfflineNotify
+     */
+    @Deprecated
     private void assembleNum(WSOnlineOfflineNotify onlineOfflineNotify) {
         ChatMemberStatisticResp memberStatistic = chatService.getMemberStatistic();
         onlineOfflineNotify.setOnlineNum(memberStatistic.getOnlineNum());
