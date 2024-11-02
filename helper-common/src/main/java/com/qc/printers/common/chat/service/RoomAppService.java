@@ -8,7 +8,7 @@ import com.qc.printers.common.chat.domain.vo.response.ChatRoomResp;
 import com.qc.printers.common.chat.domain.vo.response.MemberResp;
 import com.qc.printers.common.common.domain.vo.request.CursorPageBaseReq;
 import com.qc.printers.common.common.domain.vo.response.CursorPageBaseResp;
-import com.qc.printers.common.user.domain.vo.response.ws.ChatMemberResp;
+import com.qc.printers.common.websocket.domain.vo.resp.ws.ChatMemberResp;
 
 import java.util.List;
 

@@ -14,7 +14,7 @@ import com.qc.printers.common.common.annotation.FrequencyControl;
 import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.domain.vo.response.CursorPageBaseResp;
 import com.qc.printers.common.common.utils.RequestHolder;
-import com.qc.printers.common.user.domain.vo.response.ws.ChatMemberResp;
+import com.qc.printers.common.websocket.domain.vo.resp.ws.ChatMemberResp;
 import com.qc.printers.common.user.service.cache.UserCache;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;

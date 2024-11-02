@@ -6,7 +6,8 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.util.Date;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 /**
  * Description: 消息
@@ -38,7 +39,7 @@ public class ChatMessageResp {
         @ApiModelProperty("房间id")
         private String roomId;
         @ApiModelProperty("消息发送时间")
-        private Date sendTime;
+        private LocalDateTime sendTime;
         @ApiModelProperty("消息类型 1正常文本 2.撤回消息")
         private Integer type;
         @ApiModelProperty("消息内容不同的消息类型，内容体不同，见https://www.yuque.com/snab/mallcaht/rkb2uz5k1qqdmcmd")

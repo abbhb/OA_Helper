@@ -7,7 +7,6 @@ import com.qc.printers.common.activiti.entity.dto.workflow.StartProcessDto;
 import com.qc.printers.common.activiti.service.ProcessStartService;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.MyString;
-import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.RedissonLock;
 import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.common.utils.DateUtils;
@@ -34,11 +33,10 @@ import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.SysDept;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.domain.entity.UserExtBase;
-import com.qc.printers.common.user.domain.vo.response.ws.WSFriendApply;
-import com.qc.printers.common.user.domain.vo.response.ws.WSSigninPush;
+import com.qc.printers.common.websocket.domain.vo.resp.ws.WSSigninPush;
 import com.qc.printers.common.user.service.ISysDeptService;
-import com.qc.printers.common.user.service.adapter.WSAdapter;
-import com.qc.printers.common.user.service.impl.PushService;
+import com.qc.printers.common.websocket.service.adapter.WSAdapter;
+import com.qc.printers.common.rocketmq.service.impl.PushService;
 import com.qc.printers.utils.JsonUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.activiti.engine.HistoryService;
@@ -59,8 +57,6 @@ import java.time.*;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
-import java.util.function.Function;
-import java.util.stream.Collectors;
 
 @Slf4j
 @Service

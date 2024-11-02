@@ -13,6 +13,8 @@ import com.qc.printers.common.chat.service.strategy.msg.AbstractMsgHandler;
 import com.qc.printers.common.chat.service.strategy.msg.MsgHandlerFactory;
 import com.qc.printers.common.common.domain.enums.YesOrNoEnum;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -54,7 +56,7 @@ public class MessageAdapter {
         messagevo.setMessageMark(null);
         messagevo.setType(message.getType());
         messagevo.setId(String.valueOf(message.getId()));
-        messagevo.setSendTime(Date.from(message.getCreateTime().atZone(ZoneId.systemDefault()).toInstant()));
+        messagevo.setSendTime(message.getCreateTime());
         AbstractMsgHandler msgHandler = MsgHandlerFactory.getStrategyNoNull(message.getType());
         if (Objects.nonNull(msgHandler)) {
             messagevo.setBody(msgHandler.showMsg(message));
@@ -65,7 +67,7 @@ public class MessageAdapter {
     private static ChatMessageResp.Message buildMessage(Message message, Map<Long, Message> replyMap, List<MessageMark> marks, Long receiveUid) {
         ChatMessageResp.Message messageVO = new ChatMessageResp.Message();
         BeanUtil.copyProperties(message, messageVO);
-        messageVO.setSendTime(Date.from(message.getCreateTime().atZone(ZoneId.systemDefault()).toInstant()));
+        messageVO.setSendTime(message.getCreateTime());
         AbstractMsgHandler msgHandler = MsgHandlerFactory.getStrategyNoNull(message.getType());
         if (Objects.nonNull(msgHandler)) {
             messageVO.setBody(msgHandler.showMsg(message));

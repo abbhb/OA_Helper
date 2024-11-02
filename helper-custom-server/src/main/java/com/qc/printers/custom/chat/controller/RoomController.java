@@ -17,7 +17,7 @@ import com.qc.printers.common.common.domain.vo.request.IdReqVO;
 import com.qc.printers.common.common.domain.vo.response.CursorPageBaseResp;
 import com.qc.printers.common.common.domain.vo.response.IdRespVO;
 import com.qc.printers.common.common.utils.RequestHolder;
-import com.qc.printers.common.user.domain.vo.response.ws.ChatMemberResp;
+import com.qc.printers.common.websocket.domain.vo.resp.ws.ChatMemberResp;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;

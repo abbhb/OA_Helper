@@ -1,6 +1,6 @@
 package com.qc.printers.common.user.domain.dto;
 
-import com.qc.printers.common.user.domain.entity.IpInfo;
+import com.qc.printers.common.websocket.domain.entity.IpInfo;
 import com.qc.printers.common.user.domain.entity.SysMenu;
 import com.qc.printers.common.user.domain.entity.SysRole;
 import com.qc.printers.common.user.domain.entity.User;

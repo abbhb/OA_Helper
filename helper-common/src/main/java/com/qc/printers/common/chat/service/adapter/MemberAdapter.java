@@ -7,10 +7,10 @@ import com.qc.printers.common.common.utils.DateUtils;
 import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.domain.entity.UserFriend;
-import com.qc.printers.common.user.domain.enums.WSBaseResp;
-import com.qc.printers.common.user.domain.enums.WSRespTypeEnum;
-import com.qc.printers.common.user.domain.vo.response.ws.ChatMemberResp;
-import com.qc.printers.common.user.domain.vo.response.ws.WSMemberChange;
+import com.qc.printers.common.websocket.domain.enums.WSBaseResp;
+import com.qc.printers.common.websocket.domain.enums.WSRespTypeEnum;
+import com.qc.printers.common.websocket.domain.vo.resp.ws.ChatMemberResp;
+import com.qc.printers.common.websocket.domain.vo.resp.ws.WSMemberChange;
 import com.qc.printers.common.user.service.cache.UserCache;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.BeanUtils;
@@ -23,8 +23,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
-import static com.qc.printers.common.user.domain.vo.response.ws.WSMemberChange.CHANGE_TYPE_ADD;
-import static com.qc.printers.common.user.domain.vo.response.ws.WSMemberChange.CHANGE_TYPE_REMOVE;
+import static com.qc.printers.common.websocket.domain.vo.resp.ws.WSMemberChange.CHANGE_TYPE_ADD;
+import static com.qc.printers.common.websocket.domain.vo.resp.ws.WSMemberChange.CHANGE_TYPE_REMOVE;
 
 /**
  * Description: 成员适配器
