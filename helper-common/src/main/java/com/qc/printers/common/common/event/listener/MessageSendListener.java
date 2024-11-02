@@ -18,7 +18,7 @@ import com.qc.printers.common.chatai.service.IChatAIService;
 import com.qc.printers.common.common.constant.MQConstant;
 import com.qc.printers.common.common.domain.dto.MsgSendMessageDTO;
 import com.qc.printers.common.common.event.MessageSendEvent;
-import com.qc.printers.common.user.service.WebSocketService;
+import com.qc.printers.common.websocket.service.WebSocketService;
 import com.qc.printers.common.user.service.cache.UserCache;
 import com.qc.printers.transaction.service.MQProducer;
 import lombok.extern.slf4j.Slf4j;

@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.qc.printers.common.common.annotation.Excel;
+import com.qc.printers.common.websocket.domain.entity.IpInfo;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;

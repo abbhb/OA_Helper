@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<configuration scan="true" scanPeriod="60 seconds" debug="false">
+<configuration scan="true" scanPeriod="60 seconds" debug="true">
     <property name="log.path" value="logs/easyoa_server" />
     <property name="log.maxHistory" value="15" />
     <property name="log.colorPattern" value="%magenta(%d{yyyy-MM-dd HH:mm:ss}) %highlight(%-5level) %yellow(%thread) %green(%logger) %msg%n"/>

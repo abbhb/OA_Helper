@@ -1,7 +1,7 @@
 package com.qc.printers.common.common.domain.dto;
 
-import com.qc.printers.common.user.domain.enums.WSBaseResp;
-import com.qc.printers.common.user.domain.enums.WSPushTypeEnum;
+import com.qc.printers.common.websocket.domain.enums.WSBaseResp;
+import com.qc.printers.common.websocket.domain.enums.WSPushTypeEnum;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -29,7 +29,7 @@ public class PushMessageDTO implements Serializable {
     /**
      * 推送类型 1个人 2全员
      *
-     * @see com.qc.printers.common.user.domain.enums.WSPushTypeEnum
+     * @see WSPushTypeEnum
      */
     private Integer pushType;
 

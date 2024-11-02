@@ -41,7 +41,7 @@ import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.domain.enums.ChatActiveStatusEnum;
 import com.qc.printers.common.user.domain.enums.RoleEnum;
-import com.qc.printers.common.user.domain.vo.response.ws.ChatMemberResp;
+import com.qc.printers.common.websocket.domain.vo.resp.ws.ChatMemberResp;
 import com.qc.printers.common.user.service.cache.UserCache;
 import com.qc.printers.transaction.service.MQProducer;
 import lombok.extern.slf4j.Slf4j;
@@ -225,7 +225,7 @@ public class ChatServiceImpl implements ChatService {
 
     @Override
     public CursorPageBaseResp<ChatMessageResp> getMsgPage(ChatMessagePageReq request, Long receiveUid) {
-        // 判断下这个房间的会话是否存在，不存在就是用户点了不显示，主动拉取消息肯定需要显示了
+        // 不显示的消息就直接移除了会话，当有新消息会自动创建会话，或者手动点击发消息
 
         // 如果是删除消息记录和会话呢？
 
