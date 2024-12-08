@@ -49,7 +49,7 @@ public class PrintersApplication implements CommandLineRunner {
         return RelyingParty.builder()
                 .identity(rpIdentity)
                 .credentialRepository(regisrationRepository)
-                .origins(Set.of("http://localhost", "http://localhost:5173"))
+                .origins(webAuthConfig.getOrigin())
                 .build();
     }
 

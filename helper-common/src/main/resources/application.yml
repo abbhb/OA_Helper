@@ -141,3 +141,4 @@ vail-code:
 authn:
   hostname: ${helper.authn.hostname}
   display: ${helper.authn.display}
+  origin: ${helper.authn.origin}
