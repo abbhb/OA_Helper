@@ -1,8 +1,10 @@
 package com.qc.printers.custom.user.service;
 
-public interface UserFrontConfigService {
-    String getUserFrontConfig();
+import com.qc.printers.custom.user.domain.vo.response.app.AppState;
 
-    String setUserFrontConfig(String config);
+public interface UserFrontConfigService {
+    AppState getUserFrontConfig();
+
+    String setUserFrontConfig(AppState config);
 
 }

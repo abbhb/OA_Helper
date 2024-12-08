@@ -6,10 +6,7 @@ import com.qc.printers.common.common.Code;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.domain.dto.RequestInfo;
-import com.qc.printers.common.common.utils.JWTUtil;
-import com.qc.printers.common.common.utils.RedisUtils;
-import com.qc.printers.common.common.utils.RequestHolder;
-import com.qc.printers.common.common.utils.ThreadLocalUtil;
+import com.qc.printers.common.common.utils.*;
 import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.service.UserInfoService;
 import io.swagger.annotations.Api;
@@ -23,6 +20,7 @@ import org.springframework.web.servlet.HandlerInterceptor;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
 import java.lang.reflect.Method;
 
 @Slf4j
@@ -34,6 +32,7 @@ public class LoginInterceptor implements HandlerInterceptor {
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+
         if (HttpMethod.OPTIONS.toString().equals(request.getMethod())) {
             System.out.println("OPTIONS请求，放行");
             System.out.println(request.getRequestURI());
@@ -43,6 +42,7 @@ public class LoginInterceptor implements HandlerInterceptor {
         if (!(handler instanceof HandlerMethod)) {
             return true;
         }
+
         HandlerMethod handlerMethod = (HandlerMethod) handler;
         Method method = handlerMethod.getMethod();
         if (method.getAnnotation(NeedToken.class) == null){
