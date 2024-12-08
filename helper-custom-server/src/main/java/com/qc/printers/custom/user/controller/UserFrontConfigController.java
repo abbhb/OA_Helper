@@ -3,6 +3,7 @@ package com.qc.printers.custom.user.controller;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.custom.user.domain.vo.request.UserFrontConfigReq;
+import com.qc.printers.custom.user.domain.vo.response.app.AppState;
 import com.qc.printers.custom.user.service.UserFrontConfigService;
 import io.swagger.annotations.Api;
 import lombok.extern.slf4j.Slf4j;
@@ -21,14 +22,14 @@ public class UserFrontConfigController {
 
     @NeedToken
     @GetMapping("/get_user_front_config")
-    public R<String> getUserFrontConfig() {
+    public R<AppState> getUserFrontConfig() {
         return R.successOnlyObject(userFrontConfigService.getUserFrontConfig());
     }
 
     @NeedToken
     @PostMapping("/set_user_front_config")
     public R<String> setUserFrontConfig(@RequestBody UserFrontConfigReq userFrontConfigReq) {
-        userFrontConfigService.setUserFrontConfig(userFrontConfigReq.getReq());
+        userFrontConfigService.setUserFrontConfig(userFrontConfigReq.getAppState());
         //否则就新增
         return R.success("更新成功");
     }

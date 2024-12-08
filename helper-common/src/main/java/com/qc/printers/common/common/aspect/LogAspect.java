@@ -5,6 +5,7 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
+import com.qc.printers.common.common.utils.StringUtils;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
 import com.qc.printers.common.common.utils.apiCount.ApiCount;
 import com.qc.printers.common.log.domain.entity.Log;
@@ -63,7 +64,7 @@ public class LogAspect {
             //获取切入点所在的方法
             Method method = signature.getMethod();
             //获取操作
-            NeedToken annotation = method.getAnnotation(NeedToken.class);
+//            NeedToken annotation = method.getAnnotation(NeedToken.class);
 //            if (annotation != null) {
 //                sysLog.setModel(annotation.operModul());
 //                sysLog.setType(annotation.operType());
@@ -91,19 +92,28 @@ public class LogAspect {
             if (rtnMap == null || rtnMap.size() == 0) {
                 params = getJsonStrByRequest(request);
             }
+            if (params.length()>1000){
+                params = params.substring(0, 960) + "......too lang";
+            }
             sysLog.setParams(params); // 请求参数
+            sysLog.setType(request.getMethod());
+
             R dataResult = (R) result;  //返回值信息
             //需要先判断返回值是不是Map <String, Object>，如果不是會拋異常，需要控制层的接口返回数据格式统一
-            //如果嫌返回格式统一太麻烦建议日志保存时去掉操作结果
-            sysLog.setType(request.getMethod());
-            sysLog.setModel(dataResult.getData().toString());
-            if (dataResult.getData().toString().length() > 100) {
-                sysLog.setModel(dataResult.getData().toString().substring(0, 100) + "......");
+            if (dataResult!=null){
+                //如果嫌返回格式统一太麻烦建议日志保存时去掉操作结果
+                sysLog.setModel(dataResult.getData().toString());
+                if (dataResult.getData().toString().length() > 100) {
+                    sysLog.setModel(dataResult.getData().toString().substring(0, 100) + "......");
+                }
+                sysLog.setResult(dataResult.getMsg()); //獲取方法返回值中的msg，如果上面的類型錯誤就拿不到msg就會拋異常
+            }else {
+                sysLog.setMethod("no data");
+                sysLog.setResult("no data");
             }
-
-            sysLog.setResult(dataResult.getMsg()); //獲取方法返回值中的msg，如果上面的類型錯誤就拿不到msg就會拋異常
             logDao.insert(sysLog);
         } catch (Exception e) {
+
             log.error(e.getMessage());
             log.error("日誌記錄異常，請檢查返回值是否是Map <String, Object>類型");
         }
