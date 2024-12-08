@@ -28,5 +28,13 @@ public class UserFrontConfig implements Serializable {
 
     public Long userId;
 
-    public String configStr;
+    private Integer colorWeak;
+
+    private String versionRead;
+
+    private String lastPrintDevice;
+
+    // light dark
+    private String theme;
+
 }

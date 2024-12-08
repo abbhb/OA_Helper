@@ -10,7 +10,7 @@ spring:
       max-file-size: -1
       max-request-size: -1
   profiles:
-    active: prod
+    active: dev
   application:
     name: printes
   datasource:
@@ -137,3 +137,7 @@ vail-code:
   emailVailUse: true
 
 
+# authn
+authn:
+  hostname: ${helper.authn.hostname}
+  display: ${helper.authn.display}

@@ -1,10 +1,16 @@
 package com.qc.printers.custom.user.domain.vo.response;
 
+import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 
 import javax.annotation.Nullable;
 import java.io.Serializable;
 
+@AllArgsConstructor
+@Builder
+@NoArgsConstructor
 @Data
 public class LoginRes implements Serializable {
     private String token;

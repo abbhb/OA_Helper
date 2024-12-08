@@ -201,6 +201,12 @@
                 <artifactId>spring-boot-starter-validation</artifactId>
                 <version>2.6.7</version>
             </dependency>
+            <dependency>
+                <groupId>com.yubico</groupId>
+                <artifactId>webauthn-server-core</artifactId>
+                <version>2.6.0-alpha7</version>
+                <scope>compile</scope>
+            </dependency>
 
             <!-- https://mvnrepository.com/artifact/org.jsoup/jsoup -->
             <!--        爬取网页，用来解析url-->
