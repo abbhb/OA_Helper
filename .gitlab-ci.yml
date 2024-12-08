@@ -25,7 +25,7 @@ build:
   stage: build
   image: maven:3.6.3-openjdk-17 # 使用 Maven 3.6.3 和 Java 17 的官方镜像
   tags:
-    - server-easyoa
+    - aifile-docekr
   script:
       - mvn ${MAVEN_CLI_OPTS} clean package
   artifacts:
@@ -36,7 +36,7 @@ dockerize:
   stage: dockerize
   image: docker:24.0.5
   tags:
-    - server-easyoa
+    - aifile-docekr
   script:
     - docker build -t easy-oa-server:$DOCKER_IMAGE_TAG --build-arg minioaccessKey=$MINIO_ACCESS_KEY --build-arg miniosecretKey=$MINIO_SECRET --build-arg emailpassword=$EMAIL_PASSWORD --build-arg mysqlpassword=$MYSQL_PASSWORD $DOCKERFILE_PATH
     - docker login -u "$HARBOR_USERNAME" -p "$HARBOR_PASSWORD" $HARBOR_REPO
