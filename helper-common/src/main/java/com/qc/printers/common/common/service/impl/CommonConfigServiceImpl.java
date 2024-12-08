@@ -2,6 +2,8 @@ package com.qc.printers.common.common.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.qc.printers.common.common.MyString;
 import com.qc.printers.common.common.domain.entity.CommonConfig;
 import com.qc.printers.common.common.mapper.CommonConfigMapper;
@@ -117,6 +119,9 @@ public class CommonConfigServiceImpl extends ServiceImpl<CommonConfigMapper, Com
             RedisUtils.set(MyString.pre_common_config, list);
             commonConfigs = list;
         }
+        ObjectMapper objectMapper = new ObjectMapper();
+        // 不加会报错
+        commonConfigs = objectMapper.convertValue(commonConfigs, new TypeReference<List<CommonConfig>>() {});
         List<CommonConfig> collect = commonConfigs.stream().filter(item -> item.getConfigKey().equals(id)).collect(Collectors.toList());
         if (collect == null) {
             collect = new ArrayList<>();
