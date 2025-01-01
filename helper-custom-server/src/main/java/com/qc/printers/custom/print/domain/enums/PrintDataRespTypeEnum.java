@@ -1,7 +1,7 @@
 package com.qc.printers.custom.print.domain.enums;
 
-import com.qc.printers.custom.print.domain.vo.response.PrintFileConfigResp;
-import com.qc.printers.custom.print.domain.vo.response.PrintImageResp;
+import com.qc.printers.common.print.domain.vo.response.PrintFileConfigResp;
+import com.qc.printers.common.print.domain.vo.response.PrintImageResp;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
 

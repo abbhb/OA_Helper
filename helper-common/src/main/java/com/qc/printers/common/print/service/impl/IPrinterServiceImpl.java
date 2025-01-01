@@ -90,7 +90,7 @@ public class IPrinterServiceImpl extends ServiceImpl<PrinterMapper, Printer> imp
             return printDeviceDto;
         }
         // 不符合条件，，直接更新并覆盖，如果没有这个设备则返回null
-        List<HealthService> registeredServices = consulService.getRegisteredServices("打印机服务注册", true);
+        List<HealthService> registeredServices = consulService.getPrintDeviceServices();
         Optional<HealthService> first = registeredServices.stream().filter(obj -> obj.getService().getId().equals(printId)).findFirst();
         if (first.isEmpty()) {
             return null;

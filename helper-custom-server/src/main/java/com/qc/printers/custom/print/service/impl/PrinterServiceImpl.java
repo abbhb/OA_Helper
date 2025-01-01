@@ -47,14 +47,12 @@ import com.qc.printers.common.user.mapper.UserMapper;
 import com.qc.printers.common.user.service.ISysDeptService;
 import com.qc.printers.common.user.service.IUserService;
 import com.qc.printers.custom.print.domain.enums.PrintDataRespTypeEnum;
-import com.qc.printers.custom.print.domain.vo.PrinterResult;
-import com.qc.printers.custom.print.domain.vo.request.PrintFileReq;
-import com.qc.printers.custom.print.domain.vo.response.*;
+import com.qc.printers.common.print.domain.vo.PrinterResult;
+import com.qc.printers.common.print.domain.vo.request.PrintFileReq;
+import com.qc.printers.common.print.domain.vo.response.*;
 import com.qc.printers.custom.print.service.PrinterService;
 import com.qc.printers.custom.print.service.strategy.AbstratePrintDataHandler;
 import com.qc.printers.custom.print.service.strategy.PrintDataHandlerFactory;
-import com.qc.printers.custom.user.domain.entity.UniquekerLoginUrl;
-import io.minio.errors.MinioException;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.BeanUtils;
@@ -70,8 +68,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 import org.springframework.web.multipart.MultipartFile;
 
-import javax.imageio.ImageIO;
-import java.awt.image.BufferedImage;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.net.URLDecoder;
@@ -519,7 +515,7 @@ public class PrinterServiceImpl implements PrinterService {
 
     @Override
     public List<PrintDeviceResp> printDevicePolling() {
-        List<HealthService> registeredServices = consulService.getRegisteredServices("打印机服务注册", true);
+        List<HealthService> registeredServices = consulService.getPrintDeviceServices();
         List<PrintDeviceResp> printDeviceResps = new ArrayList<>();
         for (HealthService registeredService : registeredServices) {
             PrintDeviceResp printDeviceResp = new PrintDeviceResp();
@@ -635,7 +631,7 @@ public class PrinterServiceImpl implements PrinterService {
         }
         List<Integer> pdfPagesList = list.stream().map(Printer::getOriginFilePages).toList();
         List<String> pdfImageList = list.stream().map(Printer::getPdfImage).toList();
-        if (list.isEmpty()||pdfPagesList.isEmpty()||pdfImageList.isEmpty()){
+        if (pdfPagesList.isEmpty() || pdfImageList.isEmpty()){
             throw new CustomException("不具备快速打印条件");
         }
         // 检查所有页数是否相等

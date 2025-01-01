@@ -1,4 +1,4 @@
-package com.qc.printers.custom.print.domain.vo.request;
+package com.qc.printers.common.print.domain.vo.request;
 
 import lombok.Data;
 

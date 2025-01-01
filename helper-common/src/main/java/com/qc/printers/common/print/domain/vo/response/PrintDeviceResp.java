@@ -1,4 +1,4 @@
-package com.qc.printers.custom.print.domain.vo.response;
+package com.qc.printers.common.print.domain.vo.response;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;

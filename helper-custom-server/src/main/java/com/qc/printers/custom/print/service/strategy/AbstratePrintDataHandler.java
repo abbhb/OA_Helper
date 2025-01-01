@@ -2,7 +2,7 @@ package com.qc.printers.custom.print.service.strategy;
 
 import com.qc.printers.common.print.domain.dto.PrinterRedis;
 import com.qc.printers.custom.print.domain.enums.PrintDataRespTypeEnum;
-import com.qc.printers.custom.print.domain.vo.response.PrinterBaseResp;
+import com.qc.printers.common.print.domain.vo.response.PrinterBaseResp;
 
 import javax.annotation.PostConstruct;
 

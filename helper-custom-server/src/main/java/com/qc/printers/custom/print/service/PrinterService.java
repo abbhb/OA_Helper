@@ -6,9 +6,9 @@ import com.qc.printers.common.common.domain.vo.ValueLabelResult;
 import com.qc.printers.common.print.domain.vo.CountTop10VO;
 import com.qc.printers.common.print.domain.vo.request.PreUploadPrintFileReq;
 import com.qc.printers.common.print.domain.vo.response.UnoServiceInfo;
-import com.qc.printers.custom.print.domain.vo.PrinterResult;
-import com.qc.printers.custom.print.domain.vo.request.PrintFileReq;
-import com.qc.printers.custom.print.domain.vo.response.*;
+import com.qc.printers.common.print.domain.vo.PrinterResult;
+import com.qc.printers.common.print.domain.vo.request.PrintFileReq;
+import com.qc.printers.common.print.domain.vo.response.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.time.LocalDateTime;

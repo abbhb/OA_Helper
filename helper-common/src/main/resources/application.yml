@@ -10,7 +10,7 @@ spring:
       max-file-size: -1
       max-request-size: -1
   profiles:
-    active: prod
+    active: dev
   application:
     name: printes
   datasource:
@@ -125,6 +125,10 @@ system-tip-message:
 my-consul:
   ip: ${helper.consul.ip}
   port: ${helper.consul.port}
+  printDeviceConsulName: 打印机服务注册
+  signinConsulName: signin
+  face2arrayServiceConsulName: face2array_service
+
 # oauth的配置
 oauth:
   use: true

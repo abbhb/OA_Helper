@@ -35,7 +35,7 @@ public class SigninDeviceMangerServiceImpl implements SigninDeviceMangerService 
     public List<SigninDeviceDto> getBindDeviceList() {
         List<SigninDeviceDto> signinDeviceDtos = new ArrayList<>();
         List<SigninDevice> list = signinDeviceDao.list();
-        List<HealthService> registeredServices = consulService.getRegisteredServices("signin", true);
+        List<HealthService> registeredServices = consulService.getSigninServices();
         for (int i = 0; i < list.size(); i++) {
             SigninDeviceDto signinDeviceDto = new SigninDeviceDto();
             signinDeviceDtos.add(signinDeviceDto);
@@ -62,7 +62,7 @@ public class SigninDeviceMangerServiceImpl implements SigninDeviceMangerService 
     public List<SigninDeviceDto> getCanBindDeviceList() {
         List<SigninDeviceDto> signinDeviceDtos = new ArrayList<>();
         List<SigninDevice> list = signinDeviceDao.list();
-        List<HealthService> registeredServices = consulService.getRegisteredServices("signin", true);
+        List<HealthService> registeredServices = consulService.getSigninServices();
         for (int i = 0; i < registeredServices.size(); i++) {
             int finalI = i;
             Optional<SigninDevice> first = list.stream().filter(obj -> obj.getId().equals(registeredServices.get(finalI).getService().getId())).findFirst();
@@ -103,7 +103,7 @@ public class SigninDeviceMangerServiceImpl implements SigninDeviceMangerService 
         signinDevice.setRemark(signinDeviceDto.getRemark());
         signinDevice.setName(signinDeviceDto.getName());
         // 校验密钥
-        List<HealthService> registeredServices = consulService.getRegisteredServices("signin", true);
+        List<HealthService> registeredServices = consulService.getSigninServices();
         Optional<HealthService> first = registeredServices.stream().filter(obj -> obj.getService().getId().equals(signinDeviceDto.getDeviceId())).findFirst();
         if (first.isEmpty()) {
             throw new CustomException("请保持设备的连接稳定再尝试绑定!");

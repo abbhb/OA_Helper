@@ -47,7 +47,7 @@ public class SigninUserDataMangerServiceImpl implements SigninUserDataMangerServ
         if (!allImageUrl.startsWith("http")) {
             throw new RuntimeException("不是http");
         }
-        List<HealthService> registeredServices = consulService.getRegisteredServices("face2array_service", true);
+        List<HealthService> registeredServices = consulService.getFace2ArrayServices();
         if (registeredServices.size() == 0) {
             throw new RuntimeException("没有转换服务存活请检查docker");
         }

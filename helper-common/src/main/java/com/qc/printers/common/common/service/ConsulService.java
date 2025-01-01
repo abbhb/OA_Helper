@@ -29,4 +29,14 @@ public class ConsulService {
         // 过滤出健康的服务实例
         return healthyServices;
     }
+
+    public List<HealthService> getFace2ArrayServices(){
+        return getRegisteredServices(consulConfig.getSigninConsulName(),true);
+    }
+    public List<HealthService> getPrintDeviceServices(){
+        return getRegisteredServices(consulConfig.getPrintDeviceConsulName(),true);
+    }
+    public List<HealthService> getSigninServices(){
+        return getRegisteredServices(consulConfig.getSigninConsulName(),true);
+    }
 }

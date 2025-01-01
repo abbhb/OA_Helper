@@ -1,0 +1,221 @@
+package com.qc.printers.common.print.service.impl;
+
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.ecwid.consul.v1.health.model.HealthService;
+import com.qc.printers.common.common.CustomException;
+import com.qc.printers.common.common.domain.entity.PageData;
+import com.qc.printers.common.common.service.ConsulService;
+import com.qc.printers.common.common.utils.StringUtils;
+import com.qc.printers.common.common.utils.ThreadLocalUtil;
+import com.qc.printers.common.print.dao.SysPrintDeviceDao;
+import com.qc.printers.common.print.dao.SysPrintDeviceUserDao;
+import com.qc.printers.common.print.domain.dto.PrintDeviceUserDto;
+import com.qc.printers.common.print.domain.entity.SysPrintDevice;
+import com.qc.printers.common.print.domain.entity.SysPrintDeviceUser;
+import com.qc.printers.common.print.domain.vo.PrintDeviceNotRegisterVO;
+import com.qc.printers.common.print.domain.vo.request.CreatePrintDeviceReq;
+import com.qc.printers.common.print.domain.vo.request.PrintDeviceUserQuery;
+import com.qc.printers.common.print.domain.vo.request.UpdatePrintDeviceStatusReq;
+import com.qc.printers.common.print.service.PrintDeviceManagerService;
+import com.qc.printers.common.user.dao.UserDao;
+import com.qc.printers.common.user.domain.dto.UserInfo;
+import com.qc.printers.common.user.domain.entity.User;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.userdetails.UserCache;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.function.Function;
+import java.util.stream.Collectors;
+
+@Service
+@Slf4j
+public class PrintDeviceManagerServiceImpl implements PrintDeviceManagerService {
+    @Autowired
+    private SysPrintDeviceDao sysPrintDeviceDao;
+
+    @Autowired
+    private SysPrintDeviceUserDao sysPrintDeviceUserDao;
+
+    @Autowired
+    private ConsulService consulService;
+
+    @Autowired
+    private UserDao userDao;
+
+    @Override
+    public List<PrintDeviceNotRegisterVO> getUnRegisterPrintDeviceList() {
+        List<HealthService> registeredServices = consulService.getPrintDeviceServices();
+        List<PrintDeviceNotRegisterVO> printDeviceNotRegisterVOs = new ArrayList<>();
+        for (HealthService registeredService : registeredServices) {
+            PrintDeviceNotRegisterVO printDeviceNotRegisterVO = new PrintDeviceNotRegisterVO();
+            printDeviceNotRegisterVO.setDescription(registeredService.getService().getMeta().get("ZName"));
+            printDeviceNotRegisterVO.setName(printDeviceNotRegisterVO.getDescription());
+//            printDeviceNotRegisterVO.set(registeredService.getService().getMeta().get("ZSecret"));
+            //筛选了只要状态正常的，所以这里全是正常的
+            printDeviceNotRegisterVO.setStatus(1);
+            printDeviceNotRegisterVO.setId(registeredService.getService().getId());
+            printDeviceNotRegisterVOs.add(printDeviceNotRegisterVO);
+        }
+        List<String> list = printDeviceNotRegisterVOs.stream().map(PrintDeviceNotRegisterVO::getId).toList();
+        LambdaQueryWrapper<SysPrintDevice> sysPrintDeviceLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        if (list.size()>1){
+            sysPrintDeviceLambdaQueryWrapper.in(SysPrintDevice::getDeviceId,list);
+        }else if (list.size()==1){
+            sysPrintDeviceLambdaQueryWrapper.eq(SysPrintDevice::getDeviceId,list.get(0));
+        }
+        List<SysPrintDevice> existSysPrintDevices = sysPrintDeviceDao.list(sysPrintDeviceLambdaQueryWrapper);
+        Map<String, SysPrintDevice> collect = existSysPrintDevices.stream().collect(Collectors.toMap(SysPrintDevice::getDeviceId, Function.identity()));
+        List<PrintDeviceNotRegisterVO> printDeviceNotRegisterVOS = new ArrayList<>();
+        for (PrintDeviceNotRegisterVO printDeviceNotRegisterVO : printDeviceNotRegisterVOs) {
+            if (StringUtils.isEmpty(printDeviceNotRegisterVO.getId())){
+                // 异常的设备，id不能为空
+                continue;
+            }
+            if (collect.containsKey(printDeviceNotRegisterVO.getId())) {
+                // 已存在
+                continue;
+            }
+            printDeviceNotRegisterVOS.add(printDeviceNotRegisterVO);
+        }
+        return printDeviceNotRegisterVOS;
+    }
+
+    @Transactional
+    @Override
+    public String createPrintDevice(CreatePrintDeviceReq data) {
+        if (StringUtils.isEmpty(data.getDeviceId())){
+            throw new CustomException("设备id必填");
+        }
+        if (StringUtils.isEmpty(data.getDeviceSecret())){
+            throw new CustomException("设备密钥必填");
+        }
+        // 校验设备是否存在与在线
+        List<HealthService> registeredServices = consulService.getPrintDeviceServices();
+        Optional<HealthService> first = registeredServices.stream().filter(obj -> obj.getService().getId().equals(data.getDeviceId())).findFirst();
+        if (first.isEmpty()) {
+            log.error("设备不在线:%s".formatted(data.getDeviceId()));
+            throw new CustomException("设备不在线");
+        }
+        String secret = first.get().getService().getMeta().get("ZSecret");
+        if (StringUtils.isEmpty(secret)){
+            throw new CustomException("设备不兼容，为了安全性，请先注册密钥！");
+        }
+        // 校验密钥是否正确
+        if (!secret.equals(data.getDeviceSecret())){
+            throw new CustomException("密钥不正确，请检查密钥");
+        }
+
+
+        SysPrintDevice sysPrintDevice = new SysPrintDevice();
+        sysPrintDevice.setDeviceDescription(first.get().getService().getMeta().get("ZName"));
+        sysPrintDevice.setDeviceName(sysPrintDevice.getDeviceDescription());
+        sysPrintDevice.setDeviceId(first.get().getService().getId());
+        sysPrintDevice.setStatus(1);
+        sysPrintDeviceDao.save(sysPrintDevice);
+        // 注册后为owner
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+        SysPrintDeviceUser build = SysPrintDeviceUser.builder()
+                .userId(currentUser.getId())
+                .printDeviceId(sysPrintDevice.getId())
+                .role(1)
+                .build();
+        sysPrintDeviceUserDao.save(build);
+        return "注册打印机成功";
+    }
+
+    @Transactional
+    @Override
+    public String deletePrintDevice(String id) {
+        if (StringUtils.isEmpty(id)){
+            throw new CustomException("请指定删除对象");
+        }
+        SysPrintDevice byId = sysPrintDeviceDao.getById(Long.valueOf(id));
+        if (byId==null) {
+            throw new CustomException("过时的信息，请先刷新");
+        }
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+        sysPrintDeviceDao.removeById(byId.getId());
+        LambdaQueryWrapper<SysPrintDeviceUser> sysPrintDeviceUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getPrintDeviceId,byId.getId());
+        sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getUserId,currentUser.getId());
+        sysPrintDeviceUserDao.remove(sysPrintDeviceUserLambdaQueryWrapper);
+        return "删除成功";
+    }
+
+    @Transactional
+    @Override
+    public String updatePrintDeviceStatus(UpdatePrintDeviceStatusReq data) {
+        if (StringUtils.isEmpty(data.getId())){
+            throw new CustomException("请指定对象");
+        }
+        if (data.getStatus()==null){
+            throw new CustomException("状态值异常");
+        }
+        switch (data.getStatus()){
+            case 1:
+            case 0:
+                break;
+            default:
+                throw new CustomException("不被支持的状态");
+        }
+        SysPrintDevice byId = sysPrintDeviceDao.getById(Long.valueOf(data.getId()));
+        if (byId==null){
+            throw new CustomException("过时的信息，请先刷新");
+        }
+        byId.setStatus(data.getStatus());
+        sysPrintDeviceDao.updateById(byId);
+        return "切换状态成功";
+    }
+
+    @Override
+    public PageData<PrintDeviceUserDto> getPrintDeviceUsers(PrintDeviceUserQuery params) {
+        if (params.getPrintDeviceId()==null){
+            throw new CustomException("设备ID为空");
+        }
+        if (params.getRole()==null){
+            params.setRole(0);
+        }
+        Page<SysPrintDeviceUser> pageInfo = new Page<>(params.getPageNum(), params.getPageSize());
+        PageData<PrintDeviceUserDto> pageData = new PageData<>();
+        LambdaQueryWrapper<SysPrintDeviceUser> sysPrintDeviceUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getPrintDeviceId,params.getPrintDeviceId());
+        if (params.getRole().equals(0)){
+            sysPrintDeviceUserLambdaQueryWrapper.orderByAsc(SysPrintDeviceUser::getRole);
+        }else {
+            sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getRole,params.getRole());
+        }
+        sysPrintDeviceUserDao.page(pageInfo,sysPrintDeviceUserLambdaQueryWrapper);
+        List<PrintDeviceUserDto> results = new ArrayList<>();
+        for (SysPrintDeviceUser sysPrintDeviceUser : pageInfo.getRecords()) {
+            PrintDeviceUserDto printDeviceUserDto = new PrintDeviceUserDto();
+            printDeviceUserDto.setPrintDeviceId(String.valueOf(sysPrintDeviceUser.getPrintDeviceId()));
+            printDeviceUserDto.setUserId(String.valueOf(sysPrintDeviceUser.getUserId()));
+            printDeviceUserDto.setRole(sysPrintDeviceUser.getRole());
+            printDeviceUserDto.setId(sysPrintDeviceUser.getId());
+            User byId = userDao.getById(sysPrintDeviceUser.getUserId());
+            if (byId==null){
+                continue;
+            }
+            printDeviceUserDto.setUsername(byId.getName());
+            results.add(printDeviceUserDto);
+        }
+        pageData.setPages(pageInfo.getPages());
+        pageData.setTotal(pageInfo.getTotal());
+        pageData.setCountId(pageInfo.getCountId());
+        pageData.setCurrent(pageInfo.getCurrent());
+        pageData.setSize(pageInfo.getSize());
+        pageData.setRecords(results);
+        pageData.setMaxLimit(pageInfo.getMaxLimit());
+        return pageData;
+    }
+
+
+}

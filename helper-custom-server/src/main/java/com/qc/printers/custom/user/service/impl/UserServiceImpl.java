@@ -1151,7 +1151,22 @@ public class UserServiceImpl implements UserService {
             } else {
                 avatar = "";
             }
-            UserResult userResult = new UserResult(String.valueOf(user1.getId()), user1.getUsername(), user1.getName(), user1.getPhone(), user1.getSex(), String.valueOf(user1.getStudentId()), user1.getStatus(), user1.getCreateTime(), user1.getUpdateTime(), String.valueOf(user1.getDeptId()), sysDept.getDeptNameAll(), user1.getEmail(), avatar, collect);
+            UserResult userResult = new UserResult(
+                    String.valueOf(user1.getId()),
+                    user1.getUsername(),
+                    user1.getName(),
+                    "保密",
+                    user1.getSex(),
+                    String.valueOf(user1.getStudentId()),
+                    user1.getStatus(),
+                    user1.getCreateTime(),
+                    user1.getUpdateTime(),
+                    String.valueOf(user1.getDeptId()),
+                    sysDept.getDeptNameAll(),
+                    "保密",
+                    avatar,
+                    collect
+            );
             results.add(userResult);
         }
         pageData.setPages(pageInfo.getPages());

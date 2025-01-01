@@ -228,10 +228,18 @@ public class UserController {
         return R.success(trLoginService.uniFirstLogin(thirdFirstLoginReq));
     }
 
-    @GetMapping("/listForBMPN")
+    /**
+     * 通用人员选择器，不返回敏感信息
+     * @param pageNum
+     * @param pageSize
+     * @param name
+     * @param deptId
+     * @return
+     */
+    @GetMapping("/listForSelect")
     @NeedToken
-    @PermissionCheck(role = {"superadmin"}, permission = "sys:bpm:add")
-    public R<PageData<UserResult>> listForBMPN(Integer pageNum, Integer pageSize, @RequestParam(required = false) String name, @RequestParam(required = false) Long deptId) {
+//    @PermissionCheck(role = {"superadmin"}, permission = "sys:bpm:add")
+    public R<PageData<UserResult>> listForSelect(Integer pageNum, Integer pageSize, @RequestParam(required = false) String name, @RequestParam(required = false) Long deptId) {
         return R.success(userService.getUserListForBpm(pageNum, pageSize, name, deptId));
     }
 

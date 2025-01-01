@@ -192,7 +192,7 @@ public class SigninUserDataServiceImpl implements SigninUserDataService {
 
     @Override
     public SigninDeviceDto checkDeviceStatus(String deviceId, String needType) {
-        List<HealthService> registeredServices = consulService.getRegisteredServices("signin", true);
+        List<HealthService> registeredServices = consulService.getSigninServices();
         Optional<HealthService> first = registeredServices.stream().filter(obj -> obj.getService().getId().equals(deviceId)).findFirst();
         if (first.isEmpty()) {
             throw new CustomException("设备掉线");

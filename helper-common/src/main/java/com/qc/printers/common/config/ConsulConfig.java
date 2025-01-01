@@ -12,5 +12,9 @@ public class ConsulConfig {
 
     private Integer port;
 
+    private String printDeviceConsulName;
+    private String signinConsulName;
+    private String face2arrayServiceConsulName;
+
 }
 
