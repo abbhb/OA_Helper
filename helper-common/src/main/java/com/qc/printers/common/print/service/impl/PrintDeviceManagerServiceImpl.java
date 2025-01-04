@@ -1,6 +1,7 @@
 package com.qc.printers.common.print.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.ecwid.consul.v1.health.model.HealthService;
 import com.qc.printers.common.common.CustomException;
@@ -16,6 +17,7 @@ import com.qc.printers.common.print.domain.entity.SysPrintDeviceUser;
 import com.qc.printers.common.print.domain.vo.PrintDeviceNotRegisterVO;
 import com.qc.printers.common.print.domain.vo.request.CreatePrintDeviceReq;
 import com.qc.printers.common.print.domain.vo.request.PrintDeviceUserQuery;
+import com.qc.printers.common.print.domain.vo.request.PrintDeviceUserReq;
 import com.qc.printers.common.print.domain.vo.request.UpdatePrintDeviceStatusReq;
 import com.qc.printers.common.print.service.PrintDeviceManagerService;
 import com.qc.printers.common.user.dao.UserDao;
@@ -49,6 +51,9 @@ public class PrintDeviceManagerServiceImpl implements PrintDeviceManagerService 
 
     @Autowired
     private UserDao userDao;
+
+
+
 
     @Override
     public List<PrintDeviceNotRegisterVO> getUnRegisterPrintDeviceList() {
@@ -215,6 +220,131 @@ public class PrintDeviceManagerServiceImpl implements PrintDeviceManagerService 
         pageData.setRecords(results);
         pageData.setMaxLimit(pageInfo.getMaxLimit());
         return pageData;
+    }
+
+    /**
+     * 添加打印机相关联用户
+     * @param data
+     * @return
+     */
+    @Transactional
+    @Override
+    public String addPrintDeviceUsers(PrintDeviceUserReq data) {
+        if (data.getPrintDeviceId()==null){
+            throw new CustomException("设备ID不能为空");
+        }
+        if (data.getRole()==null){
+            data.setRole(3);// 默认添加的用户就是用户
+        }
+        if (data.getUserIds()==null|| data.getUserIds().isEmpty()){
+            throw new CustomException("必须包含要添加的用户");
+        }
+        // 校验设备是否注册
+        SysPrintDevice sysPrintDevice = sysPrintDeviceDao.getById(Long.valueOf(data.getPrintDeviceId()));
+        if (sysPrintDevice==null){
+            throw new CustomException("设备不存在，是否被人删除了");
+        }
+        for (String userId : data.getUserIds()) {
+            User byId = userDao.getById(Long.valueOf(userId));
+            if (byId==null){
+                throw new CustomException("选中的用户id不存在数据:"+userId);
+            }
+        }
+        for (String userId : data.getUserIds()) {
+            SysPrintDeviceUser build = SysPrintDeviceUser.builder()
+                    .userId(Long.valueOf(userId))
+                    .printDeviceId(Long.valueOf(data.getPrintDeviceId()))
+                    .role(data.getRole())
+                    .build();
+            sysPrintDeviceUserDao.save(build);
+        }
+        return "添加用户成功";
+    }
+
+    @Transactional
+    @Override
+    public String removePrintDeviceUser(String printDeviceId, String userId) {
+        // 校验设备是否注册
+        SysPrintDevice sysPrintDevice = sysPrintDeviceDao.getById(Long.valueOf(printDeviceId));
+        if (sysPrintDevice==null){
+            throw new CustomException("设备不存在，是否被人删除了");
+        }
+        String[] split = userId.split(",");
+        List<Long> userIds = new ArrayList<>();
+        for (String s : split) {
+            if (StringUtils.isEmpty(StringUtils.trim(s))){
+                continue;
+            }
+            userIds.add(Long.valueOf(StringUtils.trim(s)));
+        }
+        if (userIds.isEmpty()){
+            throw new CustomException("请传入用户");
+        }
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+        LambdaQueryWrapper<SysPrintDeviceUser> operatorLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        operatorLambdaQueryWrapper.eq(SysPrintDeviceUser::getPrintDeviceId,sysPrintDevice.getId());
+        operatorLambdaQueryWrapper.eq(SysPrintDeviceUser::getUserId,currentUser.getId());
+        // 获取当前用户在该设备的对象
+        SysPrintDeviceUser operator = sysPrintDeviceUserDao.getOne(operatorLambdaQueryWrapper);
+        // 构造批量删除绑定关系
+        LambdaQueryWrapper<SysPrintDeviceUser> sysPrintDeviceUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getPrintDeviceId,Long.valueOf(printDeviceId));
+        sysPrintDeviceUserLambdaQueryWrapper.gt(SysPrintDeviceUser::getRole,operator.getRole());
+        if (userIds.size()>1){
+            sysPrintDeviceUserLambdaQueryWrapper.in(SysPrintDeviceUser::getUserId,userIds);
+        }else {
+            sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getUserId,userIds.get(0));
+        }
+        // 删除
+        sysPrintDeviceUserDao.remove(sysPrintDeviceUserLambdaQueryWrapper);
+        return "删除用户成功";
+    }
+
+    @Transactional
+    @Override
+    public String updatePrintDeviceUserRole(PrintDeviceUserReq data) {
+        if (StringUtils.isEmpty(data.getPrintDeviceId())){
+            throw new CustomException("请填写设备id");
+        }
+        if (data.getUserIds()==null){
+            throw new CustomException("请指定操作对象");
+        }
+        if (data.getRole()==null){
+            throw new CustomException("请设置角色");
+        }
+        if (data.getUserIds().isEmpty()){
+            throw new CustomException("请保证操作对象");
+        }
+        SysPrintDevice byId = sysPrintDeviceDao.getById(data.getPrintDeviceId());
+        if (byId==null){
+            throw new CustomException("未注册设备ID");
+        }
+        if (data.getRole().equals(1)){
+            // 等效转交所有权
+            // 有且一人
+            if (data.getUserIds().size()>1){
+                throw new CustomException("转交所有权只能选择一人");
+            }
+        }
+        LambdaUpdateWrapper<SysPrintDeviceUser> sysPrintDeviceUserLambdaQueryWrapper = new LambdaUpdateWrapper<>();
+        sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getPrintDeviceId,byId.getId());
+        if (data.getUserIds().size()>1){
+            sysPrintDeviceUserLambdaQueryWrapper.in(SysPrintDeviceUser::getUserId,data.getUserIds());
+        }else {
+            sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getUserId,data.getUserIds().get(0));
+        }
+        sysPrintDeviceUserLambdaQueryWrapper.set(SysPrintDeviceUser::getRole,data.getRole());
+        sysPrintDeviceUserDao.update(sysPrintDeviceUserLambdaQueryWrapper);
+        if (data.getRole().equals(1)){
+            // 将自己的所有者更新成user
+            LambdaUpdateWrapper<SysPrintDeviceUser> selfUpdate = new LambdaUpdateWrapper<>();
+            UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+            selfUpdate.eq(SysPrintDeviceUser::getUserId,currentUser.getId());
+            selfUpdate.eq(SysPrintDeviceUser::getPrintDeviceId,byId.getId());
+            selfUpdate.set(SysPrintDeviceUser::getRole,3);
+            sysPrintDeviceUserDao.update(selfUpdate);
+        }
+        return "更新成功";
     }
 
 

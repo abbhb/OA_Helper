@@ -8,6 +8,7 @@ import com.qc.printers.common.print.domain.dto.PrintDeviceUserDto;
 import com.qc.printers.common.print.domain.vo.PrintDeviceNotRegisterVO;
 import com.qc.printers.common.print.domain.vo.request.CreatePrintDeviceReq;
 import com.qc.printers.common.print.domain.vo.request.PrintDeviceUserQuery;
+import com.qc.printers.common.print.domain.vo.request.PrintDeviceUserReq;
 import com.qc.printers.common.print.domain.vo.request.UpdatePrintDeviceStatusReq;
 import com.qc.printers.common.print.service.PrintDeviceManagerService;
 import io.swagger.annotations.Api;
@@ -63,5 +64,35 @@ public class PrintDeviceManagerController {
     @ApiOperation(value = "获取打印机用户列表")
     public R<PageData<PrintDeviceUserDto>> getPrintDeviceUsers(PrintDeviceUserQuery params) {
         return R.success(printDeviceManagerService.getPrintDeviceUsers(params));
+    }
+
+    @NeedToken
+    @PostMapping("/user/add")
+    @PrintDeviceRoleCheck(role = {1,2},deviceEl = "#data.printDeviceId")
+    @ApiOperation(value = "添加打印机用户")
+    public R<String> addPrintDeviceUsers(@RequestBody PrintDeviceUserReq data) {
+        return R.success(printDeviceManagerService.addPrintDeviceUsers(data));
+    }
+
+    /**
+     * @param printDeviceId
+     * @param userId 可以逗号分隔，批量移除
+     * @return
+     */
+    @NeedToken
+    @DeleteMapping("/user/remove")
+    @PrintDeviceRoleCheck(role = {1,2},deviceEl = "#printDeviceId")
+    @ApiOperation(value = "移除打印机用户")
+    public R<String> removePrintDeviceUser(@RequestParam(name = "printDeviceId") String printDeviceId,
+                                           @RequestParam(name = "userId") String userId) {
+        return R.success(printDeviceManagerService.removePrintDeviceUser(printDeviceId,userId));
+    }
+
+    @NeedToken
+    @PutMapping("/user/update_role")
+    @PrintDeviceRoleCheck(role = {1},deviceEl = "#data.printDeviceId")
+    @ApiOperation(value = "更新用户角色")
+    public R<String> updatePrintDeviceUserRole(@RequestBody PrintDeviceUserReq data) {
+        return R.success(printDeviceManagerService.updatePrintDeviceUserRole(data));
     }
 }

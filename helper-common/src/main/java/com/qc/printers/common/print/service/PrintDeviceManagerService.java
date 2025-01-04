@@ -6,6 +6,7 @@ import com.qc.printers.common.print.domain.dto.PrintDeviceUserDto;
 import com.qc.printers.common.print.domain.vo.PrintDeviceNotRegisterVO;
 import com.qc.printers.common.print.domain.vo.request.CreatePrintDeviceReq;
 import com.qc.printers.common.print.domain.vo.request.PrintDeviceUserQuery;
+import com.qc.printers.common.print.domain.vo.request.PrintDeviceUserReq;
 import com.qc.printers.common.print.domain.vo.request.UpdatePrintDeviceStatusReq;
 
 import java.util.List;
@@ -20,4 +21,10 @@ public interface PrintDeviceManagerService {
     String updatePrintDeviceStatus(UpdatePrintDeviceStatusReq data);
 
     PageData<PrintDeviceUserDto> getPrintDeviceUsers(PrintDeviceUserQuery params);
+
+    String addPrintDeviceUsers(PrintDeviceUserReq data);
+
+    String removePrintDeviceUser(String printDeviceId, String userId);
+
+    String updatePrintDeviceUserRole(PrintDeviceUserReq data);
 }
