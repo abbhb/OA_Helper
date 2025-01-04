@@ -8,6 +8,7 @@ import com.qc.printers.common.print.domain.vo.request.CreatePrintDeviceReq;
 import com.qc.printers.common.print.domain.vo.request.PrintDeviceUserQuery;
 import com.qc.printers.common.print.domain.vo.request.PrintDeviceUserReq;
 import com.qc.printers.common.print.domain.vo.request.UpdatePrintDeviceStatusReq;
+import com.qc.printers.common.print.domain.vo.response.PrintDeviceVO;
 
 import java.util.List;
 
@@ -27,4 +28,6 @@ public interface PrintDeviceManagerService {
     String removePrintDeviceUser(String printDeviceId, String userId);
 
     String updatePrintDeviceUserRole(PrintDeviceUserReq data);
+
+    List<PrintDeviceVO> getPrintDeviceList();
 }

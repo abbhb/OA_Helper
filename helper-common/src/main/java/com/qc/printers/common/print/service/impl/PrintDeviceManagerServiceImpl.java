@@ -19,6 +19,7 @@ import com.qc.printers.common.print.domain.vo.request.CreatePrintDeviceReq;
 import com.qc.printers.common.print.domain.vo.request.PrintDeviceUserQuery;
 import com.qc.printers.common.print.domain.vo.request.PrintDeviceUserReq;
 import com.qc.printers.common.print.domain.vo.request.UpdatePrintDeviceStatusReq;
+import com.qc.printers.common.print.domain.vo.response.PrintDeviceVO;
 import com.qc.printers.common.print.service.PrintDeviceManagerService;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.dto.UserInfo;
@@ -345,6 +346,45 @@ public class PrintDeviceManagerServiceImpl implements PrintDeviceManagerService 
             sysPrintDeviceUserDao.update(selfUpdate);
         }
         return "更新成功";
+    }
+
+
+    @Override
+    public List<PrintDeviceVO> getPrintDeviceList() {
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+        LambdaQueryWrapper<SysPrintDeviceUser> sysPrintDeviceUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getUserId,currentUser.getId());
+        List<SysPrintDeviceUser> list = sysPrintDeviceUserDao.list(sysPrintDeviceUserLambdaQueryWrapper);
+        List<PrintDeviceVO> printDeviceVOS = new ArrayList<>();
+
+        for (SysPrintDeviceUser sysPrintDeviceUser : list) {
+            Long printDeviceId = sysPrintDeviceUser.getPrintDeviceId();
+            SysPrintDevice sysPrintDevice = sysPrintDeviceDao.getById(printDeviceId);
+            if (sysPrintDevice==null){
+                continue;
+                // 可能设备已删除
+            }
+            LambdaQueryWrapper<SysPrintDeviceUser> ownerSDUL = new LambdaQueryWrapper<>();
+            ownerSDUL.eq(SysPrintDeviceUser::getRole,1);
+            ownerSDUL.eq(SysPrintDeviceUser::getPrintDeviceId,sysPrintDevice.getId());
+            SysPrintDeviceUser ownerSDU = sysPrintDeviceUserDao.getOne(ownerSDUL);
+            if (ownerSDU==null){
+                // owner 不存在
+                continue;
+            }
+            PrintDeviceVO printDeviceVO = new PrintDeviceVO();
+            printDeviceVO.setDeviceDescription(sysPrintDevice.getDeviceDescription());
+            printDeviceVO.setDeviceName(sysPrintDevice.getDeviceName());
+            printDeviceVO.setDeviceId(sysPrintDevice.getDeviceId());
+            printDeviceVO.setCreateTime(sysPrintDevice.getCreateTime());
+            printDeviceVO.setCreateUserName(userDao.getById(sysPrintDevice.getCreateUser()).getName());
+            printDeviceVO.setOwnerName(userDao.getById(ownerSDU.getUserId()).getName());
+            printDeviceVO.setStatus(sysPrintDevice.getStatus());
+            printDeviceVO.setUserRole(sysPrintDeviceUser.getRole());
+            printDeviceVO.setId(sysPrintDevice.getId());
+            printDeviceVOS.add(printDeviceVO);
+        }
+        return printDeviceVOS;
     }
 
 

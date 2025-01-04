@@ -10,6 +10,7 @@ import com.qc.printers.common.print.domain.vo.request.CreatePrintDeviceReq;
 import com.qc.printers.common.print.domain.vo.request.PrintDeviceUserQuery;
 import com.qc.printers.common.print.domain.vo.request.PrintDeviceUserReq;
 import com.qc.printers.common.print.domain.vo.request.UpdatePrintDeviceStatusReq;
+import com.qc.printers.common.print.domain.vo.response.PrintDeviceVO;
 import com.qc.printers.common.print.service.PrintDeviceManagerService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -30,6 +31,12 @@ public class PrintDeviceManagerController {
     @Autowired
     private PrintDeviceManagerService printDeviceManagerService;
 
+    @NeedToken
+    @GetMapping("/list")
+    @ApiOperation(value = "获取与我相关的打印机列表")
+    public R<List<PrintDeviceVO>> getPrintDeviceList() {
+        return R.success(printDeviceManagerService.getPrintDeviceList());
+    }
     @NeedToken
     @GetMapping("/unregister/list")
     @ApiOperation(value = "获取未注册的在线打印机列表")
