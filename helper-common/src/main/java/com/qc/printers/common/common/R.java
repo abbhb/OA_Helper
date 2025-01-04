@@ -37,12 +37,12 @@ public class R<T> implements Serializable {
         r.code = 1;
         return r;
     }
-//    public static <T> R<T> success(String msg) {
-//        R<T> r = new R<T>();
-//        r.msg = msg + suffix;
-//        r.code = 1;
-//        return r;
-//    }
+    public static <T> R<T> success(String msg) {
+        R<T> r = new R<T>();
+        r.msg = msg + suffix;
+        r.code = 1;
+        return r;
+    }
 
 
 
