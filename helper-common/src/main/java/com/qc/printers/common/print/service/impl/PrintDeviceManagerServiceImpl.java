@@ -282,6 +282,11 @@ public class PrintDeviceManagerServiceImpl implements PrintDeviceManagerService 
             throw new CustomException("请传入用户");
         }
         UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+        for (Long id : userIds) {
+            if (id.equals(currentUser.getId())){
+                throw new CustomException("请勿操作自己");
+            }
+        }
         LambdaQueryWrapper<SysPrintDeviceUser> operatorLambdaQueryWrapper = new LambdaQueryWrapper<>();
         operatorLambdaQueryWrapper.eq(SysPrintDeviceUser::getPrintDeviceId,sysPrintDevice.getId());
         operatorLambdaQueryWrapper.eq(SysPrintDeviceUser::getUserId,currentUser.getId());
@@ -327,19 +332,28 @@ public class PrintDeviceManagerServiceImpl implements PrintDeviceManagerService 
                 throw new CustomException("转交所有权只能选择一人");
             }
         }
+        List<Long> userIds = new ArrayList<>();
+        for (String id : data.getUserIds()) {
+            userIds.add(Long.valueOf(StringUtils.trim(id)));
+        }
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+        for (Long id : userIds) {
+            if (id.equals(currentUser.getId())){
+                throw new CustomException("请勿操作自己");
+            }
+        }
         LambdaUpdateWrapper<SysPrintDeviceUser> sysPrintDeviceUserLambdaQueryWrapper = new LambdaUpdateWrapper<>();
         sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getPrintDeviceId,byId.getId());
         if (data.getUserIds().size()>1){
-            sysPrintDeviceUserLambdaQueryWrapper.in(SysPrintDeviceUser::getUserId,data.getUserIds());
+            sysPrintDeviceUserLambdaQueryWrapper.in(SysPrintDeviceUser::getUserId,userIds);
         }else {
-            sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getUserId,data.getUserIds().get(0));
+            sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getUserId,userIds.get(0));
         }
         sysPrintDeviceUserLambdaQueryWrapper.set(SysPrintDeviceUser::getRole,data.getRole());
         sysPrintDeviceUserDao.update(sysPrintDeviceUserLambdaQueryWrapper);
         if (data.getRole().equals(1)){
             // 将自己的所有者更新成user
             LambdaUpdateWrapper<SysPrintDeviceUser> selfUpdate = new LambdaUpdateWrapper<>();
-            UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
             selfUpdate.eq(SysPrintDeviceUser::getUserId,currentUser.getId());
             selfUpdate.eq(SysPrintDeviceUser::getPrintDeviceId,byId.getId());
             selfUpdate.set(SysPrintDeviceUser::getRole,3);
