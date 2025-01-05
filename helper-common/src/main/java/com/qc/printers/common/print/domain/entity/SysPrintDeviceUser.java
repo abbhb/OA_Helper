@@ -9,6 +9,9 @@ import java.io.Serializable;
 
 /**
  * 打印机设备的用户关系
+ * user-device 1:N
+ * dept-device 1:N 仍各自保证1:N
+ * todo:当用户同时处于组授权和用户授权，谁的角色大取谁（role值小）
  */
 @AllArgsConstructor
 @NoArgsConstructor
@@ -16,7 +19,12 @@ import java.io.Serializable;
 @Data
 public class SysPrintDeviceUser implements Serializable {
     private Long id;
-    private Long userId;
+    private Long linkId;
+    /**
+     * 1：user
+     * 2：dept
+     */
+    private Integer linkType;
     private Long printDeviceId;
     /**
      * 1：owner

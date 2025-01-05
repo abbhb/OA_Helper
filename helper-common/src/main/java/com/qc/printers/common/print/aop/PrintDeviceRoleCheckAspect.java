@@ -81,7 +81,7 @@ public class PrintDeviceRoleCheckAspect
         String key = SpElUtils.parseSpEl(method, joinPoint.getArgs(), controllerDataScope.deviceEl());
         int[] role = controllerDataScope.role();
         if(role==null|| role.length==0){
-            throw new CustomException("请最少运行一个角色:print-device");
+            throw new CustomException("请最少允许一个角色:print-device");
         }
         // 获取当前的用户
         UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
@@ -90,13 +90,23 @@ public class PrintDeviceRoleCheckAspect
         }
         LambdaQueryWrapper<SysPrintDeviceUser> sysPrintDeviceUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
         sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getPrintDeviceId,Long.valueOf(key));
-        sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getUserId,currentUser.getId());
-        SysPrintDeviceUser one = sysPrintDeviceUserDao.getOne(sysPrintDeviceUserLambdaQueryWrapper);
-        if (one==null){
+        sysPrintDeviceUserLambdaQueryWrapper.and(
+                wrapper -> wrapper.eq(
+                        SysPrintDeviceUser::getLinkId, currentUser.getId()
+                        )
+                .eq(SysPrintDeviceUser::getLinkType, 1)
+                .or().eq(SysPrintDeviceUser::getLinkType, 2)
+                .eq(SysPrintDeviceUser::getLinkId, currentUser.getDeptId()
+                )
+        );
+        List<SysPrintDeviceUser> deviceUserList = sysPrintDeviceUserDao.list(sysPrintDeviceUserLambdaQueryWrapper);
+        if (deviceUserList==null||deviceUserList.isEmpty()){
             throw new CustomException("你还没有权限进行此操作");
         }
-        OptionalInt first = Arrays.stream(role).filter(value -> value == one.getRole()).findFirst();
-        if (first.isEmpty()){
+        boolean anyMatch = deviceUserList.stream()
+                .map(SysPrintDeviceUser::getRole)
+                .anyMatch(roleValue -> Arrays.stream(role).anyMatch(value -> value == roleValue));
+        if (!anyMatch){
             throw new CustomException("你还没有权限进行此操作");
         }
     }
