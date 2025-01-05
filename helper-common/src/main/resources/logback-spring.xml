@@ -47,13 +47,18 @@
         <destination>${logstash.url}:9601</destination>
         <encoder charset="GBK" class="net.logstash.logback.encoder.LogstashEncoder"/>
     </appender>
+    <appender name="async" class="ch.qos.logback.classic.AsyncAppender">
+        <queueSize>512</queueSize>
+        <neverBlock>true</neverBlock>
+        <!-- 指定异步写入名称为 logfile 的 appender，这里最多只能添加一个 appender-ref -->
+        <appender-ref ref="logstash" />
+    </appender>
 
     <root level="debug">
         <appender-ref ref="console" />
     </root>
 
     <root level="info">
-        <appender-ref ref="logstash" />
         <appender-ref ref="file_info" />
         <appender-ref ref="file_error" />
         <!--        <appender-ref ref="logstash" />-->
