@@ -23,6 +23,9 @@ public interface PrintDeviceManagerService {
 
     PageData<PrintDeviceUserDto> getPrintDeviceUsers(PrintDeviceUserQuery params);
 
+    // 返回一个已选择用户id列表,用于添加设备过滤
+    List<Long> getPrintDeviceUserIds(Long printDeviceId);
+
     String addPrintDeviceUsers(PrintDeviceUserReq data);
 
     String removePrintDeviceUser(String printDeviceId, String userId);

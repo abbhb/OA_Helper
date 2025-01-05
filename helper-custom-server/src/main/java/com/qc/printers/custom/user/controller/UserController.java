@@ -239,8 +239,25 @@ public class UserController {
     @GetMapping("/listForSelect")
     @NeedToken
 //    @PermissionCheck(role = {"superadmin"}, permission = "sys:bpm:add")
-    public R<PageData<UserResult>> listForSelect(Integer pageNum, Integer pageSize, @RequestParam(required = false) String name, @RequestParam(required = false) Long deptId) {
-        return R.success(userService.getUserListForBpm(pageNum, pageSize, name, deptId));
+    public R<PageData<UserResult>> listForSelect(
+            Integer pageNum,
+            Integer pageSize,
+            @RequestParam(required = false) String name
+            , @RequestParam(required = false, name = "mustHaveStudentId") Integer mustHaveStudentId
+            , @RequestParam(required = false, name = "cascade", defaultValue = "0") Integer cascade //必须和deptId同时出现才有用 0：不级联
+            , @RequestParam(required = false, name = "deptId") Long deptId
+            , @RequestParam(required = false, name = "level") String level
+
+    ) {
+        return R.success(userService.getUserListForBpm(
+                pageNum,
+                pageSize,
+                name,
+                deptId,
+                cascade,
+                mustHaveStudentId,
+                level
+        ));
     }
 
 

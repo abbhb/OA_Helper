@@ -458,38 +458,8 @@ public class UserServiceImpl implements UserService {
             lambdaQueryWrapper.eq(User::getDeptId, deptId);
         } else {
             List<DeptManger> deptMangers = deptService.getDeptListOnlyTree();
-            Set<DeptManger> childTemp = new HashSet<>();
-            Set<Long> childId = new HashSet<>();
-            int isDeptIdOrChild = 0;
-            while (deptMangers != null && deptMangers.size() > 0) {
-                for (DeptManger det :
-                        deptMangers) {
-                    if (det == null) {
-                        continue;
-                    }
-                    if (det.getChildren() != null && det.getChildren().size() > 0) {
-                        childTemp.addAll(det.getChildren());
-                    }
-                    if (det.getId().equals(deptId)) {
-                        if (det.getChildren() != null) {
-                            childTemp = new HashSet<>(det.getChildren());
-                        }
-                        isDeptIdOrChild = 1;
-                        childId.add(det.getId());
-                        break;
-                    }
-                    if (isDeptIdOrChild == 1) {
-                        childId.add(det.getId());
-                    }
-                }
-                if (childTemp.size() == 0) {
-                    break;
-                }
-                deptMangers = new ArrayList<>(childTemp);
-
-                childTemp = new HashSet<>();
-            }
-            if (childId.size() > 0) {
+            Set<Long> childId = DeptManger.getIdsJiLian(deptMangers, deptId);
+            if (!childId.isEmpty()) {
                 log.info("childId={}", childId);
                 lambdaQueryWrapper.in(User::getDeptId, childId);
             }
@@ -1110,19 +1080,61 @@ public class UserServiceImpl implements UserService {
     }
 
     @Override
-    public PageData<UserResult> getUserListForBpm(Integer pageNum, Integer pageSize, String name, Long deptId) {
+    public PageData<UserResult> getUserListForBpm(Integer pageNum,
+                                                  Integer pageSize,
+                                                  String name,
+                                                  Long deptId,
+                                                  Integer cascade,
+                                                  Integer mustHaveStudentId,
+                                                  String level
+    ) {
         if (pageNum == null) {
             throw new IllegalArgumentException("传参错误");
         }
         if (pageSize == null) {
             throw new IllegalArgumentException("传参错误");
         }
+        if (cascade == null) {
+            cascade = 0;// 0为不级联，1为级联
+        }
+        if (mustHaveStudentId==null){
+            mustHaveStudentId = 0;//不是必须
+        }
+
         Page<User> pageInfo = new Page<>(pageNum, pageSize);
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         //添加过滤条件
         lambdaQueryWrapper.like(StringUtils.isNotEmpty(name), User::getName, name);
         if (deptId != null) {
-            lambdaQueryWrapper.eq(User::getDeptId, deptId);
+            if (!cascade.equals(1)) {
+                lambdaQueryWrapper.eq(User::getDeptId, deptId);
+            } else {
+                List<DeptManger> deptMangers = deptService.getDeptListOnlyTree();
+                Set<Long> childId = DeptManger.getIdsJiLian(deptMangers, deptId);
+                if (!childId.isEmpty()) {
+                    log.info("childId={}", childId);
+                    lambdaQueryWrapper.in(User::getDeptId, childId);
+                }
+            }
+        }
+
+        //添加过滤条件
+        lambdaQueryWrapper.like(StringUtils.isNotEmpty(name), User::getName, name);
+        if (mustHaveStudentId.equals(1)){
+            lambdaQueryWrapper.isNotNull(User::getStudentId) // 学号不为null
+                    .and(wrapper -> wrapper
+                            .ne(User::getStudentId, "null") // 学号不为字符串"null"
+                            .or()
+                            .eq(User::getStudentId, "") // 学号为字符串""
+                    );
+        }
+        if (StringUtils.isNotEmpty(level)){
+            String[] yearArray = level.split(",");
+            lambdaQueryWrapper.and(wrapper -> {
+                for (String year : yearArray) {
+                    wrapper.or().apply("SUBSTRING(student_id, 1, 4) = {0}", year.trim());
+                }
+            });
         }
 
         //添加排序条件
@@ -1139,7 +1151,7 @@ public class UserServiceImpl implements UserService {
             sysRoleLambdaQueryWrapper.eq(SysUserRole::getUserId, user1.getId());
             List<RoleResp> collect = new ArrayList<>();
             List<SysUserRole> list = iSysUserRoleService.list(sysRoleLambdaQueryWrapper);
-            if (list != null && list.size() > 0) {
+            if (list != null && !list.isEmpty()) {
                 List<Long> rolesId = list.stream().map(SysUserRole::getRoleId).toList();
                 List<SysRole> sysRoles = iSysRoleService.listByIds(rolesId);
                 collect = sysRoles.stream().sorted(Comparator.comparing(SysRole::getRoleSort)).map(sysRole -> new RoleResp(String.valueOf(sysRole.getId()), sysRole.getRoleName(), sysRole.getRoleKey(), sysRole.getRoleSort())).collect(Collectors.toList());

@@ -235,37 +235,7 @@ public class SigninUserDataServiceImpl implements SigninUserDataService {
             lambdaQueryWrapper.eq(User::getDeptId, deptId);
         } else {
             List<DeptManger> deptMangers = deptService.getDeptListOnlyTree();
-            Set<DeptManger> childTemp = new HashSet<>();
-            Set<Long> childId = new HashSet<>();
-            int isDeptIdOrChild = 0;
-            while (deptMangers != null && deptMangers.size() > 0) {
-                for (DeptManger det :
-                        deptMangers) {
-                    if (det == null) {
-                        continue;
-                    }
-                    if (det.getChildren() != null && det.getChildren().size() > 0) {
-                        childTemp.addAll(det.getChildren());
-                    }
-                    if (det.getId().equals(deptId)) {
-                        if (det.getChildren() != null) {
-                            childTemp = new HashSet<>(det.getChildren());
-                        }
-                        isDeptIdOrChild = 1;
-                        childId.add(det.getId());
-                        break;
-                    }
-                    if (isDeptIdOrChild == 1) {
-                        childId.add(det.getId());
-                    }
-                }
-                if (childTemp.size() == 0) {
-                    break;
-                }
-                deptMangers = new ArrayList<>(childTemp);
-
-                childTemp = new HashSet<>();
-            }
+            Set<Long> childId = DeptManger.getIdsJiLian(deptMangers, deptId);
             if (childId.size() > 0) {
                 log.info("childId={}", childId);
                 lambdaQueryWrapper.in(User::getDeptId, childId);

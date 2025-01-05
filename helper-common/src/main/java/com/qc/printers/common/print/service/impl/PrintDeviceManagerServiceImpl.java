@@ -31,10 +31,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -223,6 +220,19 @@ public class PrintDeviceManagerServiceImpl implements PrintDeviceManagerService 
         return pageData;
     }
 
+    @Override
+    public List<Long> getPrintDeviceUserIds(Long printDeviceId) {
+        if (printDeviceId==null){
+            throw new CustomException("请传入设备ID");
+        }
+        LambdaQueryWrapper<SysPrintDeviceUser> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper.eq(SysPrintDeviceUser::getPrintDeviceId,printDeviceId);
+        userLambdaQueryWrapper.select(SysPrintDeviceUser::getUserId);
+
+        List<SysPrintDeviceUser> list = sysPrintDeviceUserDao.list(userLambdaQueryWrapper);
+        return list.stream().map(SysPrintDeviceUser::getUserId).toList();
+    }
+
     /**
      * 添加打印机相关联用户
      * @param data
@@ -245,12 +255,29 @@ public class PrintDeviceManagerServiceImpl implements PrintDeviceManagerService 
         if (sysPrintDevice==null){
             throw new CustomException("设备不存在，是否被人删除了");
         }
+        Set<Long> ids = new HashSet<>();
         for (String userId : data.getUserIds()) {
             User byId = userDao.getById(Long.valueOf(userId));
             if (byId==null){
                 throw new CustomException("选中的用户id不存在数据:"+userId);
             }
+            ids.add(byId.getId());
         }
+        List<Long> userIdList = ids.stream().toList();
+
+        LambdaQueryWrapper<SysPrintDeviceUser> NotFoundLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        NotFoundLambdaQueryWrapper.eq(SysPrintDeviceUser::getPrintDeviceId,Long.valueOf(data.getPrintDeviceId()));
+        if (userIdList.size()==1){
+            NotFoundLambdaQueryWrapper.eq(SysPrintDeviceUser::getUserId,userIdList.get(0));
+        }else {
+            NotFoundLambdaQueryWrapper.in(SysPrintDeviceUser::getUserId,userIdList);
+
+        }
+        int count = sysPrintDeviceUserDao.count(NotFoundLambdaQueryWrapper);
+        if (count>0){
+            throw new CustomException("请重新选择，不能包含已经存在的人!");
+        }
+
         for (String userId : data.getUserIds()) {
             SysPrintDeviceUser build = SysPrintDeviceUser.builder()
                     .userId(Long.valueOf(userId))

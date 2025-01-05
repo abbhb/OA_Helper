@@ -72,6 +72,12 @@ public class PrintDeviceManagerController {
     public R<PageData<PrintDeviceUserDto>> getPrintDeviceUsers(PrintDeviceUserQuery params) {
         return R.success(printDeviceManagerService.getPrintDeviceUsers(params));
     }
+    @NeedToken
+    @GetMapping("/user/id/list")
+    @ApiOperation(value = "获取打印机用户ID列表")
+    public R<List<Long>> getPrintDeviceUserIds(@RequestParam String deviceId) {
+        return R.success(printDeviceManagerService.getPrintDeviceUserIds(Long.valueOf(deviceId)));
+    }
 
     @NeedToken
     @PostMapping("/user/add")

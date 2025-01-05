@@ -8,7 +8,9 @@ import lombok.ToString;
 
 import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Data
 @EqualsAndHashCode(callSuper = true)
@@ -64,6 +66,41 @@ public class DeptManger extends SysDept implements Serializable {
             addDescendantIds(deptManager.getChildren(), ids);
         }
         return ids;
+    }
+
+    public static Set<Long> getIdsJiLian(List<DeptManger> deptMangers,Long deptId){
+        Set<DeptManger> childTemp = new HashSet<>();
+        Set<Long> childId = new HashSet<>();
+        int isDeptIdOrChild = 0;
+        while (deptMangers != null && !deptMangers.isEmpty()) {
+            for (DeptManger det :
+                    deptMangers) {
+                if (det == null) {
+                    continue;
+                }
+                if (det.getChildren() != null && !det.getChildren().isEmpty()) {
+                    childTemp.addAll(det.getChildren());
+                }
+                if (det.getId().equals(deptId)) {
+                    if (det.getChildren() != null) {
+                        childTemp = new HashSet<>(det.getChildren());
+                    }
+                    isDeptIdOrChild = 1;
+                    childId.add(det.getId());
+                    break;
+                }
+                if (isDeptIdOrChild == 1) {
+                    childId.add(det.getId());
+                }
+            }
+            if (childTemp.isEmpty()) {
+                break;
+            }
+            deptMangers = new ArrayList<>(childTemp);
+
+            childTemp = new HashSet<>();
+        }
+        return childId;
     }
 
 
