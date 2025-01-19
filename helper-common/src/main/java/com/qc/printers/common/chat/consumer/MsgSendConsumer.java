@@ -29,6 +29,7 @@ import org.springframework.stereotype.Component;
 
 import java.time.ZoneId;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Description: 发送消息更新房间收信箱，并同步给房间成员信箱
@@ -88,7 +89,13 @@ public class MsgSendConsumer implements RocketMQListener<MsgSendMessageDTO> {
             } else if (Objects.equals(room.getType(), RoomTypeEnum.FRIEND.getType())) {//单聊对象
                 //对单人推送
                 RoomFriend roomFriend = roomFriendDao.getByRoomId(room.getId());
-                memberUidList = Arrays.asList(roomFriend.getUid1(), roomFriend.getUid2());
+//                memberUidList = Arrays.asList(roomFriend.getUid1(), roomFriend.getUid2());
+                // 排除自己 message.getFromUid()
+                memberUidList = Arrays.asList(roomFriend.getUid1(), roomFriend.getUid2())
+                        .stream()
+                        .filter(uid -> !uid.equals(message.getFromUid()))
+                        .collect(Collectors.toList());
+
             }
             //更新所有群成员的会话时间
             contactDao.refreshOrCreateActiveTime(room.getId(), memberUidList, message.getId(), Date.from(message.getCreateTime().atZone(ZoneId.systemDefault()).toInstant()));
