@@ -77,8 +77,8 @@ public class UserEmojiController {
     @DeleteMapping("/delete")
     @NeedToken
     @ApiOperation("删除表情包")
-    public R<Void> deleteEmojis(@Valid @RequestBody IdReqVO reqVO) {
+    public R<String> deleteEmojis(@Valid IdReqVO reqVO) {
         userEmojiService.remove(reqVO.getId(), RequestHolder.get().getUid());
-        return R.success("");
+        return R.success("删除表情包成功");
     }
 }

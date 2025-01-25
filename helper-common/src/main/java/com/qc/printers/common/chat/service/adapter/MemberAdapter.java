@@ -41,8 +41,12 @@ public class MemberAdapter {
         return list.stream().map(a -> {
             ChatMemberResp resp = new ChatMemberResp();
             resp.setActiveStatus(a.getActiveStatus());
+            if (a.getLoginDate()==null){
+                resp.setLastOptTime(null);
+            }else {
+                resp.setLastOptTime(DateUtils.localDateTimeToDate(a.getLoginDate()));
+            }
 
-            resp.setLastOptTime(DateUtils.localDateTimeToDate(a.getLoginDate()));
             resp.setUid(a.getId());
             return resp;
         }).collect(Collectors.toList());
