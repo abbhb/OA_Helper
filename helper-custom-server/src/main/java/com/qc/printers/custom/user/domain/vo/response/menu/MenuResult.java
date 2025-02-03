@@ -13,5 +13,5 @@ import java.util.List;
 @ToString(callSuper = true)
 public class MenuResult extends MenuResultNode implements Serializable {
 
-    private List<MenuResultNode> children;
+    private List<MenuResult> children;
 }

@@ -9,4 +9,6 @@ public class MenuResultNode implements Serializable {
     private String path;
     private String name;
     private MetaNode meta;
+
+
 }

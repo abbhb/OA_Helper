@@ -1,6 +1,7 @@
 package com.qc.printers.common.common.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -110,6 +111,12 @@ public class CommonConfigServiceImpl extends ServiceImpl<CommonConfigMapper, Com
         RedisUtils.set(MyString.pre_common_config, list);
         return a;
     }
+
+    /**
+     * 注意取的缓存，仅在初始化时设置，后续更新操作不会更新缓存
+     * @param id
+     * @return
+     */
     @Transactional
     @Override
     public CommonConfig getById(Serializable id) {
@@ -127,7 +134,7 @@ public class CommonConfigServiceImpl extends ServiceImpl<CommonConfigMapper, Com
             collect = new ArrayList<>();
         }
         if (collect.size() == 0) {
-            CommonConfig commonConfig = super.getById(id);
+            CommonConfig commonConfig = getById(id);
             collect.add(commonConfig);
         }
         return collect.get(0);
@@ -145,7 +152,6 @@ public class CommonConfigServiceImpl extends ServiceImpl<CommonConfigMapper, Com
         }
         return commonConfigs;
     }
-
 
 
 }

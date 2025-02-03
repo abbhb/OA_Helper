@@ -16,7 +16,7 @@ public class AppState implements Serializable {
 
     private Boolean tabBar = false;
 
-    private Boolean topMenu = false;
+    private Boolean topMenu = true;
 
     private Boolean footer = true;
 
