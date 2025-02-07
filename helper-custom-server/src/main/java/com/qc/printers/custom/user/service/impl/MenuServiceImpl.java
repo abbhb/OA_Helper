@@ -195,20 +195,51 @@ public class MenuServiceImpl implements MenuService {
                 menuManger2.setCreateUserName("信息缺失");
                 menuManger2.setUpdateUserName("信息缺失");
                 if (sysMenu.getCreateUser() != null) {
-                    menuManger2.setCreateUserName(userDao.getById(sysMenu2.getCreateUser()).getName());
+                    try {
+                        menuManger2.setCreateUserName(userDao.getById(sysMenu2.getCreateUser()).getName());
+                    } catch (Exception e) {
+                        menuManger2.setCreateUserName("信息缺失");
+                        log.error("异常的用户id{}", sysMenu2.getCreateUser());
+                    }
                 }
                 if (sysMenu.getUpdateUser() != null) {
                     if (sysMenu.getUpdateUser().equals(sysMenu2.getCreateUser())) {
                         menuManger2.setUpdateUserName(menuManger2.getCreateUserName());
                     } else {
-                        menuManger2.setUpdateUserName(userDao.getById(sysMenu2.getUpdateUser()).getName());
+                        try {
+                            menuManger2.setUpdateUserName(userDao.getById(sysMenu2.getUpdateUser()).getName());
+                        } catch (Exception e) {
+                            menuManger2.setUpdateUserName("信息缺失");
+                            log.error("异常的用户id{}", sysMenu2.getUpdateUser());
+                        }
                     }
                 }
                 menuManger2.setUpdateTime(sysMenu2.getUpdateTime());
                 menuManger2.setParentId(sysMenu2.getParentId());
                 menuManger2.setUpdateUser(sysMenu2.getUpdateUser());
                 //第三层--叶子
-                List<MenuManger> collect3 = list.stream().filter(sysMenu3 -> sysMenu3.getParentId().equals(menuManger2.getId())).map(newsysMeny3 -> new MenuManger(newsysMeny3.getId(), newsysMeny3.getName(), newsysMeny3.getLocale(), newsysMeny3.getParentId(), newsysMeny3.getOrderNum(), newsysMeny3.getPath(), newsysMeny3.getIsFrame(), newsysMeny3.getIsCache(), newsysMeny3.getType(), newsysMeny3.getIsShow(), newsysMeny3.getStatus(), newsysMeny3.getPerms(), newsysMeny3.getIcon(), newsysMeny3.getCreateUser(), userDao.getById(newsysMeny3.getCreateUser()).getName(), newsysMeny3.getCreateTime(), newsysMeny3.getUpdateUser(), userDao.getById(newsysMeny3.getUpdateUser()).getName(), newsysMeny3.getUpdateTime(), null)).collect(Collectors.toList());
+                List<MenuManger> collect3 = list.stream().filter(sysMenu3 -> sysMenu3.getParentId().equals(menuManger2.getId()))
+                        .map(newsysMeny3 -> new MenuManger(
+                                newsysMeny3.getId(),
+                                newsysMeny3.getName(),
+                                newsysMeny3.getLocale(),
+                                newsysMeny3.getParentId(),
+                                newsysMeny3.getOrderNum(),
+                                newsysMeny3.getPath(),
+                                newsysMeny3.getIsFrame(),
+                                newsysMeny3.getIsCache(),
+                                newsysMeny3.getType(),
+                                newsysMeny3.getIsShow(),
+                                newsysMeny3.getStatus(),
+                                newsysMeny3.getPerms(),
+                                newsysMeny3.getIcon(),
+                                newsysMeny3.getCreateUser(),
+                                newsysMeny3.getCreateUser()!=null?userDao.getById(newsysMeny3.getCreateUser()).getName():"无",
+                                newsysMeny3.getCreateTime(),
+                                newsysMeny3.getUpdateUser(),
+                                newsysMeny3.getUpdateUser()!=null?userDao.getById(newsysMeny3.getUpdateUser()).getName():"无",
+                                newsysMeny3.getUpdateTime(), null))
+                        .collect(Collectors.toList());
                 collect3.sort(Comparator.comparing(MenuManger::getSort));
                 menuManger2.setChildren(collect3);
                 menuMangerList2.add(menuManger2);

@@ -69,9 +69,10 @@ public class SigninGroupController {
 
     /*
      * 节假日相关
+     * 开放权限
      */
     @GetMapping("/list_holidays/{group_id}")
-    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin-group-holiday:list")
+//    @PermissionCheck(role = {"superadmin"}, permission = "sys:signin-group-holiday:list")
     @NeedToken
     @ApiOperation(value = "获取考勤组节假日信息")
     public R<List<Holidays>> listHolidays(@PathVariable("group_id") Long groupId,

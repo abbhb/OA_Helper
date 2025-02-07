@@ -117,3 +117,8 @@ docker run -itd --name file2pdf_node_2 file2pdf_node:latest
 docker run -itd --name file2pdf_node_3 file2pdf_node:latest
 # 可以结合机器资源启动多个
 ```
+
+# 版本更新
+## 4.4.0
+- 修复了一些bug
+- 需同步菜单结构

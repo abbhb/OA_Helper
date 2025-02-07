@@ -89,7 +89,10 @@ public class UserInfoServiceImpl implements UserInfoService {
                 menuIdList.add(sysRoleMenu.getMenuId());
             }
         }
-        Set<SysMenu> sysMenus = new HashSet<>(iSysMenuService.listByIds(menuIdList));
+        Set<SysMenu> sysMenus = new HashSet<>();
+        if(!menuIdList.isEmpty()){
+            sysMenus = new HashSet<>(iSysMenuService.listByIds(menuIdList));
+        }
         userInfo.setSysMenus(sysMenus);
         userInfo.setSysRoles(userAllRole);
         return userInfo;
