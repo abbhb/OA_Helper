@@ -17,7 +17,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @Builder
 @Data
-public class SysPrintDeviceUser implements Serializable {
+public class SysPrintDeviceLink implements Serializable {
     private Long id;
     private Long linkId;
     /**

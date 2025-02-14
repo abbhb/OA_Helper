@@ -46,6 +46,7 @@
     <appender name="logstash" class="net.logstash.logback.appender.LogstashTcpSocketAppender">
         <destination>${logstash.url}:9601</destination>
         <encoder charset="GBK" class="net.logstash.logback.encoder.LogstashEncoder"/>
+        <reconnectionDelay>3000</reconnectionDelay>
     </appender>
     <appender name="async" class="ch.qos.logback.classic.AsyncAppender">
         <queueSize>512</queueSize>

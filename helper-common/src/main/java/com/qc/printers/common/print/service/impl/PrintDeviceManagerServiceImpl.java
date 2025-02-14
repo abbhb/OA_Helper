@@ -11,30 +11,27 @@ import com.qc.printers.common.common.service.ConsulService;
 import com.qc.printers.common.common.utils.StringUtils;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
 import com.qc.printers.common.print.dao.SysPrintDeviceDao;
-import com.qc.printers.common.print.dao.SysPrintDeviceUserDao;
-import com.qc.printers.common.print.domain.dto.PrintDeviceUserDto;
+import com.qc.printers.common.print.dao.SysPrintDeviceLinkDao;
+import com.qc.printers.common.print.domain.dto.PrintDeviceLinkDto;
 import com.qc.printers.common.print.domain.entity.SysPrintDevice;
-import com.qc.printers.common.print.domain.entity.SysPrintDeviceUser;
+import com.qc.printers.common.print.domain.entity.SysPrintDeviceLink;
 import com.qc.printers.common.print.domain.vo.PrintDeviceNotRegisterVO;
 import com.qc.printers.common.print.domain.vo.request.CreatePrintDeviceReq;
-import com.qc.printers.common.print.domain.vo.request.PrintDeviceUserQuery;
-import com.qc.printers.common.print.domain.vo.request.PrintDeviceUserReq;
+import com.qc.printers.common.print.domain.vo.request.PrintDeviceLinkQuery;
+import com.qc.printers.common.print.domain.vo.request.PrintDeviceLinkReq;
 import com.qc.printers.common.print.domain.vo.request.UpdatePrintDeviceStatusReq;
 import com.qc.printers.common.print.domain.vo.response.PrintDeviceVO;
 import com.qc.printers.common.print.service.PrintDeviceManagerService;
 import com.qc.printers.common.user.dao.UserDao;
-import com.qc.printers.common.user.domain.dto.DeptManger;
 import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.SysDept;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.service.ISysDeptService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.core.userdetails.UserCache;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -46,7 +43,7 @@ public class PrintDeviceManagerServiceImpl implements PrintDeviceManagerService 
     private SysPrintDeviceDao sysPrintDeviceDao;
 
     @Autowired
-    private SysPrintDeviceUserDao sysPrintDeviceUserDao;
+    private SysPrintDeviceLinkDao sysPrintDeviceLinkDao;
 
     @Autowired
     private ConsulService consulService;
@@ -131,13 +128,13 @@ public class PrintDeviceManagerServiceImpl implements PrintDeviceManagerService 
         sysPrintDeviceDao.save(sysPrintDevice);
         // 注册后为owner
         UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
-        SysPrintDeviceUser build = SysPrintDeviceUser.builder()
+        SysPrintDeviceLink build = SysPrintDeviceLink.builder()
                 .linkId(currentUser.getId())
                 .linkType(1)
                 .printDeviceId(sysPrintDevice.getId())
                 .role(1)
                 .build();
-        sysPrintDeviceUserDao.save(build);
+        sysPrintDeviceLinkDao.save(build);
         return "注册打印机成功";
     }
 
@@ -153,9 +150,9 @@ public class PrintDeviceManagerServiceImpl implements PrintDeviceManagerService 
         }
         UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
         sysPrintDeviceDao.removeById(byId.getId());
-        LambdaQueryWrapper<SysPrintDeviceUser> sysPrintDeviceUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getPrintDeviceId,byId.getId());
-        sysPrintDeviceUserDao.remove(sysPrintDeviceUserLambdaQueryWrapper);
+        LambdaQueryWrapper<SysPrintDeviceLink> sysPrintDeviceUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceLink::getPrintDeviceId,byId.getId());
+        sysPrintDeviceLinkDao.remove(sysPrintDeviceUserLambdaQueryWrapper);
         return "删除成功";
     }
 
@@ -185,47 +182,49 @@ public class PrintDeviceManagerServiceImpl implements PrintDeviceManagerService 
     }
 
     @Override
-    public PageData<PrintDeviceUserDto> getPrintDeviceUsers(PrintDeviceUserQuery params) {
-        if (params.getPrintDeviceId()==null){
+    public PageData<PrintDeviceLinkDto> getPrintDeviceLinks(PrintDeviceLinkQuery params) {
+        if (StringUtils.isEmpty(params.getPrintDeviceId())){
             throw new CustomException("设备ID为空");
         }
         if (params.getRole()==null){
             params.setRole(0);
         }
-        Page<SysPrintDeviceUser> pageInfo = new Page<>(params.getPageNum(), params.getPageSize());
-        PageData<PrintDeviceUserDto> pageData = new PageData<>();
-        LambdaQueryWrapper<SysPrintDeviceUser> sysPrintDeviceUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getPrintDeviceId,params.getPrintDeviceId());
-        sysPrintDeviceUserLambdaQueryWrapper.orderByDesc(SysPrintDeviceUser::getLinkType);
+        Page<SysPrintDeviceLink> pageInfo = new Page<>(params.getPageNum(), params.getPageSize());
+        PageData<PrintDeviceLinkDto> pageData = new PageData<>();
+        LambdaQueryWrapper<SysPrintDeviceLink> sysPrintDeviceUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceLink::getPrintDeviceId,params.getPrintDeviceId());
+        sysPrintDeviceUserLambdaQueryWrapper.orderByDesc(SysPrintDeviceLink::getLinkType);
 
         if (params.getRole().equals(0)){
-            sysPrintDeviceUserLambdaQueryWrapper.orderByAsc(SysPrintDeviceUser::getRole);
+            sysPrintDeviceUserLambdaQueryWrapper.orderByAsc(SysPrintDeviceLink::getRole);
         }else {
-            sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getRole,params.getRole());
+            sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceLink::getRole,params.getRole());
         }
-        sysPrintDeviceUserDao.page(pageInfo,sysPrintDeviceUserLambdaQueryWrapper);
-        List<PrintDeviceUserDto> results = new ArrayList<>();
-        for (SysPrintDeviceUser sysPrintDeviceUser : pageInfo.getRecords()) {
-            PrintDeviceUserDto printDeviceUserDto = new PrintDeviceUserDto();
-            printDeviceUserDto.setPrintDeviceId(String.valueOf(sysPrintDeviceUser.getPrintDeviceId()));
-            printDeviceUserDto.setUserId(String.valueOf(sysPrintDeviceUser.getLinkId()));
-            printDeviceUserDto.setRole(sysPrintDeviceUser.getRole());
-            printDeviceUserDto.setId(sysPrintDeviceUser.getId());
-            if (sysPrintDeviceUser.getLinkType().equals(1)){
-                User byId = userDao.getById(sysPrintDeviceUser.getLinkId());
+        sysPrintDeviceLinkDao.page(pageInfo,sysPrintDeviceUserLambdaQueryWrapper);
+        List<PrintDeviceLinkDto> results = new ArrayList<>();
+        for (SysPrintDeviceLink sysPrintDeviceLink : pageInfo.getRecords()) {
+            PrintDeviceLinkDto printDeviceLinkDto = new PrintDeviceLinkDto();
+            printDeviceLinkDto.setPrintDeviceId(String.valueOf(sysPrintDeviceLink.getPrintDeviceId()));
+            printDeviceLinkDto.setLinkId(String.valueOf(sysPrintDeviceLink.getLinkId()));
+            printDeviceLinkDto.setRole(sysPrintDeviceLink.getRole());
+            printDeviceLinkDto.setId(sysPrintDeviceLink.getId());
+            // 1:user 2:dept
+            printDeviceLinkDto.setLinkType(sysPrintDeviceLink.getLinkType());
+            if (sysPrintDeviceLink.getLinkType().equals(1)){
+                User byId = userDao.getById(sysPrintDeviceLink.getLinkId());
                 if (byId==null){
                     continue;
                 }
-                printDeviceUserDto.setUsername(byId.getName());
-            }else if (sysPrintDeviceUser.getLinkType().equals(2)){
-                SysDept sysDept = iSysDeptService.getById(sysPrintDeviceUser.getLinkId());
+                printDeviceLinkDto.setLinkName(byId.getName());
+            }else if (sysPrintDeviceLink.getLinkType().equals(2)){
+                SysDept sysDept = iSysDeptService.getById(sysPrintDeviceLink.getLinkId());
                 if (sysDept==null){
                     continue;
                 }
-                printDeviceUserDto.setUsername("[用户组]"+sysDept.getDeptNameAll());
+                printDeviceLinkDto.setLinkName("[用户组]"+sysDept.getDeptNameAll());
             }
 
-            results.add(printDeviceUserDto);
+            results.add(printDeviceLinkDto);
         }
         pageData.setPages(pageInfo.getPages());
         pageData.setTotal(pageInfo.getTotal());
@@ -238,17 +237,20 @@ public class PrintDeviceManagerServiceImpl implements PrintDeviceManagerService 
     }
 
     @Override
-    public List<Long> getPrintDeviceUserIds(Long printDeviceId) {
+    public Map<Integer,List<Long>> getPrintDeviceLinkIds(Long printDeviceId) {
         if (printDeviceId==null){
             throw new CustomException("请传入设备ID");
         }
-        LambdaQueryWrapper<SysPrintDeviceUser> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        userLambdaQueryWrapper.eq(SysPrintDeviceUser::getPrintDeviceId,printDeviceId);
-        userLambdaQueryWrapper.eq(SysPrintDeviceUser::getLinkType,1);
-        userLambdaQueryWrapper.select(SysPrintDeviceUser::getLinkId);
+        LambdaQueryWrapper<SysPrintDeviceLink> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper.eq(SysPrintDeviceLink::getPrintDeviceId,printDeviceId);
+        userLambdaQueryWrapper.select(SysPrintDeviceLink::getLinkId,SysPrintDeviceLink::getLinkType);
 
-        List<SysPrintDeviceUser> list = sysPrintDeviceUserDao.list(userLambdaQueryWrapper);
-        return list.stream().map(SysPrintDeviceUser::getLinkId).toList();
+        List<SysPrintDeviceLink> list = sysPrintDeviceLinkDao.list(userLambdaQueryWrapper);
+        Map<Integer, List<Long>> listMap = new HashMap<>();
+        listMap.put(1,list.stream().filter(sysPrintDeviceLink -> sysPrintDeviceLink.getLinkType().equals(1)).map(SysPrintDeviceLink::getLinkId).toList());
+        listMap.put(2,list.stream().filter(sysPrintDeviceLink -> sysPrintDeviceLink.getLinkType().equals(2)).map(SysPrintDeviceLink::getLinkId).toList());
+
+        return listMap;
     }
 
     /**
@@ -259,14 +261,14 @@ public class PrintDeviceManagerServiceImpl implements PrintDeviceManagerService 
     @Transactional
     @RedissonLock(prefixKey = "print_device",key = "#data.printDeviceId")
     @Override
-    public String addPrintDeviceUsers(PrintDeviceUserReq data) {
+    public String addPrintDeviceLinks(PrintDeviceLinkReq data) {
         if (data.getPrintDeviceId()==null){
             throw new CustomException("设备ID不能为空");
         }
         if (data.getRole()==null){
             data.setRole(3);// 默认添加的用户就是用户
         }
-        if (data.getUserIds()==null|| data.getUserIds().isEmpty()){
+        if (data.getLinkIds()==null|| data.getLinkIds().isEmpty()){
             throw new CustomException("必须包含要添加的用户");
         }
         // 校验设备是否注册
@@ -275,101 +277,110 @@ public class PrintDeviceManagerServiceImpl implements PrintDeviceManagerService 
             throw new CustomException("设备不存在，是否被人删除了");
         }
         Set<Long> ids = new HashSet<>();
-        for (String userId : data.getUserIds()) {
-            User byId = userDao.getById(Long.valueOf(userId));
-            if (byId==null){
-                throw new CustomException("选中的用户id不存在数据:"+userId);
+        for (String linkId : data.getLinkIds()) {
+            if (data.getLinkType().equals(1)){
+                User byId = userDao.getById(Long.valueOf(linkId));
+                if (byId==null){
+                    throw new CustomException("选中的用户id不存在数据:"+linkId);
+                }
+                ids.add(byId.getId());
+            }else if (data.getLinkType().equals(2)){
+                SysDept byId = iSysDeptService.getById(Long.valueOf(linkId));
+                if (byId==null){
+                    throw new CustomException("选中的部门id不存在数据:"+linkId);
+                }
+                ids.add(byId.getId());
             }
-            ids.add(byId.getId());
-        }
-        List<Long> userIdList = ids.stream().toList();
-        List<Long> userIdResultList = new ArrayList<>();
-        for (Long l : userIdList) {
-            LambdaQueryWrapper<SysPrintDeviceUser> NotFoundLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            NotFoundLambdaQueryWrapper.eq(SysPrintDeviceUser::getPrintDeviceId,Long.valueOf(data.getPrintDeviceId()));
-            NotFoundLambdaQueryWrapper.eq(SysPrintDeviceUser::getLinkId,l);
-            NotFoundLambdaQueryWrapper.eq(SysPrintDeviceUser::getLinkType,1);
 
-            int count = sysPrintDeviceUserDao.count(NotFoundLambdaQueryWrapper);
+        }
+        List<Long> linkIdList = ids.stream().toList();
+        List<Long> linkIdResultList = new ArrayList<>();
+        for (Long l : linkIdList) {
+            LambdaQueryWrapper<SysPrintDeviceLink> NotFoundLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            NotFoundLambdaQueryWrapper.eq(SysPrintDeviceLink::getPrintDeviceId,Long.valueOf(data.getPrintDeviceId()));
+            NotFoundLambdaQueryWrapper.eq(SysPrintDeviceLink::getLinkId,l);
+            NotFoundLambdaQueryWrapper.eq(SysPrintDeviceLink::getLinkType,data.getLinkType());
+
+            int count = sysPrintDeviceLinkDao.count(NotFoundLambdaQueryWrapper);
             if (count>0){
                 continue;
             }
-            userIdResultList.add(l);
+            linkIdResultList.add(l);
         }
 
 
-        for (Long userId : userIdResultList) {
-            SysPrintDeviceUser build = SysPrintDeviceUser.builder()
-                    .linkType(1)
-                    .linkId(userId)
+        for (Long linkId : linkIdResultList) {
+            SysPrintDeviceLink build = SysPrintDeviceLink.builder()
+                    .linkType(data.getLinkType())
+                    .linkId(linkId)
                     .printDeviceId(Long.valueOf(data.getPrintDeviceId()))
                     .role(data.getRole())
                     .build();
-            sysPrintDeviceUserDao.save(build);
+            sysPrintDeviceLinkDao.save(build);
         }
-        return "添加用户成功";
+        return "添加成功";
     }
 
     @Transactional
     @RedissonLock(prefixKey = "print_device",key = "#printDeviceId")
     @Override
-    public String removePrintDeviceUser(String printDeviceId, String userId) {
+    public String removePrintDeviceLink(String printDeviceId,String linkId,Integer linkType) {
         // 校验设备是否注册
         SysPrintDevice sysPrintDevice = sysPrintDeviceDao.getById(Long.valueOf(printDeviceId));
         if (sysPrintDevice==null){
             throw new CustomException("设备不存在，是否被人删除了");
         }
-        String[] split = userId.split(",");
-        List<Long> userIds = new ArrayList<>();
+        String[] split = linkId.split(",");
+        List<Long> linkIds = new ArrayList<>();
         for (String s : split) {
             if (StringUtils.isEmpty(StringUtils.trim(s))){
                 continue;
             }
-            userIds.add(Long.valueOf(StringUtils.trim(s)));
+            linkIds.add(Long.valueOf(StringUtils.trim(s)));
         }
-        if (userIds.isEmpty()){
+        if (linkIds.isEmpty()){
             throw new CustomException("请传入用户");
         }
         UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
-        for (Long id : userIds) {
+        for (Long id : linkIds) {
             if (id.equals(currentUser.getId())){
                 throw new CustomException("请勿操作自己");
             }
         }
-        LambdaQueryWrapper<SysPrintDeviceUser> operatorLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        operatorLambdaQueryWrapper.eq(SysPrintDeviceUser::getPrintDeviceId,sysPrintDevice.getId());
-        operatorLambdaQueryWrapper.eq(SysPrintDeviceUser::getLinkId,currentUser.getId());
-        operatorLambdaQueryWrapper.eq(SysPrintDeviceUser::getLinkType,1);
+        LambdaQueryWrapper<SysPrintDeviceLink> operatorLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        operatorLambdaQueryWrapper.eq(SysPrintDeviceLink::getPrintDeviceId,sysPrintDevice.getId());
+        operatorLambdaQueryWrapper.eq(SysPrintDeviceLink::getLinkId,currentUser.getId());
+        operatorLambdaQueryWrapper.eq(SysPrintDeviceLink::getLinkType,1);
         // 获取当前用户在该设备的对象
-        SysPrintDeviceUser operator = sysPrintDeviceUserDao.getOne(operatorLambdaQueryWrapper);
+        SysPrintDeviceLink operator = sysPrintDeviceLinkDao.getOne(operatorLambdaQueryWrapper);
         // 构造批量删除绑定关系
-        LambdaQueryWrapper<SysPrintDeviceUser> sysPrintDeviceUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getPrintDeviceId,Long.valueOf(printDeviceId));
-        sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getLinkType,1);
-        sysPrintDeviceUserLambdaQueryWrapper.gt(SysPrintDeviceUser::getRole,operator.getRole());
-        if (userIds.size()>1){
-            sysPrintDeviceUserLambdaQueryWrapper.in(SysPrintDeviceUser::getLinkId,userIds);
+        LambdaQueryWrapper<SysPrintDeviceLink> sysPrintDeviceUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceLink::getPrintDeviceId,Long.valueOf(printDeviceId));
+        sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceLink::getLinkType,linkType);
+        sysPrintDeviceUserLambdaQueryWrapper.gt(SysPrintDeviceLink::getRole,operator.getRole());
+        if (linkIds.size()>1){
+            sysPrintDeviceUserLambdaQueryWrapper.in(SysPrintDeviceLink::getLinkId,linkIds);
         }else {
-            sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getLinkId,userIds.get(0));
+            sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceLink::getLinkId,linkIds.get(0));
         }
         // 删除
-        sysPrintDeviceUserDao.remove(sysPrintDeviceUserLambdaQueryWrapper);
-        return "删除用户成功";
+        sysPrintDeviceLinkDao.remove(sysPrintDeviceUserLambdaQueryWrapper);
+        return "删除成功";
     }
 
     @Transactional
     @Override
-    public String updatePrintDeviceUserRole(PrintDeviceUserReq data) {
+    public String updatePrintDeviceLinkRole(PrintDeviceLinkReq data) {
         if (StringUtils.isEmpty(data.getPrintDeviceId())){
             throw new CustomException("请填写设备id");
         }
-        if (data.getUserIds()==null){
+        if (data.getLinkIds()==null){
             throw new CustomException("请指定操作对象");
         }
         if (data.getRole()==null){
             throw new CustomException("请设置角色");
         }
-        if (data.getUserIds().isEmpty()){
+        if (data.getLinkIds().isEmpty()){
             throw new CustomException("请保证操作对象");
         }
         SysPrintDevice byId = sysPrintDeviceDao.getById(data.getPrintDeviceId());
@@ -379,64 +390,71 @@ public class PrintDeviceManagerServiceImpl implements PrintDeviceManagerService 
         if (data.getRole().equals(1)){
             // 等效转交所有权
             // 有且一人
-            if (data.getUserIds().size()>1){
+            if (data.getLinkIds().size()>1){
                 throw new CustomException("转交所有权只能选择一人");
             }
+            if (data.getLinkType().equals(2)){
+                throw new CustomException("禁止转交所有权给部门");
+            }
         }
-        List<Long> userIds = new ArrayList<>();
-        for (String id : data.getUserIds()) {
-            userIds.add(Long.valueOf(StringUtils.trim(id)));
+        List<Long> linkIds = new ArrayList<>();
+        for (String id : data.getLinkIds()) {
+            linkIds.add(Long.valueOf(StringUtils.trim(id)));
         }
         UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
-        for (Long id : userIds) {
+        for (Long id : linkIds) {
             if (id.equals(currentUser.getId())){
                 throw new CustomException("请勿操作自己");
             }
         }
-        LambdaUpdateWrapper<SysPrintDeviceUser> sysPrintDeviceUserLambdaQueryWrapper = new LambdaUpdateWrapper<>();
-        sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getPrintDeviceId,byId.getId());
-        sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getLinkType,1);
-        if (data.getUserIds().size()>1){
-            sysPrintDeviceUserLambdaQueryWrapper.in(SysPrintDeviceUser::getLinkId,userIds);
+        LambdaUpdateWrapper<SysPrintDeviceLink> sysPrintDeviceUserLambdaQueryWrapper = new LambdaUpdateWrapper<>();
+        sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceLink::getPrintDeviceId,byId.getId());
+        sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceLink::getLinkType,data.getLinkType());
+        if (data.getLinkIds().size()>1){
+            sysPrintDeviceUserLambdaQueryWrapper.in(SysPrintDeviceLink::getLinkId,linkIds);
         }else {
-            sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getLinkId,userIds.get(0));
+            sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceLink::getLinkId,linkIds.get(0));
         }
-        sysPrintDeviceUserLambdaQueryWrapper.set(SysPrintDeviceUser::getRole,data.getRole());
-        sysPrintDeviceUserDao.update(sysPrintDeviceUserLambdaQueryWrapper);
+        sysPrintDeviceUserLambdaQueryWrapper.set(SysPrintDeviceLink::getRole,data.getRole());
+        sysPrintDeviceLinkDao.update(sysPrintDeviceUserLambdaQueryWrapper);
         if (data.getRole().equals(1)){
-            // 将自己的所有者更新成user
-            LambdaUpdateWrapper<SysPrintDeviceUser> selfUpdate = new LambdaUpdateWrapper<>();
-            selfUpdate.eq(SysPrintDeviceUser::getLinkId,currentUser.getId());
-            selfUpdate.eq(SysPrintDeviceUser::getLinkType,1);
-            selfUpdate.eq(SysPrintDeviceUser::getPrintDeviceId,byId.getId());
-            selfUpdate.set(SysPrintDeviceUser::getRole,3);
-            sysPrintDeviceUserDao.update(selfUpdate);
+            // 将自己的所有者更新成link
+            LambdaUpdateWrapper<SysPrintDeviceLink> selfUpdate = new LambdaUpdateWrapper<>();
+            selfUpdate.eq(SysPrintDeviceLink::getLinkId,currentUser.getId());
+            selfUpdate.eq(SysPrintDeviceLink::getLinkType,data.getLinkType());
+            selfUpdate.eq(SysPrintDeviceLink::getPrintDeviceId,byId.getId());
+            selfUpdate.set(SysPrintDeviceLink::getRole,3);
+            sysPrintDeviceLinkDao.update(selfUpdate);
         }
-        return "更新成功";
+        return "更新关联成功";
     }
 
 
     @Override
     public List<PrintDeviceVO> getPrintDeviceList() {
         UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
-        LambdaQueryWrapper<SysPrintDeviceUser> sysPrintDeviceUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getLinkId,currentUser.getId());
-        sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getLinkType,1);
-        List<SysPrintDeviceUser> list = sysPrintDeviceUserDao.list(sysPrintDeviceUserLambdaQueryWrapper);
+        LambdaQueryWrapper<SysPrintDeviceLink> sysPrintDeviceUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceLink::getLinkId,currentUser.getId());
+        sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceLink::getLinkType,1);
+        sysPrintDeviceUserLambdaQueryWrapper.or(sysPrintDeviceUserLambdaQueryWrapper1 -> {
+            sysPrintDeviceUserLambdaQueryWrapper1.eq(SysPrintDeviceLink::getLinkType,2).
+                    eq(SysPrintDeviceLink::getLinkId,currentUser.getDeptId());
+        });
+        List<SysPrintDeviceLink> list = sysPrintDeviceLinkDao.list(sysPrintDeviceUserLambdaQueryWrapper);
         List<PrintDeviceVO> printDeviceVOS = new ArrayList<>();
 
-        for (SysPrintDeviceUser sysPrintDeviceUser : list) {
-            Long printDeviceId = sysPrintDeviceUser.getPrintDeviceId();
+        for (SysPrintDeviceLink sysPrintDeviceLink : list) {
+            Long printDeviceId = sysPrintDeviceLink.getPrintDeviceId();
             SysPrintDevice sysPrintDevice = sysPrintDeviceDao.getById(printDeviceId);
             if (sysPrintDevice==null){
                 continue;
                 // 可能设备已删除
             }
-            LambdaQueryWrapper<SysPrintDeviceUser> ownerSDUL = new LambdaQueryWrapper<>();
-            ownerSDUL.eq(SysPrintDeviceUser::getRole,1);
-            ownerSDUL.eq(SysPrintDeviceUser::getLinkType,1);
-            ownerSDUL.eq(SysPrintDeviceUser::getPrintDeviceId,sysPrintDevice.getId());
-            SysPrintDeviceUser ownerSDU = sysPrintDeviceUserDao.getOne(ownerSDUL);
+            LambdaQueryWrapper<SysPrintDeviceLink> ownerSDUL = new LambdaQueryWrapper<>();
+            ownerSDUL.eq(SysPrintDeviceLink::getRole,1);
+            ownerSDUL.eq(SysPrintDeviceLink::getLinkType,1);
+            ownerSDUL.eq(SysPrintDeviceLink::getPrintDeviceId,sysPrintDevice.getId());
+            SysPrintDeviceLink ownerSDU = sysPrintDeviceLinkDao.getOne(ownerSDUL);
             if (ownerSDU==null){
                 // owner 不存在
                 continue;
@@ -449,7 +467,7 @@ public class PrintDeviceManagerServiceImpl implements PrintDeviceManagerService 
             printDeviceVO.setCreateUserName(userDao.getById(sysPrintDevice.getCreateUser()).getName());
             printDeviceVO.setOwnerName(userDao.getById(ownerSDU.getLinkId()).getName());
             printDeviceVO.setStatus(sysPrintDevice.getStatus());
-            printDeviceVO.setUserRole(sysPrintDeviceUser.getRole());
+            printDeviceVO.setUserRole(sysPrintDeviceLink.getRole());
             printDeviceVO.setId(sysPrintDevice.getId());
             printDeviceVOS.add(printDeviceVO);
         }

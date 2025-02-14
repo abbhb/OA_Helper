@@ -2,23 +2,13 @@ package com.qc.printers.common.print.aop;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.qc.printers.common.common.CustomException;
-import com.qc.printers.common.common.annotation.DataScope;
 import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.utils.SpElUtils;
-import com.qc.printers.common.common.utils.StringUtils;
 import com.qc.printers.common.common.utils.ThreadLocalUtil;
 import com.qc.printers.common.print.annotation.PrintDeviceRoleCheck;
-import com.qc.printers.common.print.dao.SysPrintDeviceUserDao;
-import com.qc.printers.common.print.domain.entity.SysPrintDeviceUser;
-import com.qc.printers.common.user.dao.SysRoleDataScopeDeptDao;
-import com.qc.printers.common.user.domain.dto.DeptManger;
+import com.qc.printers.common.print.dao.SysPrintDeviceLinkDao;
+import com.qc.printers.common.print.domain.entity.SysPrintDeviceLink;
 import com.qc.printers.common.user.domain.dto.UserInfo;
-import com.qc.printers.common.user.domain.entity.SysDept;
-import com.qc.printers.common.user.domain.entity.SysRole;
-import com.qc.printers.common.user.domain.entity.User;
-import com.qc.printers.common.user.domain.enums.DataScopeEnum;
-import com.qc.printers.common.user.service.ISysDeptService;
-import com.qc.printers.common.user.utils.DeptMangerHierarchyBuilder;
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.Signature;
 import org.aspectj.lang.annotation.Aspect;
@@ -31,10 +21,6 @@ import org.springframework.stereotype.Component;
 import java.lang.reflect.Method;
 import java.util.Arrays;
 import java.util.List;
-import java.util.OptionalInt;
-import java.util.stream.Collectors;
-
-import static com.qc.printers.common.user.domain.dto.DeptManger.sortRecursion;
 
 /**
  * 过滤打印机权限
@@ -47,7 +33,7 @@ public class PrintDeviceRoleCheckAspect
 {
 
     @Autowired
-    private SysPrintDeviceUserDao sysPrintDeviceUserDao;
+    private SysPrintDeviceLinkDao sysPrintDeviceLinkDao;
 
 
     @Pointcut("@annotation(com.qc.printers.common.print.annotation.PrintDeviceRoleCheck)")
@@ -88,23 +74,23 @@ public class PrintDeviceRoleCheckAspect
         if (currentUser == null) {
             throw new CustomException("请先登录:print-device");
         }
-        LambdaQueryWrapper<SysPrintDeviceUser> sysPrintDeviceUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceUser::getPrintDeviceId,Long.valueOf(key));
+        LambdaQueryWrapper<SysPrintDeviceLink> sysPrintDeviceUserLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysPrintDeviceUserLambdaQueryWrapper.eq(SysPrintDeviceLink::getPrintDeviceId,Long.valueOf(key));
         sysPrintDeviceUserLambdaQueryWrapper.and(
                 wrapper -> wrapper.eq(
-                        SysPrintDeviceUser::getLinkId, currentUser.getId()
+                        SysPrintDeviceLink::getLinkId, currentUser.getId()
                         )
-                .eq(SysPrintDeviceUser::getLinkType, 1)
-                .or().eq(SysPrintDeviceUser::getLinkType, 2)
-                .eq(SysPrintDeviceUser::getLinkId, currentUser.getDeptId()
+                .eq(SysPrintDeviceLink::getLinkType, 1)
+                .or().eq(SysPrintDeviceLink::getLinkType, 2)
+                .eq(SysPrintDeviceLink::getLinkId, currentUser.getDeptId()
                 )
         );
-        List<SysPrintDeviceUser> deviceUserList = sysPrintDeviceUserDao.list(sysPrintDeviceUserLambdaQueryWrapper);
+        List<SysPrintDeviceLink> deviceUserList = sysPrintDeviceLinkDao.list(sysPrintDeviceUserLambdaQueryWrapper);
         if (deviceUserList==null||deviceUserList.isEmpty()){
             throw new CustomException("你还没有权限进行此操作");
         }
         boolean anyMatch = deviceUserList.stream()
-                .map(SysPrintDeviceUser::getRole)
+                .map(SysPrintDeviceLink::getRole)
                 .anyMatch(roleValue -> Arrays.stream(role).anyMatch(value -> value == roleValue));
         if (!anyMatch){
             throw new CustomException("你还没有权限进行此操作");

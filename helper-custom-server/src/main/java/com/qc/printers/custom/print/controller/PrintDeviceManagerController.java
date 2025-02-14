@@ -2,14 +2,13 @@ package com.qc.printers.custom.print.controller;
 
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
-import com.qc.printers.common.common.annotation.RedissonLock;
 import com.qc.printers.common.common.domain.entity.PageData;
 import com.qc.printers.common.print.annotation.PrintDeviceRoleCheck;
-import com.qc.printers.common.print.domain.dto.PrintDeviceUserDto;
+import com.qc.printers.common.print.domain.dto.PrintDeviceLinkDto;
 import com.qc.printers.common.print.domain.vo.PrintDeviceNotRegisterVO;
 import com.qc.printers.common.print.domain.vo.request.CreatePrintDeviceReq;
-import com.qc.printers.common.print.domain.vo.request.PrintDeviceUserQuery;
-import com.qc.printers.common.print.domain.vo.request.PrintDeviceUserReq;
+import com.qc.printers.common.print.domain.vo.request.PrintDeviceLinkQuery;
+import com.qc.printers.common.print.domain.vo.request.PrintDeviceLinkReq;
 import com.qc.printers.common.print.domain.vo.request.UpdatePrintDeviceStatusReq;
 import com.qc.printers.common.print.domain.vo.response.PrintDeviceVO;
 import com.qc.printers.common.print.service.PrintDeviceManagerService;
@@ -18,9 +17,9 @@ import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 
 @RestController//@ResponseBody+@Controller
@@ -68,45 +67,48 @@ public class PrintDeviceManagerController {
     }
 
     @NeedToken
-    @GetMapping("/user/list")
-    @ApiOperation(value = "获取打印机用户列表")
-    public R<PageData<PrintDeviceUserDto>> getPrintDeviceUsers(PrintDeviceUserQuery params) {
-        return R.success(printDeviceManagerService.getPrintDeviceUsers(params));
+    @GetMapping("/link/list")
+    @PrintDeviceRoleCheck(role = {1,2},deviceEl = "#params.printDeviceId")
+    @ApiOperation(value = "获取打印机关联列表")
+    public R<PageData<PrintDeviceLinkDto>> getPrintDeviceLinks(PrintDeviceLinkQuery params) {
+        return R.success(printDeviceManagerService.getPrintDeviceLinks(params));
     }
     @NeedToken
-    @GetMapping("/user/id/list")
-    @ApiOperation(value = "获取打印机用户ID列表")
-    public R<List<Long>> getPrintDeviceUserIds(@RequestParam String deviceId) {
-        return R.success(printDeviceManagerService.getPrintDeviceUserIds(Long.valueOf(deviceId)));
+    @GetMapping("/link/id/list")
+    @PrintDeviceRoleCheck(role = {1,2},deviceEl = "#deviceId")
+    @ApiOperation(value = "获取打印机关联ID列表")
+    public R<Map<Integer,List<Long>>> getPrintDeviceLinkIds(@RequestParam String deviceId) {
+        return R.success(printDeviceManagerService.getPrintDeviceLinkIds(Long.valueOf(deviceId)));
     }
 
     @NeedToken
-    @PostMapping("/user/add")
+    @PostMapping("/link/add")
     @PrintDeviceRoleCheck(role = {1,2},deviceEl = "#data.printDeviceId")
-    @ApiOperation(value = "添加打印机用户")
-    public R<String> addPrintDeviceUsers(@RequestBody PrintDeviceUserReq data) {
-        return R.success(printDeviceManagerService.addPrintDeviceUsers(data));
+    @ApiOperation(value = "添加打印机关联")
+    public R<String> addPrintDeviceLinks(@RequestBody PrintDeviceLinkReq data) {
+        return R.success(printDeviceManagerService.addPrintDeviceLinks(data));
     }
 
     /**
      * @param printDeviceId
-     * @param userId 可以逗号分隔，批量移除
+     * @param linkId 可以逗号分隔，批量移除
      * @return
      */
     @NeedToken
-    @DeleteMapping("/user/remove")
+    @DeleteMapping("/link/remove")
     @PrintDeviceRoleCheck(role = {1,2},deviceEl = "#printDeviceId")
-    @ApiOperation(value = "移除打印机用户")
-    public R<String> removePrintDeviceUser(@RequestParam(name = "printDeviceId") String printDeviceId,
-                                           @RequestParam(name = "userId") String userId) {
-        return R.success(printDeviceManagerService.removePrintDeviceUser(printDeviceId,userId));
+    @ApiOperation(value = "移除打印机关联")
+    public R<String> removePrintDeviceLink(@RequestParam(name = "printDeviceId") String printDeviceId,
+                                           @RequestParam(name = "linkId") String linkId,
+                                            @RequestParam(name = "linkType") Integer linkType) {
+        return R.success(printDeviceManagerService.removePrintDeviceLink(printDeviceId, linkId,linkType));
     }
 
     @NeedToken
-    @PutMapping("/user/update_role")
+    @PutMapping("/link/update_role")
     @PrintDeviceRoleCheck(role = {1},deviceEl = "#data.printDeviceId")
-    @ApiOperation(value = "更新用户角色")
-    public R<String> updatePrintDeviceUserRole(@RequestBody PrintDeviceUserReq data) {
-        return R.success(printDeviceManagerService.updatePrintDeviceUserRole(data));
+    @ApiOperation(value = "更新关联角色")
+    public R<String> updatePrintDeviceLinkRole(@RequestBody PrintDeviceLinkReq data) {
+        return R.success(printDeviceManagerService.updatePrintDeviceLinkRole(data));
     }
 }

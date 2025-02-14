@@ -5,8 +5,8 @@ import lombok.Data;
 import java.io.Serializable;
 
 @Data
-public class PrintDeviceUserQuery implements Serializable {
-    private Long printDeviceId;
+public class PrintDeviceLinkQuery implements Serializable {
+    private String printDeviceId;
     private Integer role;
     private Integer pageNum;
     private Integer pageSize;

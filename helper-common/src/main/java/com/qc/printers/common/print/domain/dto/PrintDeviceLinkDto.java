@@ -3,15 +3,16 @@ package com.qc.printers.common.print.domain.dto;
 import lombok.Data;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 
 @Data
-public class PrintDeviceUserDto implements Serializable {
+public class PrintDeviceLinkDto implements Serializable {
     private Long id;
 
-    private String userId;
+    private String linkId;
 
-    private String username;
+    private String linkName;
+
+    private Integer linkType;
 
     private String printDeviceId;
 
