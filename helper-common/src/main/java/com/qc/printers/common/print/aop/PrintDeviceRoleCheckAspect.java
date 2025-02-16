@@ -25,8 +25,7 @@ import java.util.List;
 /**
  * 过滤打印机权限
  *
- * @author ruoyi
- */
+ * */
 @Aspect
 @Component
 public class PrintDeviceRoleCheckAspect

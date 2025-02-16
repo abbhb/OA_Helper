@@ -471,6 +471,8 @@ public class PrintDeviceManagerServiceImpl implements PrintDeviceManagerService 
             printDeviceVO.setId(sysPrintDevice.getId());
             printDeviceVOS.add(printDeviceVO);
         }
+        // 按设备id去重
+        printDeviceVOS = printDeviceVOS.stream().collect(Collectors.collectingAndThen(Collectors.toCollection(() -> new TreeSet<>(Comparator.comparing(PrintDeviceVO::getDeviceId))), ArrayList::new));
         return printDeviceVOS;
     }
 

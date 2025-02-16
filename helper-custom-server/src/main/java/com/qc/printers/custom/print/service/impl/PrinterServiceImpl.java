@@ -27,11 +27,15 @@ import com.qc.printers.common.common.utils.oss.domain.OssReq;
 import com.qc.printers.common.common.utils.oss.domain.OssResp;
 import com.qc.printers.common.config.MinIoProperties;
 import com.qc.printers.common.config.system.SystemMessageConfig;
+import com.qc.printers.common.print.dao.SysPrintDeviceDao;
+import com.qc.printers.common.print.dao.SysPrintDeviceLinkDao;
 import com.qc.printers.common.print.domain.dto.CancelPrintDto;
 import com.qc.printers.common.print.domain.dto.DiffItem;
 import com.qc.printers.common.print.domain.dto.PrintDeviceDto;
 import com.qc.printers.common.print.domain.dto.PrinterRedis;
 import com.qc.printers.common.print.domain.entity.Printer;
+import com.qc.printers.common.print.domain.entity.SysPrintDevice;
+import com.qc.printers.common.print.domain.entity.SysPrintDeviceLink;
 import com.qc.printers.common.print.domain.enums.FileTypeEnum;
 import com.qc.printers.common.print.domain.vo.CountTop10VO;
 import com.qc.printers.common.print.domain.vo.request.PreUploadPrintFileReq;
@@ -121,7 +125,11 @@ public class PrinterServiceImpl implements PrinterService {
     @Autowired
     private ISysDeptService iSysDeptService;
 
+    @Autowired
+    private SysPrintDeviceLinkDao sysPrintDeviceLinkDao;
 
+    @Autowired
+    private SysPrintDeviceDao sysPrintDeviceDao;
 
     @Autowired
     public PrinterServiceImpl(CommonService commonService, UserMapper userMapper, PrinterMapper printerMapper) {
@@ -515,9 +523,39 @@ public class PrinterServiceImpl implements PrinterService {
 
     @Override
     public List<PrintDeviceResp> printDevicePolling() {
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+        int[] role = new int[]{1, 2,3};
+        // 查询当前用户的所有设备
+        LambdaQueryWrapper<SysPrintDeviceLink> sysPrintDeviceLinkLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysPrintDeviceLinkLambdaQueryWrapper.and(
+                wrapper -> wrapper.eq(
+                                SysPrintDeviceLink::getLinkId, currentUser.getId()
+                        )
+                        .eq(SysPrintDeviceLink::getLinkType, 1)
+                        .or().eq(SysPrintDeviceLink::getLinkType, 2)
+                        .eq(SysPrintDeviceLink::getLinkId, currentUser.getDeptId()
+                        )
+        );
+        List<SysPrintDeviceLink> deviceUserList = sysPrintDeviceLinkDao.list(sysPrintDeviceLinkLambdaQueryWrapper);
+        if (deviceUserList==null||deviceUserList.isEmpty()){
+            return new ArrayList<>();
+        }
+        // 获取满足role的设备id(device_id)
+        List<String> keyList = deviceUserList.stream()
+                .filter(sysPrintDeviceLink -> Arrays.stream(role).anyMatch(value -> value == sysPrintDeviceLink.getRole()))
+                .map(sysPrintDeviceLink -> String.valueOf(sysPrintDeviceLink.getPrintDeviceId()))
+                .toList();
+        if (keyList.isEmpty()){
+            return new ArrayList<>();
+        }
+        // 这个id是sys_print_device表的id,需要查出device_id
+        List<String> keyList1 = sysPrintDeviceDao.listByIds(keyList).stream().map(sysPrintDevice -> String.valueOf(sysPrintDevice.getDeviceId())).toList();
         List<HealthService> registeredServices = consulService.getPrintDeviceServices();
         List<PrintDeviceResp> printDeviceResps = new ArrayList<>();
         for (HealthService registeredService : registeredServices) {
+            if (!keyList1.contains(registeredService.getService().getId())) {
+                continue;
+            }
             PrintDeviceResp printDeviceResp = new PrintDeviceResp();
             printDeviceResp.setDescription(registeredService.getService().getMeta().get("ZName"));
 
@@ -528,6 +566,54 @@ public class PrinterServiceImpl implements PrinterService {
             printDeviceResps.add(printDeviceResp);
         }
         return printDeviceResps;
+    }
+
+    @Override
+    public PrintDeviceInfoResp printDeviceInfoPolling(String id) {
+        if (StringUtils.isEmpty(id)) {
+            throw new IllegalArgumentException("参数异常");
+        }
+        PrintDeviceInfoResp printDeviceInfoResp = new PrintDeviceInfoResp();
+        PrintDeviceDto printDeviceDto = iPrinterService.pollingPrintDevice(id);
+        if (printDeviceDto == null) {
+            // 查不到详情
+            printDeviceInfoResp.setStatusType(0);
+            printDeviceInfoResp.setStatusTypeMessage("未知");
+            printDeviceInfoResp.setId(id);
+            return printDeviceInfoResp;
+        }
+        // 校验权限
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+        if (currentUser == null) {
+            throw new CustomException("系统异常");
+        }
+        // id是sys_print_device表的device_id,查询出id
+        SysPrintDevice sysPrintDevice = sysPrintDeviceDao.getOne(new LambdaQueryWrapper<SysPrintDevice>().eq(SysPrintDevice::getDeviceId, id));
+        if (sysPrintDevice == null) {
+            throw new CustomException("无权查看");
+        }
+        int count = sysPrintDeviceLinkDao.count(new LambdaQueryWrapper<SysPrintDeviceLink>()
+                .eq(SysPrintDeviceLink::getPrintDeviceId,
+                        sysPrintDevice.getId())
+                .and(sysPrintDeviceLinkLambdaQueryWrapper -> {
+                    sysPrintDeviceLinkLambdaQueryWrapper.eq(SysPrintDeviceLink::getLinkId, currentUser.getId())
+                            .eq(SysPrintDeviceLink::getLinkType, 1)
+                            .or().eq(SysPrintDeviceLink::getLinkId, currentUser.getDeptId())
+                            .eq(SysPrintDeviceLink::getLinkType, 2);
+                }));
+        if (count < 1) {
+            throw new CustomException("无权查看");
+        }
+
+        // 有详情拼接参数
+        printDeviceInfoResp.setPrintJobs(printDeviceDto.getPrintJobs());
+        printDeviceInfoResp.setPrintName(printDeviceDto.getPrintName());
+        printDeviceInfoResp.setPrintDescription(printDeviceDto.getPrintDescription());
+        printDeviceInfoResp.setStatusType(printDeviceDto.getStatusType());
+        printDeviceInfoResp.setListNums(printDeviceDto.getListNums());
+        printDeviceInfoResp.setStatusTypeMessage(printDeviceDto.getStatusTypeMessage());
+        printDeviceInfoResp.setId(printDeviceDto.getId());
+        return printDeviceInfoResp;
     }
 
     @Transactional
@@ -565,30 +651,7 @@ public class PrinterServiceImpl implements PrinterService {
         return "已添加任务到打印队列";
     }
 
-    @Override
-    public PrintDeviceInfoResp printDeviceInfoPolling(String id) {
-        if (StringUtils.isEmpty(id)) {
-            throw new IllegalArgumentException("参数异常");
-        }
-        PrintDeviceInfoResp printDeviceInfoResp = new PrintDeviceInfoResp();
-        PrintDeviceDto printDeviceDto = iPrinterService.pollingPrintDevice(id);
-        if (printDeviceDto == null) {
-            // 查不到详情
-            printDeviceInfoResp.setStatusType(0);
-            printDeviceInfoResp.setStatusTypeMessage("未知");
-            printDeviceInfoResp.setId(id);
-            return printDeviceInfoResp;
-        }
-        // 有详情拼接参数
-        printDeviceInfoResp.setPrintJobs(printDeviceDto.getPrintJobs());
-        printDeviceInfoResp.setPrintName(printDeviceDto.getPrintName());
-        printDeviceInfoResp.setPrintDescription(printDeviceDto.getPrintDescription());
-        printDeviceInfoResp.setStatusType(printDeviceDto.getStatusType());
-        printDeviceInfoResp.setListNums(printDeviceDto.getListNums());
-        printDeviceInfoResp.setStatusTypeMessage(printDeviceDto.getStatusTypeMessage());
-        printDeviceInfoResp.setId(printDeviceDto.getId());
-        return printDeviceInfoResp;
-    }
+
 
     @Override
     public void cancelPrint(String id, String deviceId) {
