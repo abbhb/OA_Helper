@@ -44,7 +44,7 @@ public class MenuController {
     @ApiOperation(value = "获取全部菜单", notes = "")
     public R<List<MenuManger>> list() {
         log.info("获取菜单");
-        List<MenuManger> userMenu = menuService.getMenuList();
+        List<MenuManger> userMenu = menuService.getMenuTree();
         log.info("userMenu={}", userMenu);
         return R.success(userMenu);
     }

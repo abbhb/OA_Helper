@@ -30,8 +30,9 @@ public interface ProcessStartService {
      * 删除流程实例
      *
      * @param instanceId 流程实例id
+     * @param remark 删除原因
      */
-    void delete(String instanceId);
+    void delete(String instanceId,String remark);
 
     void checkProcess(StartProcessDto dto, String s);
 }

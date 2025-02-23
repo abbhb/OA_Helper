@@ -4,6 +4,7 @@ package com.qc.printers.common.activiti.service.impl;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.qc.printers.common.activiti.constant.ActivityType;
 import com.qc.printers.common.activiti.constant.NodeStatus;
+import com.qc.printers.common.activiti.constant.TaskDeleteType;
 import com.qc.printers.common.activiti.entity.dto.workflow.FinishedListDto;
 import com.qc.printers.common.activiti.entity.vo.workflow.FinishedListVo;
 import com.qc.printers.common.activiti.entity.vo.workflow.HighlightNodeInfoVo;
@@ -126,6 +127,22 @@ public class ProcessHistoryServiceImpl implements ProcessHistoryService {
         return pageData;
     }
 
+
+    /**
+     * 设置节点状态
+     */
+    interface Operation {
+        void setStatus(int status);
+    }
+    private void nodeStatusSetting(Operation operation, HistoricActivityInstance item) {
+        if (StringUtils.isNotEmpty(item.getDeleteReason()) && item.getDeleteReason().equals(TaskDeleteType.BuTongGuo)) {
+            // 优化不通过的节点状态
+            operation.setStatus(NodeStatus.ERROR);
+        } else {
+            operation.setStatus(NodeStatus.EXECUTED);
+        }
+    }
+
     /**
      * 查询审批进度
      *
@@ -158,8 +175,9 @@ public class ProcessHistoryServiceImpl implements ProcessHistoryService {
             vo.setEndTime(item.getEndTime());
             // 获取获选人 或 候选组信息
             vo.setIdentity(getCandidateInfo(item.getTaskId()));
-            vo.setStatus(NodeStatus.EXECUTED);
-
+//            vo.setStatus(NodeStatus.EXECUTED);
+            // finish节点可能是审批不通过
+            nodeStatusSetting(vo::setStatus, item);
             // 设置流程变量,根据activityId回显动态表单(用户提交的数据),因为前端赋值是这样的:
             // variables[`${activityId}_formJson`] = formJson;
             // variables[`${activityId}_formData`] = JSON.parse(JSON.stringify(formData));
@@ -229,11 +247,15 @@ public class ProcessHistoryServiceImpl implements ProcessHistoryService {
             List<HistoryRecordVo> nodeHistory = historyList.stream()
                     .filter(t -> t.getActivityId().equals(item.getActivityId()))
                     .collect(Collectors.toList());
-            nodeInfo.add(new HighlightNodeInfoVo() {{
+
+            HighlightNodeInfoVo highlightNodeInfoVo = new HighlightNodeInfoVo() {{
                 setActivityId(item.getActivityId());
-                setStatus(NodeStatus.EXECUTED);
                 setHistoryRecordVo(nodeHistory);
-            }});
+            }};
+
+            // finish节点可能是审批不通过
+            nodeStatusSetting(highlightNodeInfoVo::setStatus, item);
+            nodeInfo.add(highlightNodeInfoVo);
         });
 
         // 获取未审批节点(活动的待审批(下一个待审批节点))
@@ -377,10 +399,13 @@ public class ProcessHistoryServiceImpl implements ProcessHistoryService {
             for (SequenceFlow sequenceFlow : sequenceFlowList) {
                 String ref = sequenceFlow.getTargetRef();
                 if (ref.equals(targetFlowNode.getId())) {
-                    highLightedFlowIds.add(new HighlightNodeInfoVo() {{
+                    HighlightNodeInfoVo highlightNodeInfoVo = new HighlightNodeInfoVo() {{
                         setActivityId(sequenceFlow.getId());
                         setStatus(NodeStatus.EXECUTED);
-                    }});
+                    }};
+
+                    highLightedFlowIds.add(highlightNodeInfoVo);
+
                 }
             }
         }

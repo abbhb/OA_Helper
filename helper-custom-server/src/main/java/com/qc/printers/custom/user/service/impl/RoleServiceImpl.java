@@ -91,7 +91,7 @@ public class RoleServiceImpl implements RoleService {
             mangers.add(roleManger);
         }
         roleMangerRoot.setMangers(mangers);
-        roleMangerRoot.setMenuMangerList(menuService.getMenuList());
+        roleMangerRoot.setMenuMangerList(menuService.getMenuTree());
         return roleMangerRoot;
     }
 

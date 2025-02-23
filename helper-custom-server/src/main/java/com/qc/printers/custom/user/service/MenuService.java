@@ -9,7 +9,9 @@ import java.util.List;
 public interface MenuService {
     List<MenuResult> getUserMenu(UserInfo userInfo);
 
+    @Deprecated
     List<MenuManger> getMenuList();
+    List<MenuManger> getMenuTree();
 
     String addMenu(MenuManger menuManger);
 

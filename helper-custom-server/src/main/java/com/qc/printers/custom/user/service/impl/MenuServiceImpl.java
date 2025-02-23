@@ -7,6 +7,7 @@ import com.qc.printers.common.common.utils.ThreadLocalUtil;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.SysMenu;
+import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.service.ISysMenuService;
 import com.qc.printers.common.user.domain.dto.MenuManger;
 import com.qc.printers.custom.user.domain.vo.response.menu.MenuResult;
@@ -15,12 +16,14 @@ import com.qc.printers.custom.user.domain.vo.response.menu.MetaNode;
 import com.qc.printers.custom.user.service.MenuService;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 @Slf4j
@@ -254,6 +257,76 @@ public class MenuServiceImpl implements MenuService {
         return menuMangerList;
     }
 
+    @Override
+    public List<MenuManger> getMenuTree() {
+        // 获取所有菜单数据并按parentId分组缓存
+        List<SysMenu> allMenus = iSysMenuService.list();
+        Map<Long, List<SysMenu>> menuGroup = allMenus.stream()
+                .collect(Collectors.groupingBy(SysMenu::getParentId));
+
+        // 获取所有涉及的用户ID并批量查询用户信息
+        Set<Long> userIds = allMenus.stream()
+                .flatMap(menu -> Stream.of(menu.getCreateUser(), menu.getUpdateUser()))
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet());
+        Map<Long, String> userNameMap = getUserNamesByIds(userIds);
+
+        // 从根节点开始构建菜单树
+        List<MenuManger> menuTree = buildMenuTree(0L, menuGroup, userNameMap);
+        menuTree.sort(Comparator.comparing(MenuManger::getSort));
+        return menuTree;
+    }
+
+    private List<MenuManger> buildMenuTree(Long parentId,
+                                           Map<Long, List<SysMenu>> menuGroup,
+                                           Map<Long, String> userNameMap) {
+        return menuGroup.getOrDefault(parentId, Collections.emptyList())
+                .stream()
+                .sorted(Comparator.comparingInt(SysMenu::getOrderNum))
+                .map(menu -> convertToMenuManger(menu, menuGroup, userNameMap))
+                .collect(Collectors.toList());
+    }
+
+    private MenuManger convertToMenuManger(SysMenu menu,
+                                           Map<Long, List<SysMenu>> menuGroup,
+                                           Map<Long, String> userNameMap) {
+        MenuManger node = new MenuManger();
+        // 基础属性设置
+        BeanUtils.copyProperties(menu, node);
+        node.setSort(menu.getOrderNum());
+
+        // 设置用户信息
+        node.setCreateUserName(userNameMap.getOrDefault(menu.getCreateUser(), "信息缺失"));
+        node.setUpdateUserName(resolveUpdateUserName(menu, userNameMap));
+
+        // 递归构建子菜单（如果当前不是F类型）
+        if (!"F".equals(menu.getType())) {
+            List<MenuManger> children = buildMenuTree(menu.getId(), menuGroup, userNameMap);
+            node.setChildren(children);
+        }
+
+        return node;
+    }
+
+    private Map<Long, String> getUserNamesByIds(Set<Long> userIds) {
+        if (userIds.isEmpty()) return Collections.emptyMap();
+        return userDao.listByIds(userIds)
+                .stream()
+                .collect(Collectors.toMap(
+                        User::getId,
+                        User::getName,
+                        (existing, replacement) -> existing
+                ));
+    }
+
+    private String resolveUpdateUserName(SysMenu menu, Map<Long, String> userNameMap) {
+        if (menu.getUpdateUser() == null) return "信息缺失";
+        if (menu.getUpdateUser().equals(menu.getCreateUser())) {
+            return userNameMap.getOrDefault(menu.getCreateUser(), "信息缺失");
+        }
+        return userNameMap.getOrDefault(menu.getUpdateUser(), "信息缺失");
+    }
+
     private void checkParamsBase(MenuManger menuManger) {
         if (StringUtils.isEmpty(menuManger.getType())) {
             throw new IllegalArgumentException("参数异常");
@@ -327,10 +400,10 @@ public class MenuServiceImpl implements MenuService {
         if (currentUser == null) {
             throw new RuntimeException("未鉴权");
         }
-        // 如果当前的上级已经是第三级禁止添加
+        // 如果当前的上级已经是第5级禁止添加
         Integer hierarchicalSeries = iSysMenuService.getHierarchicalSeries(menuManger.getParentId());
-        if (hierarchicalSeries >= 3) {
-            throw new CustomException("禁止层级>3");
+        if (hierarchicalSeries >= 5) {
+            throw new CustomException("禁止折叠层级>5");
         }
         checkParamsAdd(menuManger);
         SysMenu sysMenu = new SysMenu();
@@ -361,8 +434,8 @@ public class MenuServiceImpl implements MenuService {
         checkParamsUpdate(menuManger);
         // 如果当前的上级已经是第三级禁止更新
         Integer hierarchicalSeries = iSysMenuService.getHierarchicalSeries(menuManger.getParentId());
-        if (hierarchicalSeries >= 3) {
-            throw new CustomException("禁止层级>3");
+        if (hierarchicalSeries >= 5) {
+            throw new CustomException("禁止折叠层级>5");
         }
         LambdaUpdateWrapper<SysMenu> lambdaUpdateWrapper = new LambdaUpdateWrapper<>();
         lambdaUpdateWrapper.eq(SysMenu::getId, menuManger.getId());
@@ -399,7 +472,7 @@ public class MenuServiceImpl implements MenuService {
         LambdaQueryWrapper<SysMenu> sysMenuLambdaQueryWrapper = new LambdaQueryWrapper<>();
         sysMenuLambdaQueryWrapper.eq(SysMenu::getParentId, Long.valueOf(id));
         List<SysMenu> children = iSysMenuService.list(sysMenuLambdaQueryWrapper);
-        if (children == null || children.size() == 0) {
+        if (children == null || children.isEmpty()) {
             iSysMenuService.removeById(Long.valueOf(id));
             return "删除成功";
         }
@@ -407,7 +480,7 @@ public class MenuServiceImpl implements MenuService {
         //递归删除
         List<SysMenu> last = new ArrayList<>();
         last.addAll(children);
-        while (last != null) {
+        while (!last.isEmpty()) {
             List<SysMenu> lastCopy = new ArrayList<>(last);
             last = new ArrayList<>();
             for (SysMenu s :

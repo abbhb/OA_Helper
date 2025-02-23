@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.qc.printers.common.activiti.constant.TaskDeleteType;
 import com.qc.printers.common.activiti.entity.dto.workflow.StartProcessDto;
 import com.qc.printers.common.activiti.service.ProcessStartService;
 import com.qc.printers.common.common.Code;
@@ -21,8 +22,6 @@ import com.qc.printers.common.common.utils.poi.ExcelUtil;
 import com.qc.printers.common.config.MinIoProperties;
 import com.qc.printers.common.email.service.EmailService;
 import com.qc.printers.common.signin.domain.dto.UserDataImportErrorDto;
-import com.qc.printers.common.signin.domain.dto.SigninUserDataExcelDto;
-import com.qc.printers.common.signin.domain.entity.SigninUserData;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.dao.UserExtBaseDao;
 import com.qc.printers.common.user.domain.dto.SummeryInfoDTO;
@@ -1378,7 +1377,7 @@ public class UserServiceImpl implements UserService {
         if (processSystem1==null){
             throw new CustomException("当前没有在进行的审批");
         }
-        processStartService.delete(processSystem1.getId());
+        processStartService.delete(processSystem1.getId(), TaskDeleteType.CheXiao);
 
         return "撤回成功";
     }

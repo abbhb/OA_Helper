@@ -1,6 +1,7 @@
 package com.qc.printers.custom.activiti.controller;
 
 
+import com.qc.printers.common.activiti.constant.TaskDeleteType;
 import com.qc.printers.common.activiti.entity.dto.workflow.StartListDto;
 import com.qc.printers.common.activiti.entity.dto.workflow.StartProcessDto;
 import com.qc.printers.common.activiti.entity.vo.workflow.HistoryRecordVo;
@@ -106,7 +107,7 @@ public class ProcessStartController {
      */
     @DeleteMapping("/delete")
     public R<String> delete(String instanceId) {
-        processStartService.delete(instanceId);
+        processStartService.delete(instanceId, TaskDeleteType.CheXiao);
         return R.success("删除成功");
     }
 }

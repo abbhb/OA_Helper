@@ -61,7 +61,13 @@ public class StartListVo {
     private String taskName;
 
     /**
-     * 1:进行中,2:已完成;3发起人撤回
+     * 1:进行中,2:已完成,3.流程被终止
      */
     private Integer status;
+
+    /**
+     * 进行中、已完成、发起人撤回、审批不通过
+     * @see com.qc.printers.common.activiti.constant.TaskStatusType
+     */
+    private String statusName;
 }

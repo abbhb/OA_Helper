@@ -16,4 +16,9 @@ public class NodeStatus {
      * 未完成的节点
      */
     public final static int UNFINISHED = 2;
+
+    /**
+     * 不通过的节点
+     */
+    public final static int ERROR = 3;
 }

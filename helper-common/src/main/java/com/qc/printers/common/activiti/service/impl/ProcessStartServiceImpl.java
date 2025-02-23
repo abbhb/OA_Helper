@@ -3,6 +3,8 @@ package com.qc.printers.common.activiti.service.impl;
 
 import com.qc.printers.common.activiti.constant.ActivityType;
 import com.qc.printers.common.activiti.constant.Constants;
+import com.qc.printers.common.activiti.constant.TaskDeleteType;
+import com.qc.printers.common.activiti.constant.TaskStatusType;
 import com.qc.printers.common.activiti.entity.dto.workflow.StartListDto;
 import com.qc.printers.common.activiti.entity.dto.workflow.StartProcessDto;
 import com.qc.printers.common.activiti.entity.vo.workflow.StartListVo;
@@ -11,6 +13,7 @@ import com.qc.printers.common.activiti.service.SysDeployService;
 import com.qc.printers.common.activiti.service.strategy.AssigneeLeaderHandelFactory;
 import com.qc.printers.common.common.CustomException;
 import com.qc.printers.common.common.domain.entity.PageData;
+import lombok.extern.slf4j.Slf4j;
 import org.activiti.engine.HistoryService;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.RuntimeService;
@@ -35,9 +38,8 @@ import java.util.Map;
 /**
  * 流程启动
  *
- * @author liuguofeng
- * @date 2023/11/04 12:09
  **/
+@Slf4j
 @Service("processStartService")
 public class ProcessStartServiceImpl implements ProcessStartService {
 
@@ -90,6 +92,7 @@ public class ProcessStartServiceImpl implements ProcessStartService {
         for (HistoricProcessInstance item : list) {
             // 设置流程实例
             StartListVo vo = new StartListVo();
+            resultList.add(vo);
             vo.setId(item.getId());
             vo.setBusinessKey(item.getBusinessKey());
             vo.setStartTime(item.getStartTime());
@@ -111,27 +114,42 @@ public class ProcessStartServiceImpl implements ProcessStartService {
                 vo.setTaskId(task.getId());
                 vo.setTaskName(task.getName());
                 vo.setStatus(1);
-            } else {
-                // 任务处理完成在history获取
-                List<HistoricTaskInstance> historicTaskInstances = historyService.createHistoricTaskInstanceQuery()
-                        .processInstanceId(item.getId())
-                        .orderByHistoricTaskInstanceEndTime()
-                        .desc()
-                        .list();
-                HistoricTaskInstance historicTask = historicTaskInstances.get(0);
-                vo.setStatus(2);
-                vo.setTaskName("结束节点");
-
-                if (StringUtils.isEmpty(item.getEndActivityId())) {
-                    // 没有结束节点还已完成说明被撤回了
-                    vo.setStatus(3);
-                    vo.setTaskName(historicTask.getName());
-
-                }
-                vo.setTaskId(historicTask.getId());
-
+                vo.setStatusName(TaskStatusType.IN_PROGRESS);
+                // 任务进行中
+                continue;
             }
-            resultList.add(vo);
+            // 任务处理完成在history获取
+            List<HistoricTaskInstance> historicTaskInstances = historyService.createHistoricTaskInstanceQuery()
+                    .processInstanceId(item.getId())
+                    .orderByHistoricTaskInstanceEndTime()
+                    .desc()
+                    .list();
+            HistoricTaskInstance historicTask = historicTaskInstances.get(0);
+            vo.setStatus(2);
+            vo.setStatusName(TaskStatusType.COMPLETED);
+            vo.setTaskName("结束节点");
+            // 没有结束节点还已完成说明流程是被删除的
+            if (StringUtils.isEmpty(item.getEndActivityId())) {
+                // 没有结束节点还已完成说明被撤回了
+                log.info("流程被撤回了 {}",historicTask);
+                // deleteReason获取
+                String deleteReason = item.getDeleteReason();
+                if (StringUtils.isEmpty(deleteReason)){
+                    // 兼容老版本，默认就是被撤销
+                    deleteReason = TaskDeleteType.CheXiao;
+                }
+                if (deleteReason.equals(TaskDeleteType.BuTongGuo)){
+                    vo.setStatusName(TaskStatusType.REJECT);
+                }else if (deleteReason.equals(TaskDeleteType.CheXiao)){
+                    vo.setStatusName(TaskStatusType.RECALL);
+                }else {
+                    vo.setStatusName(deleteReason);
+                }
+                // 终止状态
+                vo.setStatus(3);
+                vo.setTaskName(historicTask.getName());
+            }
+            vo.setTaskId(historicTask.getId());
         }
         PageData pageData = new PageData();
         pageData.setTotal(query.count());
@@ -183,7 +201,7 @@ public class ProcessStartServiceImpl implements ProcessStartService {
      * @param instanceId 流程实例id
      */
     @Override
-    public void delete(String instanceId) {
+    public void delete(String instanceId,String remark) {
         // 查询历史数据
         HistoricProcessInstance historicProcessInstance = historyService.createHistoricProcessInstanceQuery()
                 .processInstanceId(instanceId)
@@ -195,7 +213,7 @@ public class ProcessStartServiceImpl implements ProcessStartService {
 //            return;
         }
         // 删除流程实例
-        runtimeService.deleteProcessInstance(instanceId, "发起人撤销");
+        runtimeService.deleteProcessInstance(instanceId, remark);
         // 删除历史流程实例
 //        historyService.deleteHistoricProcessInstance(instanceId);
     }
