@@ -10,7 +10,7 @@ spring:
       max-file-size: -1
       max-request-size: -1
   profiles:
-    active: prod
+    active: dev
   application:
     name: printes
   datasource:
@@ -146,3 +146,7 @@ authn:
   hostname: ${helper.authn.hostname}
   display: ${helper.authn.display}
   origin: ${helper.authn.origin}
+
+ikuai:
+  ip: 10.15.247.251
+  port: 13170

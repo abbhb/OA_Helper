@@ -59,6 +59,7 @@ update 修改权限
 创建superadmin角色,id必须为1L
 创建一个用户名为admin的用户，为该用户绑定1L的角色
 升级为直接执行docs文件夹里的init.sql即可!
+mysql8以上需要修改sql_mode: ONLY_FULL_GROUP_BY 必须去掉，否则某些时候会报错
 ### 这几个用户也得创建id，为系统预留id
 - 10010 chatgpt用户绑定对于的chat模块功能逻辑
 - 10011 服务于系统通知的推送和管理发送

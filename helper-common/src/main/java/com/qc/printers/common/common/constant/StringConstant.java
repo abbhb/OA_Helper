@@ -13,5 +13,8 @@ public class StringConstant {
     public static final String FRONT_MODEL_TOP_MENU = "user_front_model_top_menu";
     public static final String FRONT_TAB_BAR = "user_front_tab_bar";
 
+    public static final String IKUAI_USER = "ikuai_username";
+    public static final String IKUAI_PASSWORD = "ikuai_password";
+
 
 }
