@@ -252,7 +252,7 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public Integer count() {
-        return userDao.count();
+        return Math.toIntExact(userDao.count());
     }
 
 
@@ -502,11 +502,11 @@ public class UserServiceImpl implements UserService {
         }
         pageData.setPages(pageInfo.getPages());
         pageData.setTotal(pageInfo.getTotal());
-        pageData.setCountId(pageInfo.getCountId());
+//        pageData.setCountId(pageInfo.getCountId());
         pageData.setCurrent(pageInfo.getCurrent());
         pageData.setSize(pageInfo.getSize());
         pageData.setRecords(results);
-        pageData.setMaxLimit(pageInfo.getMaxLimit());
+//        pageData.setMaxLimit(pageInfo.getMaxLimit());
         return pageData;
     }
 
@@ -549,7 +549,7 @@ public class UserServiceImpl implements UserService {
     public R<String> hasUserName(String username) {
         LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
         userLambdaQueryWrapper.eq(User::getUsername, username);
-        int count = userDao.count(userLambdaQueryWrapper);
+        int count = (int) userDao.count(userLambdaQueryWrapper);
         if (count == 0) {
             return R.success("可用");
         }
@@ -572,7 +572,7 @@ public class UserServiceImpl implements UserService {
             }
             LambdaQueryWrapper<User> userLambdaQueryWrapperCount = new LambdaQueryWrapper<>();
             userLambdaQueryWrapperCount.eq(User::getEmail, emails);
-            int count = userDao.count(userLambdaQueryWrapperCount);
+            int count = (int) userDao.count(userLambdaQueryWrapperCount);
             if (count > 0) {
                 throw new CustomException("该账号已经绑定过帐号了!");
             }
@@ -922,7 +922,7 @@ public class UserServiceImpl implements UserService {
         if (username.contains("@")) {
             LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
             userLambdaQueryWrapper.eq(User::getEmail, username);
-            int count = userDao.count(userLambdaQueryWrapper);
+            int count = (int) userDao.count(userLambdaQueryWrapper);
             log.info("count{}", count);
             one = userDao.getOne(userLambdaQueryWrapper);
             if (one == null) {
@@ -1182,11 +1182,11 @@ public class UserServiceImpl implements UserService {
         }
         pageData.setPages(pageInfo.getPages());
         pageData.setTotal(pageInfo.getTotal());
-        pageData.setCountId(pageInfo.getCountId());
+//        pageData.setCountId(pageInfo.getCountId());
         pageData.setCurrent(pageInfo.getCurrent());
         pageData.setSize(pageInfo.getSize());
         pageData.setRecords(results);
-        pageData.setMaxLimit(pageInfo.getMaxLimit());
+//        pageData.setMaxLimit(pageInfo.getMaxLimit());
         return pageData;
     }
 
@@ -1528,7 +1528,7 @@ public class UserServiceImpl implements UserService {
             LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
             userLambdaQueryWrapper.eq(User::getEmail,user.getEmail());
             userLambdaQueryWrapper.or().eq(User::getStudentId,user.getStudentId());
-            int count = userDao.count(userLambdaQueryWrapper);
+            int count = (int) userDao.count(userLambdaQueryWrapper);
 
             if (count>0){
                 errorData.add(userDataImportErrorDtoBuilder.error("用户邮箱或者学号已存在!").build());

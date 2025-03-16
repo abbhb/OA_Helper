@@ -154,23 +154,24 @@ public class SigninLogServiceImpl implements SigninLogService {
     }
 
     @Override
-    public boolean getUserAskForLeave(Long userId, LocalDateTime time) {
+    public List<Long> getUserAskForLeave(Long userId, LocalDateTime time) {
         LambdaQueryWrapper<SigninLogAskLeave> signinLogAskLeaveLambdaQueryWrapper = new LambdaQueryWrapper<>();
-        signinLogAskLeaveLambdaQueryWrapper.eq(SigninLogAskLeave::getUserId,userId);
-//        此处学到新东西了，两个条件要同时生效得and，默认是or
+        //        此处学到新东西了，两个条件要同时生效得and，默认是or
         signinLogAskLeaveLambdaQueryWrapper
                 .eq(SigninLogAskLeave::getUserId, userId)
                 .and(wrapper ->
                         wrapper.le(SigninLogAskLeave::getStartTime, time)
                                 .ge(SigninLogAskLeave::getEndTime, time)
                 );
-        int count = signinLogAskLeaveDao.count(signinLogAskLeaveLambdaQueryWrapper);
-        if (count<1){
-            // 这个用户在这个时间没有请假
-            return false;
+        List<SigninLogAskLeave> signinLogAskLeaveList = signinLogAskLeaveDao.list(signinLogAskLeaveLambdaQueryWrapper);
+        if (signinLogAskLeaveList== null || signinLogAskLeaveList.isEmpty()){
+            return null;
         }
-        // 绝对有请假
-        return true;
+        List<Long> signinLogIdList = new ArrayList<>();
+        for (SigninLogAskLeave signinLogAskLeave : signinLogAskLeaveList) {
+            signinLogIdList.add(signinLogAskLeave.getId());
+        }
+        return signinLogIdList;
     }
 
     /**
@@ -756,6 +757,8 @@ public class SigninLogServiceImpl implements SigninLogService {
         signinLogForSelfResp.setNeedSB(true);
         signinLogForSelfResp.setState(0);
         signinLogForSelfResp.setBcCount(0);
+        signinLogForSelfResp.setWorkingHours(String.valueOf(0));
+
         signinLogForSelfResp.setUserId(userId);
         signinLogForSelfResp.setErrMsg("");
 
@@ -771,6 +774,7 @@ public class SigninLogServiceImpl implements SigninLogService {
                     .userId(userId)
                     .currentXQ(DateUtils.dateToWeek(formattedDateTime)
                     )
+                    .workingHours(String.valueOf(0))
                     .currentDate(formattedDateTime)
                     .needSB(false)
                     .build();
@@ -952,6 +956,7 @@ public class SigninLogServiceImpl implements SigninLogService {
                             userId);
                     if (signinRenewal!=null){
                         signinLogCliBcDto1.getSbItem().setBq(true);
+                        signinLogCliBcDto1.getSbItem().setBqId(signinRenewal.getId());
                         signinLogCliBcDto1.getSbItem().setBqState(signinRenewal.getState());
                         signinLogCliBcDto1.getSbItem().setBqTime(signinRenewal.getRenewalTime());// 不管是否成功，先返回补签点
                     }
@@ -981,6 +986,8 @@ public class SigninLogServiceImpl implements SigninLogService {
                             userId);
                     if (signinRenewal!=null){
                         signinLogCliBcDto1.getXbItem().setBq(true);
+                        signinLogCliBcDto1.getXbItem().setBqId(signinRenewal.getId());
+
                         signinLogCliBcDto1.getXbItem().setBqState(signinRenewal.getState());
                         signinLogCliBcDto1.getXbItem().setBqTime(signinRenewal.getRenewalTime());// 不管是否成功，先返回补签点
                     }
@@ -1016,6 +1023,14 @@ public class SigninLogServiceImpl implements SigninLogService {
         }
 
 
+        Integer zuizhongzhuangtai = getZuizhongzhuangtai(signinLogForSelfResp);
+        signinLogForSelfResp.setState(zuizhongzhuangtai);
+
+        return signinLogForSelfResp;
+    }
+
+    @NotNull
+    private static Integer getZuizhongzhuangtai(SigninLogForSelfResp signinLogForSelfResp) {
         // log聚合状态填充
         Integer zuizhongzhuangtai = 0;
         for (SigninLogCliBcDto signinLogCliBcDto : signinLogForSelfResp.getBcDetail()) {
@@ -1040,9 +1055,7 @@ public class SigninLogServiceImpl implements SigninLogService {
                 }
             }
         }
-        signinLogForSelfResp.setState(zuizhongzhuangtai);
-
-        return signinLogForSelfResp;
+        return zuizhongzhuangtai;
     }
 
 
@@ -1150,6 +1163,17 @@ public class SigninLogServiceImpl implements SigninLogService {
         return String.valueOf(signinGroupByUserIdWithTime.getGroupId());
     }
 
+    private List<Long> itemToIdList(List<Long> list1,List<Long> list2){
+
+        if (list1==null){
+            list1 = new ArrayList<>();
+        }
+        if (list2==null){
+            list2 = new ArrayList<>();
+        }
+        list1.addAll(list2);
+        return list1;
+    }
 
     /**
      * 通过原始cli数据列表和班次得到处理后的对象列表-方便后续修改统计算法
@@ -1180,14 +1204,15 @@ public class SigninLogServiceImpl implements SigninLogService {
             LocalDateTime xb_dateTime = date.atTime(xbtime);
 
 
-            boolean userAskForLeave_s = this.getUserAskForLeave(userId, sb_dateTime);
-            boolean userAskForLeave_x = this.getUserAskForLeave(userId, xb_dateTime);
+            List<Long> userAskForLeave_s = this.getUserAskForLeave(userId, sb_dateTime);
+            List<Long> userAskForLeave_x = this.getUserAskForLeave(userId, xb_dateTime);
 //            log.info("tag:请假-表示sb{}表示下班{}",userAskForLeave_s,userAskForLeave_x);
 
-            if (userAskForLeave_s||userAskForLeave_x){
+            if (userAskForLeave_s!=null || userAskForLeave_x!=null){
                 SigninLogCliBcDto signinLogCli = new SigninLogCliBcDto();
                 // 有请假记录,直接计为请假
                 signinLogCli.setState(4);
+                signinLogCli.setAskLeaveId(itemToIdList(userAskForLeave_s,userAskForLeave_x));
                 signinLogCli.setBcCount(i);
                 signinLogCli.setUserId(userId);
                 logListT.add(signinLogCli);
@@ -1362,11 +1387,11 @@ public class SigninLogServiceImpl implements SigninLogService {
                 // 将LocalDate和LocalTime组合成LocalDateTime
                 LocalDateTime sb_dateTime = now.atTime(sbtime);
                 LocalDateTime xb_dateTime = now.atTime(xbtime);
-                boolean userAskForLeave_s = this.getUserAskForLeave(kqUserId, sb_dateTime);
-                boolean userAskForLeave_x = this.getUserAskForLeave(kqUserId, xb_dateTime);
+                List<Long> userAskForLeave_s = this.getUserAskForLeave(kqUserId, sb_dateTime);
+                List<Long> userAskForLeave_x = this.getUserAskForLeave(kqUserId, xb_dateTime);
 //                log.info("tag:请假-表示sb{}表示下班{}",userAskForLeave_s,userAskForLeave_x);
 
-                if (userAskForLeave_s||userAskForLeave_x){
+                if (userAskForLeave_s !=null ||userAskForLeave_x!=null){
                     // 这个班次用户已经请假了，直接不往后查
                     signinLogRealYiQianDaoDto.setTag("请假");
                     numberOfLeave+=1;
@@ -1446,9 +1471,9 @@ public class SigninLogServiceImpl implements SigninLogService {
                 LocalDateTime xb_dateTime = now.atTime(xbtime);
 
 
-                boolean userAskForLeave_s = this.getUserAskForLeave(kqUserId, sb_dateTime);
-                boolean userAskForLeave_x = this.getUserAskForLeave(kqUserId, xb_dateTime);
-                if (userAskForLeave_s||userAskForLeave_x){
+                List<Long> userAskForLeave_s = this.getUserAskForLeave(kqUserId, sb_dateTime);
+                List<Long> userAskForLeave_x = this.getUserAskForLeave(kqUserId, xb_dateTime);
+                if (userAskForLeave_s != null|| userAskForLeave_x!= null){
                     // 这个班次用户已经请假了，直接不往后查
                     signinLogRealYiQianDaoDto.setTag("请假");
                     numberOfLeave+=1;

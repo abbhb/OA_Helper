@@ -1,13 +1,17 @@
 package com.qc.printers.common.signin.domain.entity;
 
+
+import lombok.AllArgsConstructor;
 import lombok.Data;
+import lombok.NoArgsConstructor;
 import org.jetbrains.annotations.NotNull;
 
 import java.io.Serializable;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 
 @Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class SigninLogAskLeave implements Serializable {
     private Long id;
 
@@ -38,4 +42,9 @@ public class SigninLogAskLeave implements Serializable {
     private String askLeaveAboutActId;
 
     private LocalDateTime createTime;
+
+    /**
+     * 请假类型
+     */
+    private String askLeaveLeaveType;
 }

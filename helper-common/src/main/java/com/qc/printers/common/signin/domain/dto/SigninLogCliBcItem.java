@@ -29,9 +29,11 @@ public class SigninLogCliBcItem implements Serializable {
     private Integer state;
 
     /**
-     * 是否存在补签
+     * 是否存在补签,不论状态
      */
     private Boolean bq;
+
+    private Long bqId;
 
 
     /**

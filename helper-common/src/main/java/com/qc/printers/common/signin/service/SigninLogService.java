@@ -39,7 +39,7 @@ public interface SigninLogService {
      * @param time 判断哪个时间在不在请假
      * @return 返回一个布尔类型是否请假
      */
-    boolean getUserAskForLeave(Long userId, LocalDateTime time);
+    List<Long> getUserAskForLeave(Long userId, LocalDateTime time);
 
     SigninGroupDateResp exportSigninGgroupDate(String groupId, LocalDate date);
 

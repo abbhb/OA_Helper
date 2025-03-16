@@ -102,7 +102,7 @@ public class DeployGroupService {
 
         LambdaQueryWrapper<DeployGroupAct> deployGroupActLambdaQueryWrapper = new LambdaQueryWrapper<>();
         deployGroupActLambdaQueryWrapper.eq(DeployGroupAct::getDeployGroupId, deployGroupId);
-        int count = deployGroupActDao.count(deployGroupActLambdaQueryWrapper);
+        int count = (int) deployGroupActDao.count(deployGroupActLambdaQueryWrapper);
         if (count > 0) {
             throw new CustomException("该组存在关联流程，请先手动解除");
         }

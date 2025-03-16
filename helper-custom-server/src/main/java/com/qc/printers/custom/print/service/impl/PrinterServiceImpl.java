@@ -193,11 +193,11 @@ public class PrinterServiceImpl implements PrinterService {
         }
         pageData.setPages(pageInfo.getPages());
         pageData.setTotal(pageInfo.getTotal());
-        pageData.setCountId(pageInfo.getCountId());
+//        pageData.setCountId(pageInfo.getCountId());
         pageData.setCurrent(pageInfo.getCurrent());
         pageData.setSize(pageInfo.getSize());
         pageData.setRecords(results);
-        pageData.setMaxLimit(pageInfo.getMaxLimit());
+//        pageData.setMaxLimit(pageInfo.getMaxLimit());
         return R.success(pageData);
     }
 
@@ -261,11 +261,11 @@ public class PrinterServiceImpl implements PrinterService {
         }
         pageData.setPages(pageInfo.getPages());
         pageData.setTotal(pageInfo.getTotal());
-        pageData.setCountId(pageInfo.getCountId());
+//        pageData.setCountId(pageInfo.getCountId());
         pageData.setCurrent(pageInfo.getCurrent());
         pageData.setSize(pageInfo.getSize());
         pageData.setRecords(results);
-        pageData.setMaxLimit(pageInfo.getMaxLimit());
+//        pageData.setMaxLimit(pageInfo.getMaxLimit());
         return R.success(pageData);
     }
 
@@ -592,7 +592,7 @@ public class PrinterServiceImpl implements PrinterService {
         if (sysPrintDevice == null) {
             throw new CustomException("无权查看");
         }
-        int count = sysPrintDeviceLinkDao.count(new LambdaQueryWrapper<SysPrintDeviceLink>()
+        int count = (int) sysPrintDeviceLinkDao.count(new LambdaQueryWrapper<SysPrintDeviceLink>()
                 .eq(SysPrintDeviceLink::getPrintDeviceId,
                         sysPrintDevice.getId())
                 .and(sysPrintDeviceLinkLambdaQueryWrapper -> {

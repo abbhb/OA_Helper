@@ -212,11 +212,11 @@ public class NoticeServiceImpl implements NoticeService {
         PageData<NoticeMangerListResp> mangerListRespPageData = new PageData<>();
         mangerListRespPageData.setTotal(pageInfo.getTotal());
         mangerListRespPageData.setPages(pageInfo.getPages());
-        mangerListRespPageData.setCountId(pageInfo.getCountId());
+//        mangerListRespPageData.setCountId(pageInfo.getCountId());
         mangerListRespPageData.setCurrent(pageInfo.getCurrent());
         mangerListRespPageData.setSize(pageInfo.getSize());
         mangerListRespPageData.setRecords(noticeMangerListResps);
-        mangerListRespPageData.setMaxLimit(pageInfo.getMaxLimit());
+//        mangerListRespPageData.setMaxLimit(pageInfo.getMaxLimit());
         return mangerListRespPageData;
 
     }
@@ -463,8 +463,8 @@ public class NoticeServiceImpl implements NoticeService {
         pageData.setSize(page.getSize());
         pageData.setTotal(page.getTotal());
         pageData.setCurrent(page.getCurrent());
-        pageData.setMaxLimit(page.getMaxLimit());
-        pageData.setCountId(page.getCountId());
+//        pageData.setMaxLimit(page.getMaxLimit());
+//        pageData.setCountId(page.getCountId());
         pageData.setRecords(noticeUserRespList);
         return pageData;
     }

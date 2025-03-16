@@ -27,10 +27,10 @@ public class MessageMarkDao extends ServiceImpl<MessageMarkMapper, MessageMark> 
     }
 
     public Integer getMarkCount(Long msgId, Integer markType) {
-        return lambdaQuery().eq(MessageMark::getMsgId, msgId)
+        return Math.toIntExact(lambdaQuery().eq(MessageMark::getMsgId, msgId)
                 .eq(MessageMark::getType, markType)
                 .eq(MessageMark::getStatus, YesOrNoEnum.NO.getStatus())
-                .count();
+                .count());
     }
 
     public List<MessageMark> getValidMarkByMsgIdBatch(List<Long> msgIds) {

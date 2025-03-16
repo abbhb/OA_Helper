@@ -44,6 +44,6 @@ public class SysConfirmServiceImpl implements SysConfirmService {
     public Integer getConfirmCount(String key) {
         LambdaQueryWrapper<SysConfirm> sysConfirmLambdaQueryWrapper = new LambdaQueryWrapper<>();
         sysConfirmLambdaQueryWrapper.eq(SysConfirm::getStrKey, key);
-        return sysConfirmDao.count(sysConfirmLambdaQueryWrapper);
+        return Math.toIntExact(sysConfirmDao.count(sysConfirmLambdaQueryWrapper));
     }
 }

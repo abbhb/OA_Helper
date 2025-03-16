@@ -90,11 +90,11 @@ public class QuickNavigationCategorizeServiceImpl implements QuickNavigationCate
         }
         pageData.setPages(pageInfo.getPages());
         pageData.setTotal(pageInfo.getTotal());
-        pageData.setCountId(pageInfo.getCountId());
+//        pageData.setCountId(pageInfo.getCountId());
         pageData.setCurrent(pageInfo.getCurrent());
         pageData.setSize(pageInfo.getSize());
         pageData.setRecords(results);
-        pageData.setMaxLimit(pageInfo.getMaxLimit());
+//        pageData.setMaxLimit(pageInfo.getMaxLimit());
         return R.success(pageData);
 
     }
@@ -118,7 +118,7 @@ public class QuickNavigationCategorizeServiceImpl implements QuickNavigationCate
 
         if (quickNavigation.getQuickNavigationCategorize().getVisibility().equals(1)) {
             // 仅部门可见
-            int count = quickNavigationDeptDao.count(quickNavigationDeptLambdaQueryWrapper);
+            int count = (int) quickNavigationDeptDao.count(quickNavigationDeptLambdaQueryWrapper);
             if (count > 0) {
                 // 先删除当前分类的绑定
                 quickNavigationDeptDao.remove(quickNavigationDeptLambdaQueryWrapper);
@@ -170,7 +170,7 @@ public class QuickNavigationCategorizeServiceImpl implements QuickNavigationCate
         iQuickNavigationCategorizeService.remove(lambdaUpdateWrapper);
         LambdaQueryWrapper<QuickNavigationDept> quickNavigationDeptLambdaQueryWrapper = new LambdaQueryWrapper<>();
         quickNavigationDeptLambdaQueryWrapper.eq(QuickNavigationDept::getQuickNavCategorizeId, id);
-        int count = quickNavigationDeptDao.count(quickNavigationDeptLambdaQueryWrapper);
+        int count = (int) quickNavigationDeptDao.count(quickNavigationDeptLambdaQueryWrapper);
         if (count > 0) {
             // 删除废弃信息
             quickNavigationDeptDao.remove(quickNavigationDeptLambdaQueryWrapper);
@@ -199,7 +199,7 @@ public class QuickNavigationCategorizeServiceImpl implements QuickNavigationCate
         }
         LambdaQueryWrapper<QuickNavigationCategorize> quickNavigationCategorizeLambdaQueryWrapper = new LambdaQueryWrapper<>();
         quickNavigationCategorizeLambdaQueryWrapper.eq(QuickNavigationCategorize::getName, quickNavigationCategorize.getQuickNavigationCategorize().getName());
-        int counted = iQuickNavigationCategorizeService.count(quickNavigationCategorizeLambdaQueryWrapper);
+        int counted = (int) iQuickNavigationCategorizeService.count(quickNavigationCategorizeLambdaQueryWrapper);
         if (counted > 0) {
             throw new CustomException("分类名不能重复");
         }
@@ -214,7 +214,7 @@ public class QuickNavigationCategorizeServiceImpl implements QuickNavigationCate
                 throw new CustomException("最少绑定一个部门");
             }
             // 仅部门可见
-            int count = quickNavigationDeptDao.count(quickNavigationDeptLambdaQueryWrapper);
+            int count = (int) quickNavigationDeptDao.count(quickNavigationDeptLambdaQueryWrapper);
 
             if (count > 0) {
                 // 先删除当前分类的绑定

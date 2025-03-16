@@ -57,10 +57,10 @@ public class UserEmojiServiceImpl implements UserEmojiService {
         AssertUtil.isFalse(count > 30, "最多只能添加30个表情哦~~");
         String expressionUrlDB = OssDBUtil.toDBUrl(req.getExpressionUrl());
         //校验表情是否存在
-        Integer existsCount = userEmojiDao.lambdaQuery()
-                .eq(UserEmoji::getExpressionUrl,expressionUrlDB)
+        Integer existsCount = Math.toIntExact(userEmojiDao.lambdaQuery()
+                .eq(UserEmoji::getExpressionUrl, expressionUrlDB)
                 .eq(UserEmoji::getUid, uid)
-                .count();
+                .count());
         AssertUtil.isFalse(existsCount > 0, "当前表情已存在哦~~");
         UserEmoji insert = UserEmoji.builder().uid(uid).expressionUrl(expressionUrlDB).build();
         userEmojiDao.save(insert);

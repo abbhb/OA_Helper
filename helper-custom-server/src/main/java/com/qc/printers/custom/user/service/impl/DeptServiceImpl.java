@@ -248,7 +248,7 @@ public class DeptServiceImpl implements DeptService {
         for (SysDept sysDept : list) {
             LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
             userLambdaQueryWrapper.eq(User::getDeptId, sysDept.getId());
-            int count = userDao.count(userLambdaQueryWrapper);
+            int count = (int) userDao.count(userLambdaQueryWrapper);
             if (count != 0) {
                 throw new CustomException("[" + sysDept.getDeptName() + "]部门下存在用户！禁止直接删除");
             }

@@ -212,7 +212,7 @@ public class RoomAppServiceImpl implements RoomAppService {
             onlineNum = userCache.getOnlineNum();
         } else {
             List<Long> memberUidList = groupMemberDao.getMemberUidList(roomGroup.getId());
-            onlineNum = userDao.getOnlineCount(memberUidList).longValue();
+            onlineNum = userDao.getOnlineCount(memberUidList);
         }
         GroupRoleAPPEnum groupRole = getGroupRole(uid, roomGroup, room);
         return MemberResp.builder()

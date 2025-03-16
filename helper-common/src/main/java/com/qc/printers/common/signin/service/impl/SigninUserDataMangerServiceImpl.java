@@ -65,7 +65,7 @@ public class SigninUserDataMangerServiceImpl implements SigninUserDataMangerServ
         }
         LambdaQueryWrapper<SigninUserData> signinUserDataLambdaQueryWrapper = new LambdaQueryWrapper<>();
         signinUserDataLambdaQueryWrapper.eq(SigninUserData::getUserId, userId);
-        int count = signinUserDataDao.count(signinUserDataLambdaQueryWrapper);
+        int count = (int) signinUserDataDao.count(signinUserDataLambdaQueryWrapper);
         if (count > 0) {
             LambdaUpdateWrapper<SigninUserData> signinUserDataLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
             signinUserDataLambdaUpdateWrapper.eq(SigninUserData::getUserId, userId);

@@ -69,7 +69,7 @@ public class UserFrontConfigServiceImpl implements UserFrontConfigService {
 
         LambdaQueryWrapper<UserFrontConfig> userFrontConfigLambdaQueryWrapper = new LambdaQueryWrapper<>();
         userFrontConfigLambdaQueryWrapper.eq(UserFrontConfig::getUserId, currentUser.getId());
-        int count = userFrontConfigDao.count(userFrontConfigLambdaQueryWrapper);
+        int count = (int) userFrontConfigDao.count(userFrontConfigLambdaQueryWrapper);
         if (count == 0) {
             // 创建该用户默认的用户config
             UserFrontConfig userFrontConfig = new UserFrontConfig();

@@ -67,16 +67,6 @@ public class CommonConfigServiceImpl extends ServiceImpl<CommonConfigMapper, Com
     }
 
 
-    @Transactional
-    @Override
-    public boolean removeByIds(Collection<? extends Serializable> idList) {
-        for (Serializable id : idList
-        ) {
-            this.removeById(id);
-        }
-        return true;
-    }
-
     @Override
     public boolean updateById(CommonConfig entity) {
         boolean a = super.updateById(entity);

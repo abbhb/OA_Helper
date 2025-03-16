@@ -36,7 +36,7 @@ public class OauthOpenidServiceImpl implements OauthOpenidService {
             LambdaQueryWrapper<SysOauthOpenid> sysOauthOpenidLambdaQueryWrapper = new LambdaQueryWrapper<>();
             sysOauthOpenidLambdaQueryWrapper.eq(SysOauthOpenid::getOpenid, inc.intValue());
             sysOauthOpenidLambdaQueryWrapper.eq(SysOauthOpenid::getSysOauthId, oauthId);
-            int count = sysOauthOpenidDao.count(sysOauthOpenidLambdaQueryWrapper);
+            int count = (int) sysOauthOpenidDao.count(sysOauthOpenidLambdaQueryWrapper);
             if (count > 0) {
                 cishu++;
                 continue;
@@ -53,7 +53,7 @@ public class OauthOpenidServiceImpl implements OauthOpenidService {
         LambdaQueryWrapper<SysOauthOpenid> sysOauthOpenidLambdaQueryWrapper = new LambdaQueryWrapper<>();
         sysOauthOpenidLambdaQueryWrapper.eq(SysOauthOpenid::getOpenid, openid);
         sysOauthOpenidLambdaQueryWrapper.eq(SysOauthOpenid::getSysOauthId, oauthId);
-        int count = sysOauthOpenidDao.count(sysOauthOpenidLambdaQueryWrapper);
+        int count = (int) sysOauthOpenidDao.count(sysOauthOpenidLambdaQueryWrapper);
         return count > 0;
     }
 
@@ -62,7 +62,7 @@ public class OauthOpenidServiceImpl implements OauthOpenidService {
         LambdaQueryWrapper<SysOauthOpenid> sysOauthOpenidLambdaQueryWrapper = new LambdaQueryWrapper<>();
         sysOauthOpenidLambdaQueryWrapper.eq(SysOauthOpenid::getUserId, userId);
         sysOauthOpenidLambdaQueryWrapper.eq(SysOauthOpenid::getSysOauthId, oauthId);
-        int count = sysOauthOpenidDao.count(sysOauthOpenidLambdaQueryWrapper);
+        int count = (int) sysOauthOpenidDao.count(sysOauthOpenidLambdaQueryWrapper);
         return count > 0;
     }
 

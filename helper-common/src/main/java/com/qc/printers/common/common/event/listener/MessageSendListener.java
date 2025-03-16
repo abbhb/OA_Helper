@@ -100,7 +100,7 @@ public class MessageSendListener {
         roomFriendLambdaQueryWrapper.eq(RoomFriend::getRoomId,room.getId());
         roomFriendLambdaQueryWrapper.eq(RoomFriend::getUid1,chatGPTProperties.getAIUserId());
         roomFriendLambdaQueryWrapper.eq(RoomFriend::getUid2,fromUid);
-        int count = roomFriendDao.count(roomFriendLambdaQueryWrapper);
+        int count = (int) roomFriendDao.count(roomFriendLambdaQueryWrapper);
 
         if (count!=0){
             return true;

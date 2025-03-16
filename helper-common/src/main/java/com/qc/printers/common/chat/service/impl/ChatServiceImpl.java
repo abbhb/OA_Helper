@@ -148,7 +148,7 @@ public class ChatServiceImpl implements ChatService {
         // 只有房间号和uid都对的上系统消息才算系统消息
         LambdaQueryWrapper<SystemMessage> systemMessageLambdaQueryWrapper = new LambdaQueryWrapper<>();
         systemMessageLambdaQueryWrapper.eq(SystemMessage::getMsgId,insert.getId());
-        int count = systemMessageDao.count(systemMessageLambdaQueryWrapper);
+        int count = (int) systemMessageDao.count(systemMessageLambdaQueryWrapper);
         if (count>0)return;// 这条消息已经出现过
         systemMessageDao.save(SystemMessage.builder().msgId(insert.getId()).createUser(insert.getFromUid()).createTime(LocalDateTime.now()).build());
     }
@@ -297,7 +297,7 @@ public class ChatServiceImpl implements ChatService {
         // 只有房间号和uid都对的上系统消息才算系统消息
         LambdaQueryWrapper<SystemMessage> systemMessageLambdaQueryWrapper = new LambdaQueryWrapper<>();
         systemMessageLambdaQueryWrapper.eq(SystemMessage::getMsgId,message.getId());
-        int count = systemMessageDao.count(systemMessageLambdaQueryWrapper);
+        int count = (int) systemMessageDao.count(systemMessageLambdaQueryWrapper);
         if (count==0)return;// 这条消息本身就不存在
         LambdaQueryWrapper<SystemMessage> systemMessageLambdaQueryWrapper1 = new LambdaQueryWrapper<>();
         systemMessageLambdaQueryWrapper1.eq(SystemMessage::getMsgId,message.getId());

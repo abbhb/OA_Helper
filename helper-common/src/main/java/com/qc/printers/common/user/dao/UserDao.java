@@ -74,11 +74,11 @@ public class UserDao extends ServiceImpl<UserMapper, User> {
 
     }
 
-    public Integer getOnlineCount() {
+    public Long getOnlineCount() {
         return getOnlineCount(null);
     }
 
-    public Integer getOnlineCount(List<Long> memberUidList) {
+    public Long getOnlineCount(List<Long> memberUidList) {
         return lambdaQuery()
                 .eq(User::getActiveStatus, ChatActiveStatusEnum.ONLINE.getStatus())
                 .in(CollectionUtil.isNotEmpty(memberUidList), User::getId, memberUidList)
@@ -96,8 +96,8 @@ public class UserDao extends ServiceImpl<UserMapper, User> {
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.eq(User::getUsername, entity.getUsername());
         //会自动加上条件判断没有删除
-        int count = this.count(lambdaQueryWrapper);
-        if (count > 0) {
+        long count = this.count(lambdaQueryWrapper);
+        if (count > 0L) {
             throw new CustomException("用户名已经存在");
         }
         return super.save(entity);

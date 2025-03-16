@@ -35,9 +35,9 @@ public class UserApplyDao extends ServiceImpl<UserApplyMapper, UserApply> {
     }
 
     public Integer getUnReadCount(Long targetId) {
-        return lambdaQuery().eq(UserApply::getTargetId, targetId)
+        return Math.toIntExact(lambdaQuery().eq(UserApply::getTargetId, targetId)
                 .eq(UserApply::getReadStatus, UNREAD.getCode())
-                .count();
+                .count());
     }
 
     public IPage<UserApply> friendApplyPage(Long uid, Page page) {

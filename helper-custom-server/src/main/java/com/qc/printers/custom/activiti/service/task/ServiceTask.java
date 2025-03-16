@@ -52,6 +52,9 @@ public class ServiceTask {
         String jiezhiriqi = (String) execution.getVariable("date29019");
         String qishishijian = (String) execution.getVariable("time88479");
         String jiezhishijian = (String) execution.getVariable("time23031");
+        String reason = (String) execution.getVariable("textarea28633");
+        // 请假类型 1:病假 2:事假
+        String leixin = (String) execution.getVariable("radio96982");
         System.out.println("你好：" + initiator);//打印   你好：中国
         // initiator为发起人
         String qishi = qishiriqi + " " + qishishijian;
@@ -59,7 +62,20 @@ public class ServiceTask {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
         LocalDateTime start_ = LocalDateTime.parse(qishi, formatter);
         LocalDateTime end_ = LocalDateTime.parse(jiezhi, formatter);
-        signinLogAskLeaveService.addAskLeave(new SigninLogAskLeave(Long.valueOf(initiator),start_,end_));
+        String processInstanceId = execution.getProcessInstanceId();
+        SigninLogAskLeave signinLogAskLeave = new SigninLogAskLeave();
+        signinLogAskLeave.setUserId(Long.valueOf(initiator));
+        signinLogAskLeave.setStartTime(start_);
+        signinLogAskLeave.setEndTime(end_);
+        signinLogAskLeave.setAskLeaveAboutActId(processInstanceId);
+        signinLogAskLeave.setAskLeaveReason(reason);
+        if (leixin.equals("1")){
+            leixin = "病假";
+        }else if (leixin.equals("2")){
+            leixin = "事假";
+        }
+        signinLogAskLeave.setAskLeaveLeaveType(leixin);
+        signinLogAskLeaveService.addAskLeave(signinLogAskLeave);
     }
 
     /**

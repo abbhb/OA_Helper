@@ -111,11 +111,11 @@ public class MessageDao extends ServiceImpl<MessageMapper, Message> {
     }
 
     public Integer getGapCount(Long roomId, Long fromId, Long toId) {
-        return lambdaQuery()
+        return Math.toIntExact(lambdaQuery()
                 .eq(Message::getRoomId, roomId)
                 .gt(Message::getId, fromId)
                 .le(Message::getId, toId)
-                .count();
+                .count());
     }
 
     public void invalidByUid(Long uid) {
@@ -126,10 +126,10 @@ public class MessageDao extends ServiceImpl<MessageMapper, Message> {
     }
 
     public Integer getUnReadCount(Long roomId, Date readTime) {
-        return lambdaQuery()
+        return Math.toIntExact(lambdaQuery()
                 .eq(Message::getRoomId, roomId)
                 .gt(Objects.nonNull(readTime), Message::getCreateTime, readTime)
-                .count();
+                .count());
     }
 
     /**

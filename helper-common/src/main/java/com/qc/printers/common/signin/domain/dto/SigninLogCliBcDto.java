@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 
 /**
  * 专门为统计数据降低粒度
@@ -54,6 +55,10 @@ public class SigninLogCliBcDto implements Serializable {
      * 下班item
      */
     private SigninLogCliBcItem xbItem = new SigninLogCliBcItem();
+
+
+    // 请假id（如果有）标记为不序列化
+    private transient List<Long> askLeaveId;
 }
 
 

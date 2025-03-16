@@ -286,11 +286,11 @@ public class SigninUserDataServiceImpl implements SigninUserDataService {
         }
         pageData.setPages(pageInfo.getPages());
         pageData.setTotal(pageInfo.getTotal());
-        pageData.setCountId(pageInfo.getCountId());
+//        pageData.setCountId(pageInfo.getCountId());
         pageData.setCurrent(pageInfo.getCurrent());
         pageData.setSize(pageInfo.getSize());
         pageData.setRecords(results);
-        pageData.setMaxLimit(pageInfo.getMaxLimit());
+//        pageData.setMaxLimit(pageInfo.getMaxLimit());
         return pageData;
     }
 
