@@ -9,6 +9,7 @@ import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.domain.entity.UserExtBase;
 import com.qc.printers.common.user.domain.vo.request.user.SummeryInfoReq;
 import com.qc.printers.common.user.domain.vo.response.user.UserInfoBaseExtStateResp;
+import com.qc.printers.common.user.domain.vo.response.user.UserVerificationStateResp;
 import com.qc.printers.custom.user.domain.dto.LoginDTO;
 import com.qc.printers.custom.user.domain.vo.request.LoginByEmailCodeReq;
 import com.qc.printers.custom.user.domain.vo.request.PasswordByOneTimeCodeReq;
@@ -82,6 +83,7 @@ public interface UserService {
     UserSelectListResp userSelectOnlyXUserList(Long deptId);
 
     UserInfoBaseExtStateResp userinfoExtMy();
+    UserVerificationStateResp getUserVerificationState();
 
     String userinfoExtMyApplyFor(UserInfoBaseExtDto userExtBase);
 

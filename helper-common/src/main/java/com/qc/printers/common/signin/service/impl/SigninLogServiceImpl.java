@@ -137,6 +137,10 @@ public class SigninLogServiceImpl implements SigninLogService {
         if (signinLog.getSigninWay().equals("face")) {
             if (StringUtils.isEmpty(signinLog.getSigninImage())) throw new CustomException("请上传原始签到图");
         }
+        if (signinLog.getSigninWay().equals("card")) {
+            // todo: 未来可能会有卡号绑定用户的情况
+//            if (StringUtils.isEmpty(signinLog.getSigninCardId())) throw new CustomException("请上传来源卡号");
+        }
         if (!signinLog.getSigninWay().equals("system")) {
             if (StringUtils.isEmpty(signinLog.getSigninDeviceId())) throw new CustomException("必须提供设备id");
         }
@@ -665,6 +669,7 @@ public class SigninLogServiceImpl implements SigninLogService {
 
         SigninLog signinLog = new SigninLog();
         signinLog.setSigninImage(null);
+        signinLog.setSigninCardId(null);
         signinLog.setSigninWay("renewal");
         signinLog.setRemark("补签，act单号"+actId);
         signinLog.setSigninTime(time);
@@ -893,16 +898,19 @@ public class SigninLogServiceImpl implements SigninLogService {
                                     xb_end +
                                     " [下班]宽限期内未打卡；"
                     );
-//                    signinLogForSelfResp.setErrMsg(signinLogForSelfResp.getErrMsg()+"时间段[上班或下班]未打卡");
                 }
+                signinLogForSelfResp.getBcDetail().add(signinLogCliBcDto);
             }
             if (signinLogCliBcDto.getState().equals(1)||signinLogCliBcDto.getState().equals(2)||signinLogCliBcDto.getState().equals(5)){
                 // 迟到 早退 没缺勤说明肯定同时存在上班或下班
-                Map<Integer, SigninLogCli> integerSigninLogCliMap = signinLogCliBcCountMap.get(bcCount);
-                if (!integerSigninLogCliMap.containsKey(0)||!integerSigninLogCliMap.containsKey(1))throw new CustomException("正常情况不包含--3600500");
-                SigninLogCli signinSBLogCli = integerSigninLogCliMap.get(0);
-                SigninLogCli signinXBLogCli = integerSigninLogCliMap.get(1);
-                if (signinSBLogCli.getState().equals(1)){
+                SigninLogCliBcItem sbItem = signinLogCliBcDto.getSbItem();
+
+                SigninLogCliBcItem xbItem = signinLogCliBcDto.getXbItem();
+                if (sbItem==null||xbItem==null){
+                    throw new CustomException("异常状态下，上下班打卡数据不完整");
+                }
+                // 可能存在补签，不存在实际打卡时间
+                if (sbItem.getState().equals(1)){
                     // 存在上班迟到
                     // 打卡晚于迟到宽限时间1分钟；应打卡09:00，实打卡09:03，迟到3分钟
                     signinLogForSelfResp.setErrMsg(
@@ -910,123 +918,91 @@ public class SigninLogServiceImpl implements SigninLogService {
                                     + "打卡晚于迟到宽限时间；应打卡"
                                     + signinBc.getRules().get(bcCount - 1).getSbTime()
                                     + "，实打卡"
-                                    + signinSBLogCli.getLogTime()
-                                    + " ，迟到"+ signinSBLogCli.getStateTime() +"分钟；"
+                                    + String.valueOf(sbItem.getTimeS())
+                                    + " ，迟到"+ String.valueOf(sbItem.getQueQingTime()) +"分钟；"
                     );
                 }
-                if (signinXBLogCli.getState().equals(2)){
+                if (xbItem.getState().equals(2)){
                     // 存在下班早退
                     signinLogForSelfResp.setErrMsg(
                             signinLogForSelfResp.getErrMsg()
                                     + "打卡早于早退宽限时间；应打卡"
                                     + signinBc.getRules().get(bcCount - 1).getXbTime()
                                     + "，实打卡"
-                                    + signinXBLogCli.getLogTime()
-                                    + " ，早退"+ signinXBLogCli.getStateTime() +"分钟；"
+                                    + String.valueOf(xbItem.getTimeS())
+                                    + " ，早退"+ String.valueOf(xbItem.getQueQingTime()) +"分钟；"
                     );
                 }
+                signinLogForSelfResp.getBcDetail().add(signinLogCliBcDto);
             }
-            SigninLogCliBcDto signinLogCliBcDto1 = new SigninLogCliBcDto(userId,date,bcCount);
-            signinLogCliBcDto1.setState(signinLogCliBcDto.getState());// 外层状态保持一致，因为每个班次状态已经有了
-            signinLogForSelfResp.getBcDetail().add(signinLogCliBcDto1);
-            // 具体log补充
-            if (signinLogCliBcCountMap.containsKey(bcCount)){
-                Map<Integer, SigninLogCli> integerSigninLogCliMap = signinLogCliBcCountMap.get(bcCount);
-                // 上班先入为主
-                signinLogCliBcDto1.getSbItem().setState(3);
-                signinLogCliBcDto1.getSbItem().setBq(false);
-                signinLogCliBcDto1.getSbItem().setTimeY(LocalDateTime.of(date,LocalTime.parse(bcRules1.get(bcCount-1).getSbTime())));
-                if (integerSigninLogCliMap.containsKey(0)){
-                    // 上班存在打卡
-                    SigninLogCli signinLogCliWithSB = integerSigninLogCliMap.get(0);
-                    signinLogCliBcDto1.getSbItem().setState(signinLogCliWithSB.getState());
-                    signinLogCliBcDto1.getSbItem().setTimeS(LocalDateTime.of(date,LocalTime.parse(signinLogCliWithSB.getLogTime())));
-                    if (signinLogCliWithSB.getState().equals(1)||signinLogCliWithSB.getState().equals(2)){
-                        // 存在缺勤时间
-                        signinLogCliBcDto1.getSbItem().setQueQingTime(signinLogCliWithSB.getStateTime());
-                    }
-                    // 查看当前班次时间内是否存在补签
-                    BcRule bcRule = signinBc.getRules().get(bcCount - 1);
-                    LocalTime sbTimeObject = LocalTime.parse(bcRule.getSbTime());
-                    SigninRenewal signinRenewal = signinRenewalMapper.hasExistRenewal(LocalDateTime.of(date, sbTimeObject
-                            .minusMinutes(bcRule.getSbStartTime())),
-                            LocalDateTime.of(date,
-                                    sbTimeObject
-                                    .plusMinutes(bcRule.getSbEndTime())),
-                            userId);
-                    if (signinRenewal!=null){
-                        signinLogCliBcDto1.getSbItem().setBq(true);
-                        signinLogCliBcDto1.getSbItem().setBqId(signinRenewal.getId());
-                        signinLogCliBcDto1.getSbItem().setBqState(signinRenewal.getState());
-                        signinLogCliBcDto1.getSbItem().setBqTime(signinRenewal.getRenewalTime());// 不管是否成功，先返回补签点
-                    }
-                }
-                // 下班先入为主
-                signinLogCliBcDto1.getXbItem().setBq(false);
-                signinLogCliBcDto1.getXbItem().setState(3);
-                signinLogCliBcDto1.getXbItem().setTimeY(LocalDateTime.of(date,LocalTime.parse(bcRules1.get(bcCount-1).getXbTime())));
-                if (integerSigninLogCliMap.containsKey(1)){
-                    // 下班存在打卡
-                    // 下班
-                    SigninLogCli signinLogCliWithXB = integerSigninLogCliMap.get(1);
-                    signinLogCliBcDto1.getXbItem().setState(signinLogCliWithXB.getState());
-                    signinLogCliBcDto1.getXbItem().setTimeS(LocalDateTime.of(date,LocalTime.parse(signinLogCliWithXB.getLogTime())));
-                    if (signinLogCliWithXB.getState().equals(1)||signinLogCliWithXB.getState().equals(2)){
-                        // 存在缺勤时间
-                        signinLogCliBcDto1.getXbItem().setQueQingTime(signinLogCliWithXB.getStateTime());
-                    }
-                    // 查看当前班次时间内是否存在补签
-                    BcRule bcRule = signinBc.getRules().get(bcCount - 1);
-                    LocalTime xbTimeObject = LocalTime.parse(bcRule.getXbTime());
-                    SigninRenewal signinRenewal = signinRenewalMapper.hasExistRenewal(LocalDateTime.of(date, xbTimeObject
-                                    .minusMinutes(bcRule.getXbStartTime())),
-                            LocalDateTime.of(date,
-                                    xbTimeObject
-                                            .plusMinutes(bcRule.getXbEndTime())),
-                            userId);
-                    if (signinRenewal!=null){
-                        signinLogCliBcDto1.getXbItem().setBq(true);
-                        signinLogCliBcDto1.getXbItem().setBqId(signinRenewal.getId());
-
-                        signinLogCliBcDto1.getXbItem().setBqState(signinRenewal.getState());
-                        signinLogCliBcDto1.getXbItem().setBqTime(signinRenewal.getRenewalTime());// 不管是否成功，先返回补签点
-                    }
-
-                }
-            }else{
-                // 上下班都没打卡
-                signinLogCliBcDto1.getSbItem().setState(3);
-                signinLogCliBcDto1.getSbItem().setBq(false);
-                signinLogCliBcDto1.getSbItem().setTimeY(LocalDateTime.of(date,LocalTime.parse(bcRules1.get(bcCount-1).getSbTime())));
-                // 下班
-                signinLogCliBcDto1.getXbItem().setBq(false);
-                signinLogCliBcDto1.getXbItem().setState(3);
-                signinLogCliBcDto1.getXbItem().setTimeY(LocalDateTime.of(date,LocalTime.parse(bcRules1.get(bcCount-1).getXbTime())));
-            }
-
-            // 本来就是各班次内层
-//            Integer zuizhongzhuangtao = 0;// 默认正常
-//            Integer stateS = signinLogCliBcDto1.getSbItem().getState();// 上班状态
-//            Integer stateX = signinLogCliBcDto1.getXbItem().getState();// 下班状态
-//            // 上班迟到1，下班早退2最终状态5，迟到早退
-//            if (((stateS.equals(1)||stateS.equals(2)||stateS.equals(5))&&(stateX.equals(1)||stateX.equals(2)||stateX.equals(5)))){
-//                zuizhongzhuangtao = 5;
-//            }
-//            if (stateS.equals(3)||stateX.equals(3)){
-//                zuizhongzhuangtao = 3;
-//            }
-//            // 暂时有一班请假算请假
-//            if (stateS.equals(4)||stateX.equals(4)){
-//                zuizhongzhuangtao = 4;
-//            }
-//            signinLogCliBcDto1.setState(zuizhongzhuangtao);
         }
-
-
         Integer zuizhongzhuangtai = getZuizhongzhuangtai(signinLogForSelfResp);
         signinLogForSelfResp.setState(zuizhongzhuangtai);
-
+        calcQueQingShiChang(signinLogForSelfResp);
         return signinLogForSelfResp;
+    }
+
+    // 计算缺勤时长 SigninLogForSelfResp
+    private void calcQueQingShiChang(SigninLogForSelfResp signinLogForSelfResp) {
+        if (signinLogForSelfResp.getState().equals(3)){
+            // 完整缺勤
+            // 根据每个班次上下班应打卡计算出总时间
+            if (signinLogForSelfResp.getBcDetail() != null && !signinLogForSelfResp.getBcDetail().isEmpty()) {
+                int totalMinutes = 0;
+                for (SigninLogCliBcDto signinLogCliBcDto : signinLogForSelfResp.getBcDetail()) {
+                    if (signinLogCliBcDto == null) {
+                        continue;
+                    }
+                    if (signinLogCliBcDto.getSbItem() == null || signinLogCliBcDto.getXbItem() == null) {
+                        continue;
+                    }
+                    // 获取班次上下班应打卡时间
+                    LocalDateTime sbTimeY = signinLogCliBcDto.getSbItem().getTimeY();
+                    LocalDateTime xbTimeY = signinLogCliBcDto.getXbItem().getTimeY();
+                    
+                    if (sbTimeY != null && xbTimeY != null) {
+                        try {
+                            // 计算时间差（分钟）
+                            long minutes = java.time.Duration.between(sbTimeY, xbTimeY).toMinutes();
+                            
+                            // 如果下班时间在第二天（即小于上班时间），需要特殊处理
+                            if (minutes < 0) {
+                                // 24小时 = 1440分钟
+                                minutes += 1440;
+                            }
+                            
+                            totalMinutes += minutes;
+                        } catch (Exception e) {
+                            log.error("计算班次时间差出错", e);
+                        }
+                    }
+                }
+                
+                signinLogForSelfResp.setQueQinTime(String.valueOf(totalMinutes) + " 分钟");
+            }
+            return;
+        }
+        // 非完整缺勤
+        if (signinLogForSelfResp.getBcDetail()!=null && !signinLogForSelfResp.getBcDetail().isEmpty()){
+            int queQinTimes = 0;
+            for (SigninLogCliBcDto signinLogCliBcDto : signinLogForSelfResp.getBcDetail()) {
+                // 这样写只是为了健壮，实际这里一定有多少班次就一定有对应item
+                if (signinLogCliBcDto==null){
+                    continue;
+                }
+                if (signinLogCliBcDto.getSbItem()!=null){
+                    if (signinLogCliBcDto.getSbItem().getQueQingTime()!=null){
+                        queQinTimes+=signinLogCliBcDto.getSbItem().getQueQingTime();
+                    }
+                }
+                if (signinLogCliBcDto.getXbItem()!=null){
+                    if (signinLogCliBcDto.getXbItem().getQueQingTime()!=null){
+                        queQinTimes+=signinLogCliBcDto.getXbItem().getQueQingTime();
+                    }
+                }
+            }
+            signinLogForSelfResp.setQueQinTime(String.valueOf(queQinTimes) + " 分钟");
+        }
     }
 
     @NotNull
@@ -1176,6 +1152,7 @@ public class SigninLogServiceImpl implements SigninLogService {
     }
 
     /**
+     * 基础计算应该都在此处做
      * 通过原始cli数据列表和班次得到处理后的对象列表-方便后续修改统计算法
      * @param userId
      * @param date 某一天
@@ -1184,6 +1161,7 @@ public class SigninLogServiceImpl implements SigninLogService {
      * @return
      */
     private List<SigninLogCliBcDto> getUserCliListBySigninDataWithBC(Long userId, LocalDate date, List<SigninLogCli> list, SigninBc signinBc) {
+        // 未打卡这里可能对应班次为空
         Map<Integer, Map<Integer, SigninLogCli>> signinLogCliBcCountMap = getSigninLogCliBcCountMap(list);
 
         List<SigninLogCliBcDto> logListT = new ArrayList<>();
@@ -1225,12 +1203,84 @@ public class SigninLogServiceImpl implements SigninLogService {
                 signinLogCli.setState(3);
                 signinLogCli.setBcCount(i);
                 signinLogCli.setUserId(userId);
+                
+                // 设置应打卡时间
+                signinLogCli.getSbItem().setTimeY(LocalDateTime.of(date, LocalTime.parse(bcRule.getSbTime())));
+                signinLogCli.getXbItem().setTimeY(LocalDateTime.of(date, LocalTime.parse(bcRule.getXbTime())));
+                
+                // 设置状态为缺勤
+                signinLogCli.getSbItem().setState(3);
+                signinLogCli.getXbItem().setState(3);
+                
+                // 初始化补签状态
+                signinLogCli.getSbItem().setBq(false);
+                signinLogCli.getXbItem().setBq(false);
+                
+                // 查看当前班次上班时间内是否存在补签
+                LocalTime sbTimeObject = LocalTime.parse(bcRule.getSbTime());
+                SigninRenewal signinRenewal = signinRenewalMapper.hasExistRenewal(
+                        LocalDateTime.of(date, sbTimeObject.minusMinutes(bcRule.getSbStartTime())),
+                        LocalDateTime.of(date, sbTimeObject.plusMinutes(bcRule.getSbEndTime())),
+                        userId);
+                if (signinRenewal != null) {
+                    signinLogCli.getSbItem().setBq(true);
+                    signinLogCli.getSbItem().setBqId(signinRenewal.getId());
+                    signinLogCli.getSbItem().setBqState(signinRenewal.getState());
+                    signinLogCli.getSbItem().setBqTime(signinRenewal.getRenewalTime());
+                    
+                    // 根据补签时间重新计算上班状态
+                    if (signinRenewal.getState() == 1) { // 补签成功
+                        LocalTime signinTime = signinRenewal.getRenewalTime().toLocalTime();
+                        // 重新计算状态
+                        if (signinTime.isBefore(sbTimeObject)) {
+                            // 正常
+                            signinLogCli.getSbItem().setState(0);
+                            signinLogCli.getSbItem().setQueQingTime(0);
+                        } else {
+                            // 迟到
+                            long minutesLate = ChronoUnit.MINUTES.between(sbTimeObject, signinTime);
+                            signinLogCli.getSbItem().setState(1);
+                            signinLogCli.getSbItem().setQueQingTime((int)minutesLate);
+                        }
 
+                    }
+                }
+                
+                // 查看当前班次下班时间内是否存在补签
+                LocalTime xbTimeObject = LocalTime.parse(bcRule.getXbTime());
+                SigninRenewal xbSigninRenewal = signinRenewalMapper.hasExistRenewal(
+                        LocalDateTime.of(date, xbTimeObject.minusMinutes(bcRule.getXbStartTime())),
+                        LocalDateTime.of(date, xbTimeObject.plusMinutes(bcRule.getXbEndTime())),
+                        userId);
+                if (xbSigninRenewal != null) {
+                    signinLogCli.getXbItem().setBq(true);
+                    signinLogCli.getXbItem().setBqId(xbSigninRenewal.getId());
+                    signinLogCli.getXbItem().setBqState(xbSigninRenewal.getState());
+                    signinLogCli.getXbItem().setBqTime(xbSigninRenewal.getRenewalTime());
+                    
+                    // 根据补签时间重新计算下班状态
+                    if (xbSigninRenewal.getState() == 1) { // 补签成功
+                        LocalTime signinTime = xbSigninRenewal.getRenewalTime().toLocalTime();
+                        // 重新计算状态
+                        if (signinTime.isAfter(xbTimeObject)) {
+                            // 正常
+                            signinLogCli.getXbItem().setState(0);
+                            signinLogCli.getXbItem().setQueQingTime(0);
+                        } else {
+                            // 早退
+                            long minutesEarly = ChronoUnit.MINUTES.between(signinTime, xbTimeObject);
+                            signinLogCli.getXbItem().setState(2);
+                            signinLogCli.getXbItem().setQueQingTime((int)minutesEarly);
+                        }
+                    }
+                }
+                signinLogCli.calculateState();
                 logListT.add(signinLogCli);
                 continue;
             }
             // 如果班次存在，也就是打过卡，看看上下班是不是都没异常，如果有上下班缺一个直接找请假，都不缺直接对比状态
 
+            // todo:这块纠正逻辑有问题，应该是全局的，先不管了，这里短期内也不会启用
             Map<Integer, SigninLogCli> signinLogCliMap = signinLogCliBcCountMap.get(i);
             // add: 上下班都存在结合处理表，如果有修改的状态机
             if (signinLogCliMap.containsKey(0)){
@@ -1288,8 +1338,80 @@ public class SigninLogServiceImpl implements SigninLogService {
                     signinLogCli.setBcCount(i);
                     signinLogCli.setLogDatetime(date);
 
+                    // 设置上下班应打卡时间
+                    signinLogCli.getSbItem().setTimeY(LocalDateTime.of(date, LocalTime.parse(bcRule.getSbTime())));
+                    signinLogCli.getXbItem().setTimeY(LocalDateTime.of(date, LocalTime.parse(bcRule.getXbTime())));
+                    
+                    // 设置状态
+                    signinLogCli.getSbItem().setState(shangbanQingKuang.getState());
+                    signinLogCli.getXbItem().setState(xiabanQingKuang.getState());
+                    
+                    // 实际打卡时间
                     signinLogCli.getSbItem().setTimeS(LocalDateTime.of(date, LocalTime.parse(shangbanQingKuang.getLogTime())));
-                    signinLogCli.getXbItem().setTimeS(LocalDateTime.of(date,LocalTime.parse(xiabanQingKuang.getLogTime())));
+                    signinLogCli.getXbItem().setTimeS(LocalDateTime.of(date, LocalTime.parse(xiabanQingKuang.getLogTime())));
+                    
+                    // 初始化补签状态
+                    signinLogCli.getSbItem().setBq(false);
+                    signinLogCli.getXbItem().setBq(false);
+                    
+                    // 查看当前班次上班时间内是否存在补签
+                    LocalTime sbTimeObject = LocalTime.parse(bcRule.getSbTime());
+                    SigninRenewal signinRenewal = signinRenewalMapper.hasExistRenewal(
+                            LocalDateTime.of(date, sbTimeObject.minusMinutes(bcRule.getSbStartTime())),
+                            LocalDateTime.of(date, sbTimeObject.plusMinutes(bcRule.getSbEndTime())),
+                            userId);
+                    if (signinRenewal != null) {
+                        signinLogCli.getSbItem().setBq(true);
+                        signinLogCli.getSbItem().setBqId(signinRenewal.getId());
+                        signinLogCli.getSbItem().setBqState(signinRenewal.getState());
+                        signinLogCli.getSbItem().setBqTime(signinRenewal.getRenewalTime());
+                        
+                        // 根据补签时间重新计算上班状态
+                        if (signinRenewal.getState() == 1) { // 补签成功
+                            LocalTime signinTime = signinRenewal.getRenewalTime().toLocalTime();
+                            // 重新计算状态
+                            if (signinTime.isBefore(sbTimeObject)) {
+                                // 正常
+                                signinLogCli.getSbItem().setState(0);
+                                signinLogCli.getSbItem().setQueQingTime(0);
+                            } else {
+                                // 迟到
+                                long minutesLate = ChronoUnit.MINUTES.between(sbTimeObject, signinTime);
+                                signinLogCli.getSbItem().setState(1);
+                                signinLogCli.getSbItem().setQueQingTime((int)minutesLate);
+                            }
+                        }
+                    }
+                    
+                    // 查看当前班次下班时间内是否存在补签
+                    LocalTime xbTimeObject = LocalTime.parse(bcRule.getXbTime());
+                    SigninRenewal xbSigninRenewal = signinRenewalMapper.hasExistRenewal(
+                            LocalDateTime.of(date, xbTimeObject.minusMinutes(bcRule.getXbStartTime())),
+                            LocalDateTime.of(date, xbTimeObject.plusMinutes(bcRule.getXbEndTime())),
+                            userId);
+                    if (xbSigninRenewal != null) {
+                        signinLogCli.getXbItem().setBq(true);
+                        signinLogCli.getXbItem().setBqId(xbSigninRenewal.getId());
+                        signinLogCli.getXbItem().setBqState(xbSigninRenewal.getState());
+                        signinLogCli.getXbItem().setBqTime(xbSigninRenewal.getRenewalTime());
+                        
+                        // 根据补签时间重新计算下班状态
+                        if (xbSigninRenewal.getState() == 1) { // 补签成功
+                            LocalTime signinTime = xbSigninRenewal.getRenewalTime().toLocalTime();
+                            // 重新计算状态
+                            if (signinTime.isAfter(xbTimeObject)) {
+                                // 正常
+                                signinLogCli.getXbItem().setState(0);
+                                signinLogCli.getXbItem().setQueQingTime(0);
+                            } else {
+                                // 早退
+                                long minutesEarly = ChronoUnit.MINUTES.between(signinTime, xbTimeObject);
+                                signinLogCli.getXbItem().setState(2);
+                                signinLogCli.getXbItem().setQueQingTime((int)minutesEarly);
+                            }
+//                            signinLogCli.getXbItem().setTimeS(xbSigninRenewal.getRenewalTime());
+                        }
+                    }
 
                     logListT.add(signinLogCli);
                     continue;
@@ -1300,18 +1422,90 @@ public class SigninLogServiceImpl implements SigninLogService {
                 signinLogCli.setBcCount(i);
                 signinLogCli.setLogDatetime(date);
 
-                signinLogCli.getSbItem().setTimeS(LocalDateTime.of(date,LocalTime.parse(shangbanQingKuang.getLogTime())));
-                signinLogCli.getXbItem().setTimeS(LocalDateTime.of(date,LocalTime.parse(xiabanQingKuang.getLogTime())));
+                // 设置上下班应打卡时间
+                signinLogCli.getSbItem().setTimeY(LocalDateTime.of(date, LocalTime.parse(bcRule.getSbTime())));
+                signinLogCli.getXbItem().setTimeY(LocalDateTime.of(date, LocalTime.parse(bcRule.getXbTime())));
+                
+                // 设置状态
+                signinLogCli.getSbItem().setState(shangbanQingKuang.getState());
+                signinLogCli.getXbItem().setState(xiabanQingKuang.getState());
+                
+                // 实际打卡时间
+                signinLogCli.getSbItem().setTimeS(LocalDateTime.of(date, LocalTime.parse(shangbanQingKuang.getLogTime())));
+                signinLogCli.getXbItem().setTimeS(LocalDateTime.of(date, LocalTime.parse(xiabanQingKuang.getLogTime())));
 
                 // 迟到或早退时间
-                signinLogCli
-                        .getSbItem()
-                        .setQueQingTime(
-                                !shangbanQingKuang.getState().equals(0)
-                                        ?shangbanQingKuang.getStateTime() :
-                                        xiabanQingKuang.getStateTime()
-                        );
-
+                if (shangbanQingKuang.getState().equals(1) || shangbanQingKuang.getState().equals(2)) {
+                    signinLogCli.getSbItem().setQueQingTime(shangbanQingKuang.getStateTime());
+                }
+                if (xiabanQingKuang.getState().equals(1) || xiabanQingKuang.getState().equals(2)) {
+                    signinLogCli.getXbItem().setQueQingTime(xiabanQingKuang.getStateTime());
+                }
+                
+                // 初始化补签状态
+                signinLogCli.getSbItem().setBq(false);
+                signinLogCli.getXbItem().setBq(false);
+                
+                // 查看当前班次上班时间内是否存在补签
+                LocalTime sbTimeObject = LocalTime.parse(bcRule.getSbTime());
+                SigninRenewal signinRenewal = signinRenewalMapper.hasExistRenewal(
+                        LocalDateTime.of(date, sbTimeObject.minusMinutes(bcRule.getSbStartTime())),
+                        LocalDateTime.of(date, sbTimeObject.plusMinutes(bcRule.getSbEndTime())),
+                        userId);
+                if (signinRenewal != null) {
+                    signinLogCli.getSbItem().setBq(true);
+                    signinLogCli.getSbItem().setBqId(signinRenewal.getId());
+                    signinLogCli.getSbItem().setBqState(signinRenewal.getState());
+                    signinLogCli.getSbItem().setBqTime(signinRenewal.getRenewalTime());
+                    
+                    // 根据补签时间重新计算上班状态
+                    if (signinRenewal.getState() == 1) { // 补签成功
+                        LocalTime signinTime = signinRenewal.getRenewalTime().toLocalTime();
+                        // 重新计算状态
+                        if (signinTime.isBefore(sbTimeObject)) {
+                            // 正常
+                            signinLogCli.getSbItem().setState(0);
+                            signinLogCli.getSbItem().setQueQingTime(0);
+                        } else {
+                            // 迟到
+                            long minutesLate = ChronoUnit.MINUTES.between(sbTimeObject, signinTime);
+                            signinLogCli.getSbItem().setState(1);
+                            signinLogCli.getSbItem().setQueQingTime((int)minutesLate);
+                        }
+//                        signinLogCli.getSbItem().setTimeS(signinRenewal.getRenewalTime());
+                    }
+                }
+                
+                // 查看当前班次下班时间内是否存在补签
+                LocalTime xbTimeObject = LocalTime.parse(bcRule.getXbTime());
+                SigninRenewal xbSigninRenewal = signinRenewalMapper.hasExistRenewal(
+                        LocalDateTime.of(date, xbTimeObject.minusMinutes(bcRule.getXbStartTime())),
+                        LocalDateTime.of(date, xbTimeObject.plusMinutes(bcRule.getXbEndTime())),
+                        userId);
+                if (xbSigninRenewal != null) {
+                    signinLogCli.getXbItem().setBq(true);
+                    signinLogCli.getXbItem().setBqId(xbSigninRenewal.getId());
+                    signinLogCli.getXbItem().setBqState(xbSigninRenewal.getState());
+                    signinLogCli.getXbItem().setBqTime(xbSigninRenewal.getRenewalTime());
+                    
+                    // 根据补签时间重新计算下班状态
+                    if (xbSigninRenewal.getState() == 1) { // 补签成功
+                        LocalTime signinTime = xbSigninRenewal.getRenewalTime().toLocalTime();
+                        // 重新计算状态
+                        if (signinTime.isAfter(xbTimeObject)) {
+                            // 正常
+                            signinLogCli.getXbItem().setState(0);
+                            signinLogCli.getXbItem().setQueQingTime(0);
+                        } else {
+                            // 早退
+                            long minutesEarly = ChronoUnit.MINUTES.between(signinTime, xbTimeObject);
+                            signinLogCli.getXbItem().setState(2);
+                            signinLogCli.getXbItem().setQueQingTime((int)minutesEarly);
+                        }
+//                        signinLogCli.getXbItem().setTimeS(xbSigninRenewal.getRenewalTime());
+                    }
+                }
+                signinLogCli.calculateState();
                 logListT.add(signinLogCli);
                 continue;
             }
@@ -1320,6 +1514,99 @@ public class SigninLogServiceImpl implements SigninLogService {
             signinLogCli.setState(3);
             signinLogCli.setUserId(userId);
             signinLogCli.setBcCount(i);
+            signinLogCli.setLogDatetime(date);
+            
+            // 设置上下班应打卡时间
+            signinLogCli.getSbItem().setTimeY(LocalDateTime.of(date, LocalTime.parse(bcRule.getSbTime())));
+            signinLogCli.getXbItem().setTimeY(LocalDateTime.of(date, LocalTime.parse(bcRule.getXbTime())));
+            
+            // 设置状态为缺勤
+            signinLogCli.getSbItem().setState(3);
+            signinLogCli.getXbItem().setState(3);
+            
+            // 初始化补签状态
+            signinLogCli.getSbItem().setBq(false);
+            signinLogCli.getXbItem().setBq(false);
+            
+            // 如果仅存在上班或下班打卡记录，设置相应信息
+            if (signinLogCliMap.containsKey(0)) {
+                SigninLogCli shangbanQingKuang = signinLogCliMap.get(0);
+                signinLogCli.getSbItem().setState(shangbanQingKuang.getState());
+                signinLogCli.getSbItem().setTimeS(LocalDateTime.of(date, LocalTime.parse(shangbanQingKuang.getLogTime())));
+                if (shangbanQingKuang.getState().equals(1) || shangbanQingKuang.getState().equals(2)) {
+                    signinLogCli.getSbItem().setQueQingTime(shangbanQingKuang.getStateTime());
+                }
+            }
+            
+            if (signinLogCliMap.containsKey(1)) {
+                SigninLogCli xiabanQingKuang = signinLogCliMap.get(1);
+                signinLogCli.getXbItem().setState(xiabanQingKuang.getState());
+                signinLogCli.getXbItem().setTimeS(LocalDateTime.of(date, LocalTime.parse(xiabanQingKuang.getLogTime())));
+                if (xiabanQingKuang.getState().equals(1) || xiabanQingKuang.getState().equals(2)) {
+                    signinLogCli.getXbItem().setQueQingTime(xiabanQingKuang.getStateTime());
+                }
+            }
+            
+            // 查看当前班次上班时间内是否存在补签
+            LocalTime sbTimeObject = LocalTime.parse(bcRule.getSbTime());
+            SigninRenewal signinRenewal = signinRenewalMapper.hasExistRenewal(
+                    LocalDateTime.of(date, sbTimeObject.minusMinutes(bcRule.getSbStartTime())),
+                    LocalDateTime.of(date, sbTimeObject.plusMinutes(bcRule.getSbEndTime())),
+                    userId);
+            if (signinRenewal != null) {
+                signinLogCli.getSbItem().setBq(true);
+                signinLogCli.getSbItem().setBqId(signinRenewal.getId());
+                signinLogCli.getSbItem().setBqState(signinRenewal.getState());
+                signinLogCli.getSbItem().setBqTime(signinRenewal.getRenewalTime());
+                
+                // 根据补签时间重新计算上班状态
+                if (signinRenewal.getState() == 1) { // 补签成功
+                    LocalTime signinTime = signinRenewal.getRenewalTime().toLocalTime();
+                    // 重新计算状态
+                    if (signinTime.isBefore(sbTimeObject)) {
+                        // 正常
+                        signinLogCli.getSbItem().setState(0);
+                        signinLogCli.getSbItem().setQueQingTime(0);
+                    } else {
+                        // 迟到
+                        long minutesLate = ChronoUnit.MINUTES.between(sbTimeObject, signinTime);
+                        signinLogCli.getSbItem().setState(1);
+                        signinLogCli.getSbItem().setQueQingTime((int)minutesLate);
+                    }
+//                    signinLogCli.getSbItem().setTimeS(signinRenewal.getRenewalTime());
+                }
+            }
+            
+            // 查看当前班次下班时间内是否存在补签
+            LocalTime xbTimeObject = LocalTime.parse(bcRule.getXbTime());
+            SigninRenewal xbSigninRenewal = signinRenewalMapper.hasExistRenewal(
+                    LocalDateTime.of(date, xbTimeObject.minusMinutes(bcRule.getXbStartTime())),
+                    LocalDateTime.of(date, xbTimeObject.plusMinutes(bcRule.getXbEndTime())),
+                    userId);
+            if (xbSigninRenewal != null) {
+                signinLogCli.getXbItem().setBq(true);
+                signinLogCli.getXbItem().setBqId(xbSigninRenewal.getId());
+                signinLogCli.getXbItem().setBqState(xbSigninRenewal.getState());
+                signinLogCli.getXbItem().setBqTime(xbSigninRenewal.getRenewalTime());
+                
+                // 根据补签时间重新计算下班状态
+                if (xbSigninRenewal.getState() == 1) { // 补签成功
+                    LocalTime signinTime = xbSigninRenewal.getRenewalTime().toLocalTime();
+                    // 重新计算状态
+                    if (signinTime.isAfter(xbTimeObject)) {
+                        // 正常
+                        signinLogCli.getXbItem().setState(0);
+                        signinLogCli.getXbItem().setQueQingTime(0);
+                    } else {
+                        // 早退
+                        long minutesEarly = ChronoUnit.MINUTES.between(signinTime, xbTimeObject);
+                        signinLogCli.getXbItem().setState(2);
+                        signinLogCli.getXbItem().setQueQingTime((int)minutesEarly);
+                    }
+                    // signinLogCli.getXbItem().setTimeS(xbSigninRenewal.getRenewalTime());
+                }
+            }
+            signinLogCli.calculateState();
             logListT.add(signinLogCli);
             continue;
         }
@@ -1407,7 +1694,7 @@ public class SigninLogServiceImpl implements SigninLogService {
                 signinLogCliLambdaQueryWrapper.eq(SigninLogCli::getStartEnd, bcTimeRule.getSxBState());
                 List<SigninLogCli> list = signinLogCliDao.list(signinLogCliLambdaQueryWrapper);
                 // 正常只存在一条，但是为了健壮性，还是用list，大于1的直接取第0条数据
-                if (list.size()==0){
+                if (list.isEmpty()){
                     // 数据都不存在，可不缺勤
                     signinLogRealYiQianDaoDto.setTag("缺勤");
                     weiqiandaoList.add(signinLogRealYiQianDaoDto);

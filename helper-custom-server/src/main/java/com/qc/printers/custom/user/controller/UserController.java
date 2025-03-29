@@ -19,6 +19,7 @@ import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.domain.entity.UserExtBase;
 import com.qc.printers.common.user.domain.vo.request.user.SummeryInfoReq;
 import com.qc.printers.common.user.domain.vo.response.user.UserInfoBaseExtStateResp;
+import com.qc.printers.common.user.domain.vo.response.user.UserVerificationStateResp;
 import com.qc.printers.common.user.service.annotation.UserPermissionGradeCheck;
 import com.qc.printers.common.vailcode.annotations.CheckVailCode;
 import com.qc.printers.common.vailcode.domain.enums.VailType;
@@ -433,6 +434,12 @@ public class UserController {
         return R.successOnlyObject(userService.userinfoExtMy());
     }
 
+    @NeedToken
+    @ApiOperation(value = "返回实名认证状态", notes = "")
+    @GetMapping("/user_verification_state")
+    public R<UserVerificationStateResp> getUserVerificationState() {
+        return R.successOnlyObject(userService.getUserVerificationState());
+    }
     @NeedToken
     @ApiOperation(value = "修改个人信息_ext", notes = "")
     @PostMapping("/userinfo_ext_my_apply_for")

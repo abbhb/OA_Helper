@@ -78,4 +78,6 @@ public class SigninLogForSelfResp implements Serializable {
      */
     private String queQinTime;
 
+
+
 }

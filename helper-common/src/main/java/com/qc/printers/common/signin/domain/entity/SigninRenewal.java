@@ -29,8 +29,14 @@ public class SigninRenewal implements Serializable {
      */
     private LocalDateTime createTime;
 
+
     private LocalDateTime updateTime;
 
+    /**
+     * 补签审批时间 approval_time
+     * 可能 Null
+     */
+    private LocalDateTime approvalTime;
 
     private String renewalReason;
 

@@ -59,6 +59,30 @@ public class SigninLogCliBcDto implements Serializable {
 
     // 请假id（如果有）标记为不序列化
     private transient List<Long> askLeaveId;
+
+    public void calculateState() {
+        // 如果上班和下班都是正常(0)，则整体状态为正常(0)
+        if (sbItem.getState().equals(0) && xbItem.getState().equals(0)) {
+            state = 0;
+        }
+        // 如果上班或下班有请假(4)，则整体状态为请假(4)
+        else if (sbItem.getState().equals(4) || xbItem.getState().equals(4)) {
+            state = 4;
+        }
+        // 如果上班或下班有缺勤(3)，则整体状态为缺勤(3)
+        else if (sbItem.getState().equals(3) || xbItem.getState().equals(3)) {
+            state = 3;
+        }
+        // 如果上班有迟到(1)或下班有早退(2)，则整体状态为有迟到早退但不算缺勤(5)
+        else if (sbItem.getState().equals(1) || xbItem.getState().equals(2) || 
+                sbItem.getState().equals(2) || xbItem.getState().equals(1)) {
+            state = 5;
+        }
+        // 其他情况，整体状态为缺勤(3)
+        else {
+            state = 3;
+        }
+    }
 }
 
 

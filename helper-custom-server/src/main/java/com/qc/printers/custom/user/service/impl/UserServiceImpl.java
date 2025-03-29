@@ -30,6 +30,7 @@ import com.qc.printers.common.user.domain.dto.UserInfoBaseExtDto;
 import com.qc.printers.common.user.domain.entity.*;
 import com.qc.printers.common.user.domain.vo.request.user.SummeryInfoReq;
 import com.qc.printers.common.user.domain.vo.response.user.UserInfoBaseExtStateResp;
+import com.qc.printers.common.user.domain.vo.response.user.UserVerificationStateResp;
 import com.qc.printers.common.user.service.*;
 import com.qc.printers.common.user.service.cache.UserCache;
 import com.qc.printers.custom.user.domain.dto.LoginDTO;
@@ -1241,10 +1242,10 @@ public class UserServiceImpl implements UserService {
         return userSelectListResp;
     }
 
-    @Override
-    public UserInfoBaseExtStateResp userinfoExtMy() {
-        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
-        String userId = String.valueOf(currentUser.getId());
+    // HistoricProcessInstance: can be null
+    private HistoricProcessInstance getProcessSystemByUserId(Long uid) {
+        String userId = String.valueOf(uid);
+
         // 首先判断当前有没有进行中的审批，还没结束
         HistoricProcessInstanceQuery query = historyService.createHistoricProcessInstanceQuery()
                 .startedBy(userId)
@@ -1253,15 +1254,38 @@ public class UserServiceImpl implements UserService {
         List<HistoricProcessInstance> processSystemList = query.processDefinitionKey("Process_system_1").unfinished().list();
         HistoricProcessInstance processSystem1 = null;
 
-
-
-
-
-
-
         if (processSystemList!=null&&processSystemList.size()!=0){
             processSystem1 = processSystemList.get(0);
         }
+        return processSystem1;
+    }
+
+    @Override
+    public UserVerificationStateResp getUserVerificationState() {
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+        Long userId = currentUser.getId();
+        HistoricProcessInstance processSystem1 = getProcessSystemByUserId(userId);
+        UserVerificationStateResp userVerificationStateResp = new UserVerificationStateResp();
+        userVerificationStateResp.setUserId(userId);
+        if (processSystem1!=null){
+            userVerificationStateResp.setState(2);
+            return userVerificationStateResp;
+        }
+        // 没在审批中
+        UserExtBase userExtBase = userExtBaseDao.getById(userId);
+        if (userExtBase!=null){
+            userVerificationStateResp.setState(1);
+            return userVerificationStateResp;
+        }
+        userVerificationStateResp.setState(0);
+        return userVerificationStateResp;
+    }
+
+    @Override
+    public UserInfoBaseExtStateResp userinfoExtMy() {
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+        String userId = String.valueOf(currentUser.getId());
+        HistoricProcessInstance processSystem1 = getProcessSystemByUserId(currentUser.getId());
         UserInfoBaseExtStateResp userInfoBaseExtStateResp = new UserInfoBaseExtStateResp();
         // 当前信息一直，都是联查两个表，左连接ext表即可！
         UserInfoBaseExtDto userInfoBaseExtDto = new UserInfoBaseExtDto();

@@ -20,6 +20,8 @@ public class SigninLog implements Serializable {
     private String signinWay;
 
     private String signinImage;
+    private String signinCardId;
+
     private Long updateUser;
     private String remark;
 

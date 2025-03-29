@@ -6,6 +6,7 @@ import com.qc.printers.common.common.annotation.PermissionCheck;
 import com.qc.printers.common.common.annotation.SigninDetailUserCheck;
 import com.qc.printers.common.signin.domain.entity.SigninBc;
 import com.qc.printers.custom.signin.domain.vo.SigninDetailDataResp;
+import com.qc.printers.custom.signin.domain.vo.SigninDetailSigninInfoResp;
 import com.qc.printers.custom.signin.domain.vo.SigninDetailUserInfoResp;
 import com.qc.printers.custom.signin.service.SigninDetailService;
 import io.swagger.annotations.Api;
@@ -57,5 +58,20 @@ public class SigninDetailController {
         return R.success(signinDetailService.getSigninInfo(userId,date));
     }
 
+
+    /**
+     * 获取某日考勤打卡信息
+     * @param userId
+     * @param date 2024-03-16
+     * @return getSigninDetailSigninInfos
+     */
+    @GetMapping("/get_signin_detail_signin_infos/{userId}")
+    @NeedToken
+    @SigninDetailUserCheck(userIdKey = "#userId")
+    @ApiOperation(value = "获取某日考勤打卡信息", notes = "")
+    public R<List<SigninDetailSigninInfoResp>> getSigninDetailSigninInfos(@PathVariable(name = "userId") Long userId, String date) {
+        log.info("获取某日考勤打卡信息");
+        return R.success(signinDetailService.getSigninDetailSigninInfos(userId,date));
+    }
 
 }

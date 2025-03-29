@@ -11,8 +11,7 @@ import java.time.LocalDateTime;
 @Mapper
 public interface SigninRenewalMapper extends BaseMapper<SigninRenewal> {
 
-    @Select("SELECT * FROM signin_renewal WHERE user_id = #{userId} AND renewal_time BETWEEN #{startTime} AND #{endTime}\n" +
-            "ORDER BY CASE WHEN state = 1 THEN 1 WHEN state = 0 THEN 2 WHEN state = 2 THEN 3 END, update_time DESC LIMIT 1;")
+    @Select("SELECT * FROM signin_renewal WHERE user_id = #{userId} AND renewal_time BETWEEN #{startTime} AND #{endTime} ORDER BY CASE WHEN state = 1 THEN 1 WHEN state = 0 THEN 2 WHEN state = 2 THEN 3 END, update_time DESC LIMIT 1;")
     SigninRenewal hasExistRenewal(@Param("startTime") LocalDateTime startTime, @Param("endTime") LocalDateTime endTime, @Param("userId") Long userId);
 
 }
