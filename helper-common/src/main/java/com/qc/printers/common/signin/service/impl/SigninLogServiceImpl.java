@@ -940,6 +940,10 @@ public class SigninLogServiceImpl implements SigninLogService {
                 }
                 signinLogForSelfResp.getBcDetail().add(signinLogCliBcDto);
             }
+            if (signinLogCliBcDto.getState().equals(0)){
+                // 正常
+                signinLogForSelfResp.getBcDetail().add(signinLogCliBcDto);
+            }
         }
         Integer zuizhongzhuangtai = getZuizhongzhuangtai(signinLogForSelfResp);
         signinLogForSelfResp.setState(zuizhongzhuangtai);

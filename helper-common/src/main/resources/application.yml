@@ -10,6 +10,7 @@ spring:
       max-file-size: -1
       max-request-size: -1
   profiles:
+    # 发版前一定记得改成prod 不然流水线会以dev打包
     active: prod
   application:
     name: printes
