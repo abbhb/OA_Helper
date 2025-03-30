@@ -1,6 +1,8 @@
 package com.qc.printers.common.signin.domain.entity;
 
 
+import com.baomidou.mybatisplus.annotation.FieldFill;
+import com.baomidou.mybatisplus.annotation.TableField;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -41,6 +43,7 @@ public class SigninLogAskLeave implements Serializable {
      */
     private String askLeaveAboutActId;
 
+    @TableField(fill = FieldFill.INSERT)
     private LocalDateTime createTime;
 
     /**

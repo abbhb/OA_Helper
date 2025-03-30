@@ -54,7 +54,7 @@ public class ServiceTask {
         String jiezhishijian = (String) execution.getVariable("time23031");
         String reason = (String) execution.getVariable("textarea28633");
         // 请假类型 1:病假 2:事假
-        String leixin = (String) execution.getVariable("radio96982");
+        Integer leixin = execution.getVariable("radio96982",Integer.class);
         System.out.println("你好：" + initiator);//打印   你好：中国
         // initiator为发起人
         String qishi = qishiriqi + " " + qishishijian;
@@ -69,12 +69,13 @@ public class ServiceTask {
         signinLogAskLeave.setEndTime(end_);
         signinLogAskLeave.setAskLeaveAboutActId(processInstanceId);
         signinLogAskLeave.setAskLeaveReason(reason);
-        if (leixin.equals("1")){
-            leixin = "病假";
-        }else if (leixin.equals("2")){
-            leixin = "事假";
+        String leixinS = "";
+        if (leixin.equals(1)){
+            leixinS = "病假";
+        }else if (leixin.equals(2)){
+            leixinS = "事假";
         }
-        signinLogAskLeave.setAskLeaveLeaveType(leixin);
+        signinLogAskLeave.setAskLeaveLeaveType(leixinS);
         signinLogAskLeaveService.addAskLeave(signinLogAskLeave);
     }
 

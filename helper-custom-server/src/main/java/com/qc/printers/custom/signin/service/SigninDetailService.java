@@ -213,6 +213,10 @@ public class SigninDetailService {
                     log.error("下班班次为空,bc-count:{},userid:{}",bcItem.getBcCount(),bcItem.getUserId());
                     continue;
                 }
+                if (bcItem.getState().equals(4)){
+                    log.info("请假班次不考虑,bc-count:{},userid:{}",bcItem.getBcCount(),bcItem.getUserId());
+                    continue;
+                }
                 if (sbItem.getBq() || xbItem.getBq()){
                     // 综合状态，2优先级>0>1的覆盖
                     if (sbItem.getBqState() == 2 || xbItem.getBqState() == 2){

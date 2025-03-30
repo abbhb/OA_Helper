@@ -904,9 +904,8 @@ public class SigninLogServiceImpl implements SigninLogService {
                                     " [下班]宽限期内未打卡；"
                     );
                 }
-                signinLogForSelfResp.getBcDetail().add(signinLogCliBcDto);
             }
-            if (signinLogCliBcDto.getState().equals(1)||signinLogCliBcDto.getState().equals(2)||signinLogCliBcDto.getState().equals(5)){
+            else if (signinLogCliBcDto.getState().equals(1)||signinLogCliBcDto.getState().equals(2)||signinLogCliBcDto.getState().equals(5)){
                 // 迟到 早退 没缺勤说明肯定同时存在上班或下班
                 SigninLogCliBcItem sbItem = signinLogCliBcDto.getSbItem();
 
@@ -938,17 +937,51 @@ public class SigninLogServiceImpl implements SigninLogService {
                                     + " ，早退"+ String.valueOf(xbItem.getQueQingTime()) +"分钟；"
                     );
                 }
-                signinLogForSelfResp.getBcDetail().add(signinLogCliBcDto);
+
             }
-            if (signinLogCliBcDto.getState().equals(0)){
+            else {
                 // 正常
-                signinLogForSelfResp.getBcDetail().add(signinLogCliBcDto);
+                // 暂无特殊处理
             }
+            signinLogForSelfResp.getBcDetail().add(signinLogCliBcDto);
         }
         Integer zuizhongzhuangtai = getZuizhongzhuangtai(signinLogForSelfResp);
         signinLogForSelfResp.setState(zuizhongzhuangtai);
         calcQueQingShiChang(signinLogForSelfResp);
+        // 额外 补充备注信息，适用与请假，后续补签等额外的信息也可以在此处补充
+        richRemarkData(userCliListBySigninDataWithBC,signinLogForSelfResp);
         return signinLogForSelfResp;
+    }
+
+    private void richRemarkData(List<SigninLogCliBcDto> userCliListBySigninDataWithBC, SigninLogForSelfResp signinLogForSelfResp) {
+        if (signinLogForSelfResp.getState().equals(4)){
+            // 请假原因补充
+            // 请假信息查询非空
+            Set<Long> askLeaveIds = new HashSet<>();
+            // 班次不为空才有意义
+            for (SigninLogCliBcDto bcItem : userCliListBySigninDataWithBC) {
+                List<Long> askLeaveId = bcItem.getAskLeaveId();
+                if (askLeaveId == null){
+                    continue;
+                }
+                askLeaveIds.addAll(askLeaveId);
+            }
+            // 请假id列表为空
+            if (!askLeaveIds.isEmpty()) {
+                List<SigninLogAskLeave> signinLogAskLeaveList = signinLogAskLeaveDao.listByIds(askLeaveIds);
+                if (signinLogAskLeaveList != null && !signinLogAskLeaveList.isEmpty()){
+                    // 请假信息查询非空
+                    StringBuilder sb = new StringBuilder();
+                    for (SigninLogAskLeave signinLogAskLeave : signinLogAskLeaveList) {
+                        sb.append(signinLogAskLeave.getAskLeaveLeaveType()).append(" ").append(signinLogAskLeave.getStartTime()).append(" - ").append(signinLogAskLeave.getEndTime()).append(";");
+                    }
+                    signinLogForSelfResp.setErrMsg(
+                            signinLogForSelfResp.getErrMsg()
+                                    + sb.toString()
+                    );
+                }
+            }
+        }
     }
 
     // 计算缺勤时长 SigninLogForSelfResp
@@ -1202,7 +1235,20 @@ public class SigninLogServiceImpl implements SigninLogService {
                 signinLogCli.setAskLeaveId(itemToIdList(userAskForLeave_s,userAskForLeave_x));
                 signinLogCli.setBcCount(i);
                 signinLogCli.setUserId(userId);
+
+                // 设置应打卡时间
+                signinLogCli.getSbItem().setTimeY(LocalDateTime.of(date, LocalTime.parse(bcRule.getSbTime())));
+                signinLogCli.getXbItem().setTimeY(LocalDateTime.of(date, LocalTime.parse(bcRule.getXbTime())));
+
+                // 设置状态为缺勤
+                signinLogCli.getSbItem().setState(4);
+                signinLogCli.getXbItem().setState(4);
+
+                // 初始化补签状态
+                signinLogCli.getSbItem().setBq(false);
+                signinLogCli.getXbItem().setBq(false);
                 logListT.add(signinLogCli);
+
                 continue;
             }
             // 连班次都不存在，不说上下班了，肯定就是没打卡
