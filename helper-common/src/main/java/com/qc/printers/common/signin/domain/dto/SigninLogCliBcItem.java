@@ -8,6 +8,11 @@ import java.time.LocalDateTime;
 @Data
 public class SigninLogCliBcItem implements Serializable {
     /**
+     * 来源原始打卡ID
+     * 不一定非空，使用需要先判断
+     */
+    private String fromLogId;
+    /**
      * 应打卡时间
      */
     private LocalDateTime timeY;

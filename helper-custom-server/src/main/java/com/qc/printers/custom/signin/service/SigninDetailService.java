@@ -1,11 +1,16 @@
 package com.qc.printers.custom.signin.service;
 
 import com.qc.printers.common.common.CustomException;
+import com.qc.printers.common.common.utils.StringUtils;
 import com.qc.printers.common.common.utils.oss.OssDBUtil;
+import com.qc.printers.common.signin.dao.SigninDeviceDao;
 import com.qc.printers.common.signin.dao.SigninLogAskLeaveDao;
+import com.qc.printers.common.signin.dao.SigninLogDao;
 import com.qc.printers.common.signin.dao.SigninRenewalDao;
 import com.qc.printers.common.signin.domain.dto.SigninLogCliBcDto;
 import com.qc.printers.common.signin.domain.dto.SigninLogCliBcItem;
+import com.qc.printers.common.signin.domain.entity.SigninDevice;
+import com.qc.printers.common.signin.domain.entity.SigninLog;
 import com.qc.printers.common.signin.domain.entity.SigninLogAskLeave;
 import com.qc.printers.common.signin.domain.entity.SigninRenewal;
 import com.qc.printers.common.signin.domain.resp.SigninLogForSelfResp;
@@ -14,9 +19,7 @@ import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.entity.SysDept;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.service.ISysDeptService;
-import com.qc.printers.custom.signin.domain.vo.SigninDetailDataResp;
-import com.qc.printers.custom.signin.domain.vo.SigninDetailSigninInfoResp;
-import com.qc.printers.custom.signin.domain.vo.SigninDetailUserInfoResp;
+import com.qc.printers.custom.signin.domain.vo.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -40,6 +43,12 @@ public class SigninDetailService {
     private SigninRenewalDao signinRenewalDao;
     @Autowired
     private SigninLogService signinLogService;
+
+    @Autowired
+    private SigninLogDao signinLogDao;
+
+    @Autowired
+    private SigninDeviceDao signinDeviceDao;
 
     @Autowired
     private SigninLogAskLeaveDao signinLogAskLeaveDao;
@@ -241,4 +250,148 @@ public class SigninDetailService {
     }
 
 
+    /**
+     * 获取某日打卡数据
+     * @param userId
+     * @param date
+     * @return
+     */
+    public List<SigninDetailClockingDataResp> getClockingRecords(Long userId, String date) {
+        List<SigninDetailClockingDataResp> clockingDataRespList = new ArrayList<>();
+        User user = userDao.getById(userId);
+        if (user==null){
+            throw new CustomException("用户信息为空");
+        }
+        SysDept userDept = iSysDeptService.getById(user.getDeptId());
+        if (userDept==null){
+            throw new CustomException("该用户关联的部门不存在");
+        }
+        SigninLogForSelfResp userDaySelf = signinLogService.getUserDaySelf(userId, LocalDate.parse(date));
+        if (userDaySelf == null) {
+            return new ArrayList<>();
+        }
+
+        List<SigninLogCliBcDto> bcDetail = userDaySelf.getBcDetail();
+        List<SigninLogCliBcItem> bcItems = new ArrayList<>();
+        if (bcDetail != null && !bcDetail.isEmpty()) {
+            for (SigninLogCliBcDto bcItem : bcDetail) {
+                SigninLogCliBcItem sbItem = bcItem.getSbItem();
+                if (sbItem != null) {
+                    // 上班打卡
+                    bcItems.add(sbItem);
+                }
+                SigninLogCliBcItem xbItem = bcItem.getXbItem();
+                if (xbItem != null) {
+                    // 下班打卡
+                    bcItems.add(xbItem);
+                }
+            }
+        }
+        int index = 0;
+        for (SigninLogCliBcItem bcItem : bcItems) {
+            // 👇需要前置检验是否真的是打卡，而不是补签或别的情况
+            if (bcItem.getState().equals(3)||bcItem.getState().equals(4)){
+                // 请假或者缺勤
+                continue;
+            }
+            if (bcItem.getBq()){
+                // 补签不考虑
+                continue;
+            }
+            if (bcItem.getTimeS()==null){
+                // 可能是补签，正常情况是有的
+                continue;
+            }
+            // 👆校验完成，接下来一定是正常打卡的班次
+            String fromLogId = bcItem.getFromLogId();
+            if (StringUtils.isEmpty(fromLogId)){
+                // 该此打卡无来源，不属于正常签到
+                log.info("无来源签到");
+                continue;
+            }
+            SigninLog signinLog = signinLogDao.getById(fromLogId);
+            if (signinLog==null){
+                continue;
+            }
+            // 考勤设备，可能为空
+            String signinDeviceId = signinLog.getSigninDeviceId();
+            SigninDevice signinDevice = null;
+            if (StringUtils.isNotEmpty(signinDeviceId)){
+                signinDevice = signinDeviceDao.getById(signinDeviceId);
+            }
+
+            SigninDetailClockingDataResp signinDetailClockingDataResp = SigninDetailClockingDataResp.builder()
+                    .index(++index)
+                    .employee(new SigninDetailClockingDataResp.Employee(
+                            OssDBUtil.toUseUrl(user.getAvatar()), user.getName())
+                    )
+                    .punchTime(String.valueOf(bcItem.getTimeS()))
+                    .attendanceCard(String.valueOf(signinLog.getSigninCardId()))
+                    .signinOrigin(String.valueOf(signinLog.getSigninWay()))
+                    .signinOriginDetail(String.valueOf(signinLog.getRemark()))
+                    .locationInfo(signinDevice != null ? signinDevice.getName() : "异常来源")
+                    .locationDescription(signinDevice != null ? signinDevice.getRemark() : "异常来源详情")
+                    .deviceInfo(String.valueOf(signinDeviceId))
+                    .department(userDept.getDeptNameAll())
+                    .creationTime(String.valueOf(signinLog.getSigninTime()))
+                    .build();
+
+            clockingDataRespList.add(signinDetailClockingDataResp);
+        }
+
+        return clockingDataRespList;
+    }
+
+    public List<SigninDetailSupplementDataResp> getSupplementRecords(Long userId, String date) {
+        List<SigninDetailSupplementDataResp> supplementDataRespList = new ArrayList<>();
+        SigninLogForSelfResp userDaySelf = signinLogService.getUserDaySelf(userId, LocalDate.parse(date));
+        if (userDaySelf == null) {
+            return new ArrayList<>();
+        }
+        List<SigninLogCliBcDto> bcDetail = userDaySelf.getBcDetail();
+        List<SigninLogCliBcItem> bcItems = new ArrayList<>();
+        if (bcDetail != null && !bcDetail.isEmpty()) {
+            for (SigninLogCliBcDto bcItem : bcDetail) {
+                SigninLogCliBcItem sbItem = bcItem.getSbItem();
+                if (sbItem != null) {
+                    // 上班打卡
+                    bcItems.add(sbItem);
+                }
+                SigninLogCliBcItem xbItem = bcItem.getXbItem();
+                if (xbItem != null) {
+                    // 下班打卡
+                    bcItems.add(xbItem);
+                }
+            }
+        }
+        int index = 0;
+        for (SigninLogCliBcItem bcItem : bcItems) {
+            // 👇需要前置检验是否补签
+            if (!bcItem.getBq()){
+                // 非补签不考虑
+                continue;
+            }
+            Long bqId = bcItem.getBqId();
+            if (bqId==null){
+                continue;
+            }
+            SigninRenewal signinRenewal = signinRenewalDao.getById(bqId);
+            if (signinRenewal==null){
+                continue;
+            }
+            // 👆校验完成，接下来一定是通过补签达成的班次
+
+            SigninDetailSupplementDataResp signinDetailSupplementDataResp = SigninDetailSupplementDataResp.builder()
+                    .index(++index)
+                    .supplementItem(String.valueOf(signinRenewal.getRenewalTime()))
+                    .supplementReason(signinRenewal.getRenewalReason())
+                    .approvalStatus(signinRenewal.convertState())
+                    .source("{单据ID:"+String.valueOf(signinRenewal.getRenewalAboutActId())+"}")
+                    .build();
+
+            supplementDataRespList.add(signinDetailSupplementDataResp);
+        }
+
+        return supplementDataRespList;
+    }
 }

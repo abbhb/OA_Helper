@@ -49,4 +49,14 @@ public class SigninRenewal implements Serializable {
     private Integer state;
 
 
+    public String convertState() {
+        if (state == 1) {
+            return "通过";
+        } else if (state == 0) {
+            return "流程中";
+        } else if (state == 2) {
+            return "拒绝";
+        }
+        return "未知";
+    }
 }

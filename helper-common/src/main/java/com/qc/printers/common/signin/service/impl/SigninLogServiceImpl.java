@@ -135,15 +135,20 @@ public class SigninLogServiceImpl implements SigninLogService {
         signinLog.setUserId(one.getId());
         // todo:策略模式优化
         if (signinLog.getSigninWay().equals("face")) {
+            signinLog.setRemark("人脸签到");
             if (StringUtils.isEmpty(signinLog.getSigninImage())) throw new CustomException("请上传原始签到图");
         }
         if (signinLog.getSigninWay().equals("card")) {
-            // todo: 未来可能会有卡号绑定用户的情况
+            signinLog.setRemark("ID卡签到");
+
+            // todo: 未来可能会有强制上报卡号的情况
 //            if (StringUtils.isEmpty(signinLog.getSigninCardId())) throw new CustomException("请上传来源卡号");
         }
         if (!signinLog.getSigninWay().equals("system")) {
+            signinLog.setRemark("系统后台");
             if (StringUtils.isEmpty(signinLog.getSigninDeviceId())) throw new CustomException("必须提供设备id");
         }
+
 
         boolean save = signinLogDao.save(signinLog);
         addSigninLogCliByLog(signinLog);
@@ -671,11 +676,11 @@ public class SigninLogServiceImpl implements SigninLogService {
         signinLog.setSigninImage(null);
         signinLog.setSigninCardId(null);
         signinLog.setSigninWay("renewal");
-        signinLog.setRemark("补签，act单号"+actId);
+        signinLog.setRemark("补签【act单号："+actId+"】");
         signinLog.setSigninTime(time);
         signinLog.setStudentId(byId.getStudentId());
         signinLogDao.save(signinLog);
-
+        // 实际Cli不会记录补签，只会记录到补签表
         addSigninLogCliByLog(signinLog);
 
         SigninRenewal signinRenewal = SigninRenewal.builder()
@@ -1349,7 +1354,11 @@ public class SigninLogServiceImpl implements SigninLogService {
                     // 实际打卡时间
                     signinLogCli.getSbItem().setTimeS(LocalDateTime.of(date, LocalTime.parse(shangbanQingKuang.getLogTime())));
                     signinLogCli.getXbItem().setTimeS(LocalDateTime.of(date, LocalTime.parse(xiabanQingKuang.getLogTime())));
-                    
+
+                    // 原始打卡log记录
+                    signinLogCli.getSbItem().setFromLogId(shangbanQingKuang.getFromLog());
+                    signinLogCli.getXbItem().setFromLogId(xiabanQingKuang.getFromLog());
+
                     // 初始化补签状态
                     signinLogCli.getSbItem().setBq(false);
                     signinLogCli.getXbItem().setBq(false);
@@ -1433,6 +1442,11 @@ public class SigninLogServiceImpl implements SigninLogService {
                 // 实际打卡时间
                 signinLogCli.getSbItem().setTimeS(LocalDateTime.of(date, LocalTime.parse(shangbanQingKuang.getLogTime())));
                 signinLogCli.getXbItem().setTimeS(LocalDateTime.of(date, LocalTime.parse(xiabanQingKuang.getLogTime())));
+
+                // 原始打卡log记录
+                signinLogCli.getSbItem().setFromLogId(shangbanQingKuang.getFromLog());
+                signinLogCli.getXbItem().setFromLogId(xiabanQingKuang.getFromLog());
+
 
                 // 迟到或早退时间
                 if (shangbanQingKuang.getState().equals(1) || shangbanQingKuang.getState().equals(2)) {
@@ -1530,21 +1544,28 @@ public class SigninLogServiceImpl implements SigninLogService {
             
             // 如果仅存在上班或下班打卡记录，设置相应信息
             if (signinLogCliMap.containsKey(0)) {
+                // 该班次仅打卡了-上班
                 SigninLogCli shangbanQingKuang = signinLogCliMap.get(0);
                 signinLogCli.getSbItem().setState(shangbanQingKuang.getState());
                 signinLogCli.getSbItem().setTimeS(LocalDateTime.of(date, LocalTime.parse(shangbanQingKuang.getLogTime())));
                 if (shangbanQingKuang.getState().equals(1) || shangbanQingKuang.getState().equals(2)) {
                     signinLogCli.getSbItem().setQueQingTime(shangbanQingKuang.getStateTime());
                 }
+                // 原始打卡log记录
+                signinLogCli.getSbItem().setFromLogId(shangbanQingKuang.getFromLog());
+
             }
             
             if (signinLogCliMap.containsKey(1)) {
+                // 该班次仅打卡了-下班
                 SigninLogCli xiabanQingKuang = signinLogCliMap.get(1);
                 signinLogCli.getXbItem().setState(xiabanQingKuang.getState());
                 signinLogCli.getXbItem().setTimeS(LocalDateTime.of(date, LocalTime.parse(xiabanQingKuang.getLogTime())));
                 if (xiabanQingKuang.getState().equals(1) || xiabanQingKuang.getState().equals(2)) {
                     signinLogCli.getXbItem().setQueQingTime(xiabanQingKuang.getStateTime());
                 }
+                // 原始打卡log记录
+                signinLogCli.getXbItem().setFromLogId(xiabanQingKuang.getFromLog());
             }
             
             // 查看当前班次上班时间内是否存在补签
@@ -1942,10 +1963,10 @@ public class SigninLogServiceImpl implements SigninLogService {
         }
         if (!fangshi) {
             return;
-            // 直接返回
+            // 不是被允许的方式，直接返回，不添加处理记录，在其余表处理
         }
         List<KQSJRule> kqsj = signinGroupByUserIdWithTime.getRulesInfo().getKqsj();
-        if (kqsj == null || kqsj.size() == 0) {
+        if (kqsj == null || kqsj.isEmpty()) {
             return;
         }
         int isPP = -1;

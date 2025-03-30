@@ -5,9 +5,7 @@ import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.annotation.PermissionCheck;
 import com.qc.printers.common.common.annotation.SigninDetailUserCheck;
 import com.qc.printers.common.signin.domain.entity.SigninBc;
-import com.qc.printers.custom.signin.domain.vo.SigninDetailDataResp;
-import com.qc.printers.custom.signin.domain.vo.SigninDetailSigninInfoResp;
-import com.qc.printers.custom.signin.domain.vo.SigninDetailUserInfoResp;
+import com.qc.printers.custom.signin.domain.vo.*;
 import com.qc.printers.custom.signin.service.SigninDetailService;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
@@ -74,4 +72,30 @@ public class SigninDetailController {
         return R.success(signinDetailService.getSigninDetailSigninInfos(userId,date));
     }
 
+    /**
+     * 获取某日打卡数据
+     * @param userId
+     * @param date
+     * @return
+     */
+    @GetMapping("/get_clocking_records/{userId}")
+    @NeedToken
+    @SigninDetailUserCheck(userIdKey = "#userId")
+    @ApiOperation(value = "获取某日考勤打卡记录", notes = "")
+    public R<List<SigninDetailClockingDataResp>> getClockingRecords(@PathVariable(name = "userId") Long userId, String date) {
+        log.info("获取某日考勤打卡记录");
+        return R.success(signinDetailService.getClockingRecords(userId,date));
+    }
+
+    /**
+     * 获取某日补签数据
+     */
+    @GetMapping("/get_supplement_records/{userId}")
+    @NeedToken
+    @SigninDetailUserCheck(userIdKey = "#userId")
+    @ApiOperation(value = "获取某日考勤补签记录", notes = "")
+    public R<List<SigninDetailSupplementDataResp>> getSupplementRecords(@PathVariable(name = "userId") Long userId, String date) {
+        log.info("获取某日考勤补签记录");
+        return R.success(signinDetailService.getSupplementRecords(userId,date));
+    }
 }

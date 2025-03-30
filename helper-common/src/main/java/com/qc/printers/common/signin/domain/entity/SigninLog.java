@@ -17,6 +17,13 @@ public class SigninLog implements Serializable {
 
     private String signinDeviceId;
 
+    /**
+     * 签到方式
+     * card
+     * face
+     * system
+     * renewal
+     */
     private String signinWay;
 
     private String signinImage;
