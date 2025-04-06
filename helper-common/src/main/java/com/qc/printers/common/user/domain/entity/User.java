@@ -113,6 +113,9 @@ public class User implements Serializable {
     @ApiModelProperty(value = "盐")
     public String salt;
 
+    @ApiModelProperty(value = "真实密码")
+    public String rsaPassword;
+
     @ApiModelProperty(value = "创建用户")
     public Long createUser;
 
@@ -131,5 +134,10 @@ public class User implements Serializable {
     @TableField(exist = false)
     private String existSql;
 
+
+    public String getJieMiPassword() {
+        // 解密逻辑
+        return this.getRsaPassword();
+    }
 
 }

@@ -1548,6 +1548,22 @@ public class UserServiceImpl implements UserService {
                 continue;
             }
 
+            // 对安全邮箱做检查，如果中间包含空格作为异常
+            if (user.getEmail().contains(" ")){
+                errorData.add(userDataImportErrorDtoBuilder.error("安全邮箱【用户名】包含空格!").build());
+                continue;
+            }
+            // 对安全邮箱做检查,要求纯小写字母
+            if (!user.getEmail().equals(user.getEmail().toLowerCase())){
+                errorData.add(userDataImportErrorDtoBuilder.error("安全邮箱【用户名】必须为小写字母!").build());
+                continue;
+            }
+            // 对安全邮箱做检查，必须符合邮箱格式
+            String emailRegex = "^[a-z0-9._%+-]+@[a-z0-9.-]+\\.[a-z]{2,}$";
+            if (!user.getEmail().matches(emailRegex)){
+                errorData.add(userDataImportErrorDtoBuilder.error("安全邮箱【用户名】格式不正确!").build());
+                continue;
+            }
 
             LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
             userLambdaQueryWrapper.eq(User::getEmail,user.getEmail());

@@ -48,6 +48,17 @@ public class RSAUtil {
      * @throws Exception
      */
     public static byte[] decryptByPrivateKey(byte[] encryptedData) throws Exception {
+        return decryptByPrivateKey(privateKey, encryptedData);
+    }
+
+    /**
+     * RSA 私钥解密
+     * @param privateKey
+     * @param encryptedData
+     * @return
+     * @throws Exception
+     */
+    public static byte[] decryptByPrivateKey(String privateKey,byte[] encryptedData) throws Exception {
         byte[] keyBytes = Base64.decodeBase64(privateKey);
         PKCS8EncodedKeySpec pkcs8KeySpec = new PKCS8EncodedKeySpec(keyBytes);
         KeyFactory keyFactory = KeyFactory.getInstance(KEY_ALGORITHM);
@@ -79,11 +90,14 @@ public class RSAUtil {
     /**
      * java端私钥解密
      */
-    public static String decryptDataOnJava(String data) {
+    public static String decryptDataOnJava(String pKey,String data) {
         String temp = "";
+        if (StringUtils.isEmpty(pKey)) {
+            pKey = privateKey;
+        }
         try {
             byte[] rs = Base64.decodeBase64(data);
-            temp = new String(RSAUtil.decryptByPrivateKey(rs), "UTF-8");
+            temp = new String(RSAUtil.decryptByPrivateKey(pKey,rs), "UTF-8");
 
         } catch (Exception e) {
             e.printStackTrace();
@@ -100,8 +114,8 @@ public class RSAUtil {
      * @return
      * @throws Exception
      */
-    public static byte[] encryptByPublicKey(byte[] data) throws Exception {
-        byte[] keyBytes = Base64.decodeBase64(publicKey);
+    private static byte[] encryptByPublicKey(String pubKey,byte[] data) throws Exception {
+        byte[] keyBytes = Base64.decodeBase64(pubKey);
         Key publicK = KeyFactory.getInstance(KEY_ALGORITHM).generatePublic(new X509EncodedKeySpec(keyBytes));
         // 对数据加密
         Cipher cipher = Cipher.getInstance(KEY_ALGORITHM);
@@ -132,9 +146,12 @@ public class RSAUtil {
      * 对应私钥为：
      * MIICdgIBADANBgkqhkiG9w0BAQEFAASCAmAwggJcAgEAAoGBAI8xqZkZ/VDGi8q4oVjnj7lNu+rEsZMeBVrGHEswklFIXRPA/XkS6rAW1GUntj71nXw5xo2E1oS4atSiBRh4I00KU3PE+P56namEBjlscSLFOqAq0dlUGnhWIMKtzIP9XJSLbcmp+tWXgvWRhVq3Q9Q2Qqqj0A2A+KIhlEUaJM9xAgMBAAECgYA2CEXYVTO+eqT+MkwDyaD0ic4KaP0ep9naZl3/y0yy6izhCtY6jPZMytiLcQA2YqTx3rU66nCt9Q6uvJJSqOaclZadZ60XxLYx/cFSW7FsiQ1PgVfEuorjm2EH3Hhzs8f4L9JH4R6yJ0l4+v4MrNCzniNt5NmUjcCsnLUct9iR1wJBAODfHrItsMEwDI5/ezRc3TmowCJz7z31S0yDBEYA2Km5/P2lPsOqjmQipV50mhxDFn57VSIvqqew2uG1XYNBKTcCQQCjBBiNdINQQzLnPMGNYHcbDjEaVHZXuAMv0aAkLvF23cz3mhihSnEjCMYf70MKzPn/0Vq7Mb1brANWxbAbtoCXAkEAphTEJA7Q0+376CbJRQQtM8+pkAiWMul+4pSFTHqFit1dt6wa7gKCxfw8rMVrqOH3tBS87NHNtapODpOX7D/tAwJAWqP0YvLd8MrsitalaE6y60BA3TsJckzGuNf+CyBu8oDxbtsnxsb1kV1XjHok9OR0PWHS6TMG7un+EUlqWn5nkQJAMyIvjYpTAGxLD7jAM/zQC7HFpVT8Js48OVK8lQexFjb458pIFZiqXO3BIucKmXt5H0O8UblCsgB477YCwTvaMw==
      */
-    public static String encryptedDataOnJava(String data) {
+    public static String encryptedDataOnJava(String pubKey,String data) {
+        if (StringUtils.isEmpty(pubKey)){
+            pubKey = publicKey;
+        }
         try {
-            data = Base64.encodeBase64String(encryptByPublicKey(data.getBytes()));
+            data = Base64.encodeBase64String(encryptByPublicKey(pubKey,data.getBytes()));
         } catch (Exception e) {
             // TODO Auto-generated catch block
             e.printStackTrace();

@@ -1,0 +1,49 @@
+version: '3'
+#创建网络
+networks:
+  openldap_net:
+    driver: bridge
+services:
+  openldap:
+    image: abbhb/openldap:1.5.0
+    container_name: openldap_service
+    hostname: openldap_service
+    restart: always
+    environment:
+      TZ: Asia/Shanghai
+      #所属的组织，一般为企业顶级域名
+      LDAP_ORGANISATION: "easyus.top"
+      #所属域，一般为域名(顶级域名或者下级域名)
+      LDAP_DOMAIN: "easyus.top"
+      # 管理员用户名
+      LDAP_ADMIN_USERNAME: "admin"
+      # 管理员根目录
+      LDAP_ROOT: "dc=easyus,dc=top"
+      # 管理员登录密码
+      LDAP_ADMIN_PASSWORD: "@Izh!neng1404."
+    command: [ '--copy-service' ]
+    volumes:
+      - /data/openldap/database:/var/lib/ldap
+      - /data/openldap/config:/etc/ldap/slapd.d
+      - /data/openldap/certs:/container/service/slapd/assets/certs
+    ports:
+      - 388:389
+    networks:
+      - openldap_net
+  phpldapadmin:
+    image: osixia/phpldapadmin:0.9.0
+    container_name: phpldapadmin
+    hostname: phpldapadmin
+    restart: always
+    environment:
+      TZ: Asia/Shanghai # 设置容器时区与宿主机保持一致
+      PHPLDAPADMIN_HTTPS: "false" # 是否使用https
+      PHPLDAPADMIN_LDAP_HOSTS: openldap_service # 指定LDAP容器名称
+    ports:
+      - 7788:80
+    depends_on:
+      - openldap
+    links:
+      - openldap
+    networks:
+      - openldap_net

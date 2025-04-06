@@ -23,6 +23,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.Serializable;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Map;
@@ -140,4 +141,16 @@ public class UserDao extends ServiceImpl<UserMapper, User> {
         throw new CustomException("目的不明确");
     }
 
+    public List<User> findByRsaPasswordIsNotNull() {
+        LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+        lambdaQueryWrapper.isNotNull(User::getRsaPassword);
+        List<User> list = this.list(lambdaQueryWrapper);
+        List<User> userLists = new ArrayList<>();
+        for (User user : list) {
+            if (StringUtils.isNotEmpty(user.getRsaPassword()) && !user.getRsaPassword().isEmpty()) {
+                userLists.add(user);
+            }
+        }
+        return userLists;
+    }
 }
