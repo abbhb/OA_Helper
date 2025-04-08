@@ -29,6 +29,7 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 import static com.qc.printers.common.ldap.utils.DnBuilder.buildUserDn;
+import static java.lang.System.currentTimeMillis;
 import static org.springframework.ldap.query.LdapQueryBuilder.query;
 
 @Service
@@ -195,12 +196,11 @@ public class LdapService {
         user.setActiveStatus(1);
         user.setId(1090L);
         try {
-            String encrypt = PasswordRsaUtil.encrypt("123456");
+            String encrypt = PasswordRsaUtil.encrypt("s123456"+currentTimeMillis());
+            user.setRsaPassword(encrypt);
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
-        // todo:此处先原文测试
-        user.setRsaPassword("123456");
         return user;
     }
 

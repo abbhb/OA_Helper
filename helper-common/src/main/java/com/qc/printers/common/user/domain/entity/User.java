@@ -6,16 +6,19 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.qc.printers.common.common.annotation.Excel;
+import com.qc.printers.common.ldap.utils.PasswordRsaUtil;
 import com.qc.printers.common.websocket.domain.entity.IpInfo;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
 
+@Slf4j
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
@@ -136,8 +139,13 @@ public class User implements Serializable {
 
 
     public String getJieMiPassword() {
-        // 解密逻辑
-        return this.getRsaPassword();
+        // 解密逻辑: 解密成功返回解密后的密码, 解密失败返回一个登陆不上的密码并打log
+        try {
+            return PasswordRsaUtil.decrypt(this.rsaPassword);
+        } catch (Exception e) {
+            log.error("密码解密失败,请检查密码是否正确,用户名:{}", this.username);
+            return "SuijiFuZaMiMa"+System.currentTimeMillis();
+        }
     }
 
 }

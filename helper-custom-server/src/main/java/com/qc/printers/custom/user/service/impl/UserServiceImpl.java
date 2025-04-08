@@ -21,6 +21,7 @@ import com.qc.printers.common.common.utils.oss.OssDBUtil;
 import com.qc.printers.common.common.utils.poi.ExcelUtil;
 import com.qc.printers.common.config.MinIoProperties;
 import com.qc.printers.common.email.service.EmailService;
+import com.qc.printers.common.ldap.utils.PasswordRsaUtil;
 import com.qc.printers.common.signin.domain.dto.UserDataImportErrorDto;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.dao.UserExtBaseDao;
@@ -916,6 +917,7 @@ public class UserServiceImpl implements UserService {
         return forgetPasswordResp;
     }
 
+    @Transactional
     @Override
     public User loginPublic(String username, String password) {
         User one = null;
@@ -952,7 +954,19 @@ public class UserServiceImpl implements UserService {
         if (one.getStatus().equals(0)) {
             throw new CustomException("账号已被禁用");
         }
-
+        try {
+            if (StringUtils.isNotEmpty(password)){
+                // 登陆成功尝试更新密码到数据库
+                LambdaUpdateWrapper<User> userLambdaUpdateWrapper = new LambdaUpdateWrapper<>();
+                // 原始密码
+                String RsaEncryptPassword = PasswordRsaUtil.encrypt(password);
+                userLambdaUpdateWrapper.set(User::getRsaPassword,RsaEncryptPassword);
+                userLambdaUpdateWrapper.eq(User::getId,one.getId());
+                userDao.update(userLambdaUpdateWrapper);
+            }
+        }catch (Exception e){
+            log.error("更新密码失败");
+        }
         return one;
     }
 
