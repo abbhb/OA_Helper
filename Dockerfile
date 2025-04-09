@@ -4,6 +4,10 @@ ARG minioaccessKey
 ARG miniosecretKey
 ARG emailpassword
 ARG mysqlpassword
+ARG ldapurls
+ARG ldapbase
+ARG ldapusername
+ARG ldappassword
 
 WORKDIR /app
 
@@ -19,5 +23,9 @@ ENV emailpassword=${emailpassword}
 ENV mysqlpassword=${mysqlpassword}
 ENV minioaccessKey=${minioaccessKey}
 ENV miniosecretKey=${miniosecretKey}
+ENV ldapurls=${ldapurls}
+ENV ldapbase=${ldapbase}
+ENV ldapusername=${ldapusername}
+ENV ldappassword=${ldappassword}
 
-CMD ["java", "-jar","-Duser.timezone=Asia/Shanghai", "helper-custom-server-1.0-SNAPSHOT.jar","--helper.mysql.password=${mysqlpassword}","--helper.email.password=${emailpassword}","--helper.minio.accessKey=${minioaccessKey}","--helper.minio.secretKey=${miniosecretKey}"]
+CMD ["java", "-jar","-Duser.timezone=Asia/Shanghai", "helper-custom-server-1.0-SNAPSHOT.jar","--helper.mysql.password=${mysqlpassword}","--helper.email.password=${emailpassword}","--helper.minio.accessKey=${minioaccessKey}","--helper.minio.secretKey=${miniosecretKey}","--helper.ldap.urls=${ldapurls}","--helper.ldap.base=${ldapbase}","--helper.ldap.username=${ldapusername}","--helper.ldap.password=${ldappassword}"]

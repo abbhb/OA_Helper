@@ -55,10 +55,10 @@ spring:
     #校验流程文件，默认校验resources下的processes文件夹里的流程文件
     check-process-definitions: false
   ldap:
-    urls: "ldap://localhost:388"
-    username: "cn=admin,dc=easyus,dc=top"
-    password: "123456"
-    base: "dc=easyus,dc=top"
+    urls: ${helper.ldap.urls}
+    username: ${helper.ldap.username}
+    password: ${helper.ldap.password}
+    base: ${helper.ldap.base}
 
 mybatis-plus:
   configuration:
