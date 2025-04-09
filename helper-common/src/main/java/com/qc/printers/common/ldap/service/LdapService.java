@@ -123,13 +123,13 @@ public class LdapService {
 
         // 递归查询父部门直到根节点
         while (currentDept != null && !currentDept.getParentId().equals(0L)) {
-            pathSegments.add("cn=" + escapeDN(currentDept.getDeptName()));
+            pathSegments.add("cn=" + escapeDN(String.valueOf(currentDept.getId())));
             currentDept = iSysDeptService.getById(currentDept.getParentId());
         }
 
         // 根部门特殊处理
         if (currentDept != null) {
-            pathSegments.add("cn=" + escapeDN(currentDept.getDeptName()));
+            pathSegments.add("cn=" + escapeDN(String.valueOf(currentDept.getId())));
         }
 
 //        Collections.reverse(pathSegments); // 反转路径顺序（从根到子）
