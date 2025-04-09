@@ -17,10 +17,10 @@ public class LdapDept {
     private Name dn; // 自动生成DN
 
     @Attribute(name = "cn")
-    private String cn; // 部门ID
+    private String cn; // 部门名
 
     @Attribute(name = "ou")
-    private String name; // 部门名
+    private String ou; // 部门ID
 
     // rdn设置为ou
 

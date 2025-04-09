@@ -1,6 +1,7 @@
 package com.qc.printers.common.ldap.service;
 
 import com.qc.printers.common.common.utils.StringUtils;
+import com.qc.printers.common.ldap.domain.dto.LdapDetpVO;
 import com.qc.printers.common.ldap.domain.entity.LdapDept;
 import com.qc.printers.common.ldap.utils.PasswordRsaUtil;
 import com.qc.printers.common.user.dao.UserDao;
@@ -58,27 +59,13 @@ public class LdapService {
             if (attrs.get("mail") != null) {
                 user.setEmail(attrs.get("mail").get().toString());
             }
+            if (attrs.get("employeeNumber") != null) {
+                user.setId(Long.valueOf(attrs.get("employeeNumber").get().toString()));
+            }
             return user;
         }
     }
-    private class GroupAttributesMapper implements AttributesMapper<LdapDept> {
-        @Override
-        public LdapDept mapFromAttributes(Attributes attrs) throws NamingException {
-            LdapDept ldapDept = new LdapDept();
-            // 从 LDAP 属性映射到 Java 对象字段
-            if (attrs.get("cn") != null) {
-                // 部门id
-                ldapDept.setCn(attrs.get("cn").get().toString());
-            }
-            if (attrs.get("mail") != null) {
-                ldapDept.setName(attrs.get("mail").get().toString());
-            }
-//            ldapDept.setDn();
-//            Object cn = (LdapAttribute)attrs.get("cn").get();
 
-            return ldapDept;
-        }
-    }
 
     public List<String> getAllExistingDeptDns() {
         return ldapTemplate.search(
@@ -97,16 +84,19 @@ public class LdapService {
 
 
     // 获取全量部门DN路径（从MySQL递归生成）
-    public List<String> generateAllDeptDns(List<DeptManger> deptTree) {
-        List<String> dns = new ArrayList<>();
+    public List<LdapDetpVO> generateAllDeptDns(List<DeptManger> deptTree) {
+        List<LdapDetpVO> dns = new ArrayList<>();
         buildDnsRecursive(deptTree, "ou=groups", dns);
         return dns;
     }
 
-    private void buildDnsRecursive(List<DeptManger> depts, String parentDn, List<String> dns) {
+    private void buildDnsRecursive(List<DeptManger> depts, String parentDn, List<LdapDetpVO> dns) {
         for (DeptManger dept : depts) {
             String currentDn = "cn=" + dept.getDeptName() + "," + parentDn;
-            dns.add(currentDn);
+            LdapDetpVO ldapDept = new LdapDetpVO();
+            ldapDept.setDn(currentDn);
+            ldapDept.setDeptId(dept.getId());
+            dns.add(ldapDept);
             if (dept.getChildren() != null) {
                 buildDnsRecursive(dept.getChildren(), currentDn, dns);
             }
@@ -153,31 +143,31 @@ public class LdapService {
         DeptMangerHierarchyBuilder deptMangerHierarchyBuilder = new DeptMangerHierarchyBuilder(list, null, null, 0);
         List<DeptManger> mysqlDeptTree = deptMangerHierarchyBuilder.buildHierarchy();
 
-
-        List<String> mysqlDns = generateAllDeptDns(mysqlDeptTree);
-
+        // 生成MySQL部门DN列表(带部门ID)
+        List<LdapDetpVO> mysqlDns = generateAllDeptDns(mysqlDeptTree);
+        List<String> mysqlDnsString = mysqlDns.stream().map(LdapDetpVO::getDn).toList();
 
         List<String> ldapDns = getAllExistingDeptDns();
         // 新增部门
         mysqlDns.stream()
-                .filter(dn -> !ldapDns.contains(dn))
+                .filter(dn -> !ldapDns.contains(dn.getDn()))
                 .forEach(this::createDeptInLdap);
 
         // 删除多余部门（逆序保证先删子部门）
         Collections.reverse(ldapDns);
         ldapDns.stream()
-                .filter(dn -> !mysqlDns.contains(dn))
+                .filter(dn -> !mysqlDnsString.contains(dn))
                 .forEach(this::deleteDeptFromLdap);
 
 
     }
 
     // 创建部门条目
-    private void createDeptInLdap(String dn) {
+    private void createDeptInLdap(LdapDetpVO dn) {
         LdapDept dept = new LdapDept();
-        dept.setDn(LdapUtils.newLdapName(dn));
-        dept.setCn(dn.split(",")[0].split("=")[1]);
-        dept.setName(dn.split(",")[0].split("=")[1]);
+        dept.setDn(LdapUtils.newLdapName(dn.getDn()));
+        dept.setCn(dn.getDn().split(",")[0].split("=")[1]);
+        dept.setOu(String.valueOf(dn.getDeptId()));
         dept.getMembers().add("cn=ldapsynczhanwei,ou=users"); // 绑定ldapsynczhanwei用户
         ldapTemplate.create(dept);
     }
@@ -350,6 +340,7 @@ public class LdapService {
     private void mapUserAttributes(User user, DirContextOperations ctx) {
         ctx.setAttributeValue("cn", user.getUsername());
         ctx.setAttributeValue("sn", user.getName());
+        ctx.setAttributeValue("employeeNumber", String.valueOf(user.getId()));
         ctx.setAttributeValue("mail", user.getEmail());
         ctx.setAttributeValue("userPassword",(user.getJieMiPassword()));
         ctx.setAttributeValue("objectClass", "inetOrgPerson");
@@ -357,6 +348,7 @@ public class LdapService {
     private boolean needUpdate(User dbUser, User ldapUser) {
         return !Objects.equals(dbUser.getName(), ldapUser.getName()) ||
                 !Objects.equals(dbUser.getEmail(), ldapUser.getEmail()) ||
+                !Objects.equals(dbUser.getId(), ldapUser.getId()) ||
                 isPasswordChanged(dbUser, ldapUser);
     }
 
