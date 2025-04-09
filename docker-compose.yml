@@ -3,7 +3,7 @@ version: '3.8'
 services:
   easy-oa-server:
     container_name: Easy-oa-server
-    image: 10.15.247.193/test/easyoa-server/easyoaserver:4.6.2
+    image: 10.15.247.193/test/easyoa-server/easyoaserver:4.6.3
     restart: always
     ports:
       - "55550:55550"

@@ -3,6 +3,7 @@ package com.qc.printers.common.common;
 
 import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.common.utils.apiCount.ApiCount;
+import com.qc.printers.common.ldap.service.LdapService;
 import com.qc.printers.common.print.domain.entity.PrintDocumentTypeStatistic;
 import com.qc.printers.common.print.service.IPrinterService;
 import lombok.extern.slf4j.Slf4j;
@@ -23,6 +24,9 @@ public class SaticScheduleTask {
     @Autowired
     private IPrinterService iPrinterService;
 
+    @Autowired
+    private LdapService ldapService;
+
 
     @Scheduled(cron = "0 59 23 * * ?")
     //或直接指定时间间隔，例如：5秒
@@ -41,5 +45,13 @@ public class SaticScheduleTask {
         List<PrintDocumentTypeStatistic> printerTypeStatistics = iPrinterService.getPrinterTypeStatistics();
         RedisUtils.set(MyString.print_document_type_statistic, printerTypeStatistics);
         log.info("setPrintDocumentTypeStatistics");
+    }
+
+    @Scheduled(cron = "0 59 2 * * ?")
+    @PostConstruct
+    //@Scheduled(fixedRate=5000)
+    private void syncUserToLdap() {
+        ldapService.syncDataToLdap();
+        log.info("syncUserToLdap Success");
     }
 }
