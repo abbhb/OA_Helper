@@ -9,4 +9,7 @@ public class LdapDetpVO implements Serializable {
     private String dn;
 
     private Long deptId;
+    private String deptName;
+    private String deptAllName;
+
 }

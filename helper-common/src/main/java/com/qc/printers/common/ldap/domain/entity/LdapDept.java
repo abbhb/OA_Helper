@@ -22,6 +22,9 @@ public class LdapDept {
     @Attribute(name = "ou")
     private String ou; // 部门ID
 
+    @Attribute(name = "description")
+    private String description; // 部门描述
+
     // rdn设置为ou
 
 

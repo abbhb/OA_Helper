@@ -92,10 +92,12 @@ public class LdapService {
 
     private void buildDnsRecursive(List<DeptManger> depts, String parentDn, List<LdapDetpVO> dns) {
         for (DeptManger dept : depts) {
-            String currentDn = "cn=" + dept.getDeptName() + "," + parentDn;
+            String currentDn = "cn=" + String.valueOf(dept.getId()) + "," + parentDn;
             LdapDetpVO ldapDept = new LdapDetpVO();
             ldapDept.setDn(currentDn);
             ldapDept.setDeptId(dept.getId());
+            ldapDept.setDeptAllName(dept.getDeptNameAll());
+            ldapDept.setDeptName(dept.getDeptName());
             dns.add(ldapDept);
             if (dept.getChildren() != null) {
                 buildDnsRecursive(dept.getChildren(), currentDn, dns);
@@ -166,8 +168,9 @@ public class LdapService {
     private void createDeptInLdap(LdapDetpVO dn) {
         LdapDept dept = new LdapDept();
         dept.setDn(LdapUtils.newLdapName(dn.getDn()));
-        dept.setCn(dn.getDn().split(",")[0].split("=")[1]);
-        dept.setOu(String.valueOf(dn.getDeptId()));
+        dept.setCn(String.valueOf(dn.getDeptId()));
+        dept.setOu(String.valueOf(dn.getDeptAllName()));
+        dept.setDescription(String.valueOf(dn.getDeptAllName()));
         dept.getMembers().add("cn=ldapsynczhanwei,ou=users"); // 绑定ldapsynczhanwei用户
         ldapTemplate.create(dept);
     }
