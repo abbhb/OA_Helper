@@ -27,7 +27,7 @@ services:
       - /data/openldap/config:/etc/ldap/slapd.d
       - /data/openldap/certs:/container/service/slapd/assets/certs
     ports:
-      - 388:389
+      - 389:389
     networks:
       - openldap_net
   phpldapadmin:
