@@ -45,3 +45,44 @@ objectClass: groupOfNames
 cn: 技术部
 member: uid=admin,ou=users,dc=easyus,dc=top  # 初始占位用户
 ```
+### easyoa写入ldap数据要求
+#### inetOrgPerson对象最少包含属性
+```ldif
+dn: cn=admin,ou=users,dc=easyus,dc=top
+objectClass: inetOrgPerson
+cn=用户名
+sn=名称
+employeeNumber=User_ID
+userPassword=密码
+Email=邮箱
+departmentNumber=部门ID
+```
+#### groupOfNames对象最少包含属性
+```ldif
+dn: cn=部门ID,ou=groups,dc=easyus,dc=top
+objectClass: groupOfNames
+cn: 部门ID
+ou: 部门名称
+member: 成员关联
+```
+
+### 对接案例
+
+#### 群晖ldap
+注意群晖强制389端口
+
+##### 配置映射
+###### filter
+passwd:(objectClass=inetOrgPerson)
+group:(objectClass=groupOfNames)
+
+###### group
+cn:cn
+gidNumber:HASH(cn)
+memberUid:member
+
+###### passwd
+uidNumber:HASH(cn)
+uid:cn
+userPassword:userPassword
+gidNumber:HASH(departmentNumber)

@@ -62,6 +62,9 @@ public class LdapService {
             if (attrs.get("employeeNumber") != null) {
                 user.setId(Long.valueOf(attrs.get("employeeNumber").get().toString()));
             }
+            if (attrs.get("departmentNumber") != null) {
+                user.setDeptId(Long.valueOf(attrs.get("departmentNumber").get().toString()));
+            }
             return user;
         }
     }
@@ -187,6 +190,7 @@ public class LdapService {
         user.setEmail("ldapsynczhanwei@easyus.top");
         user.setStudentId("202115040299");
         user.setActiveStatus(1);
+        user.setDeptId(1L);
         user.setId(1090L);
         try {
             String encrypt = PasswordRsaUtil.encrypt("s123456"+currentTimeMillis());
@@ -344,6 +348,7 @@ public class LdapService {
         ctx.setAttributeValue("cn", user.getUsername());
         ctx.setAttributeValue("sn", user.getName());
         ctx.setAttributeValue("employeeNumber", String.valueOf(user.getId()));
+        ctx.setAttributeValue("departmentNumber", String.valueOf(user.getDeptId()));
         ctx.setAttributeValue("mail", user.getEmail());
         ctx.setAttributeValue("userPassword",(user.getJieMiPassword()));
         ctx.setAttributeValue("objectClass", "inetOrgPerson");
@@ -352,6 +357,7 @@ public class LdapService {
         return !Objects.equals(dbUser.getName(), ldapUser.getName()) ||
                 !Objects.equals(dbUser.getEmail(), ldapUser.getEmail()) ||
                 !Objects.equals(dbUser.getId(), ldapUser.getId()) ||
+                !Objects.equals(dbUser.getDeptId(), ldapUser.getDeptId()) ||
                 isPasswordChanged(dbUser, ldapUser);
     }
 
