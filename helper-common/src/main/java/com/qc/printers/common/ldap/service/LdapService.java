@@ -1,6 +1,9 @@
 package com.qc.printers.common.ldap.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.qc.printers.common.common.utils.StringUtils;
+import com.qc.printers.common.ikuai.dao.SysIkuaiNetAllowDao;
+import com.qc.printers.common.ikuai.domain.entity.SysIkuaiNetAllow;
 import com.qc.printers.common.ldap.domain.dto.LdapDetpVO;
 import com.qc.printers.common.ldap.domain.entity.LdapDept;
 import com.qc.printers.common.ldap.utils.PasswordRsaUtil;
@@ -17,6 +20,7 @@ import org.springframework.ldap.core.*;
 import org.springframework.ldap.core.support.AbstractContextMapper;
 import org.springframework.ldap.support.LdapUtils;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.naming.NamingException;
 import javax.naming.directory.Attributes;
@@ -45,6 +49,9 @@ public class LdapService {
     @Autowired
     private LdapTemplate ldapTemplate;
 
+    @Autowired
+    private SysIkuaiNetAllowDao sysIkuaiNetAllowDao;
+
     // 构建部门路径缓存（需在服务初始化时加载）
     private Map<Long, String> deptPathCache = new ConcurrentHashMap<>();
 
@@ -67,6 +74,61 @@ public class LdapService {
             }
             return user;
         }
+    }
+
+
+    /**
+     * 执行同步
+     */
+    public void syncDataToLdap(){
+        // 清空缓存
+        deptPathCache.clear();
+        // 从数据库获取有效用户（密码不为空）
+        List<User> dbUsers = userDao.findByRsaPasswordIsNotNull();
+
+        // --- 1.用户同步 ---
+        syncUsersToLdap("users",dbUsers);
+        List<SysDept> list = iSysDeptService.list();
+
+        // --- 2.用户组同步 ---
+        syncDepts(list);
+
+        // --- 3.用户-组织关联关系同步 ---
+        Map<String, List<String>> targetMemberMap = buildUserDeptMapping(dbUsers,list);
+        syncDeptMembers(targetMemberMap);
+
+        // --- 4.再写一份用户到ikuaier组 ---
+        try {
+            syncUserToIkuai();
+        }catch (Exception e){
+            // 失败不影响整个同步
+            log.error("syncUserToIkuai error: {}", e.getMessage());
+        }
+    }
+
+    // 同步ikuai相关用户到ldap
+    private void syncUserToIkuai(){
+        // 判断有哪些符合条件的用户
+        List<User> dbUsers = userDao.findByRsaPasswordIsNotNull();
+        // 过滤出有权限的用户
+        List<User> filteredUsers = new ArrayList<>();
+        for (User dbUser : dbUsers) {
+            LambdaQueryWrapper<SysIkuaiNetAllow> sysIkuaiNetAllowLambdaQueryWrapper = new LambdaQueryWrapper<>();
+            // 用户ID or 部门Id
+            sysIkuaiNetAllowLambdaQueryWrapper.eq(SysIkuaiNetAllow::getLinkType, 1);
+            sysIkuaiNetAllowLambdaQueryWrapper.eq(SysIkuaiNetAllow::getLinkId,dbUser.getId());
+            sysIkuaiNetAllowLambdaQueryWrapper.or(sysIkuaiNetAllowLambdaQueryWrapper1 -> {
+                sysIkuaiNetAllowLambdaQueryWrapper1.eq(SysIkuaiNetAllow::getLinkType, 2);
+                sysIkuaiNetAllowLambdaQueryWrapper1.eq(SysIkuaiNetAllow::getLinkId,dbUser.getDeptId());
+            });
+            long count = sysIkuaiNetAllowDao.count(sysIkuaiNetAllowLambdaQueryWrapper);
+            if (count > 0L) {
+                // 用户有权限
+                filteredUsers.add(dbUser);
+            }
+        }
+        // --- 用户同步 ---
+        syncUsersToLdap("ikuaier",filteredUsers);
     }
 
 
@@ -201,7 +263,7 @@ public class LdapService {
         return user;
     }
 
-    private void syncUsersToLdap(List<User> users) {
+    private void syncUsersToLdap(String groupName,List<User> users) {
         List<User> dbUsers = new ArrayList<>();
         // 此处复制数据，避免直接添加的占位用户影响后续绑定
         dbUsers.addAll(users);
@@ -209,7 +271,7 @@ public class LdapService {
         dbUsers.add(mockUser());
         // 从LDAP获取现有用户
         List<User> ldapUsers = ldapTemplate.search(
-                "ou=users",
+                "ou=%s".formatted(groupName),
                 "(objectClass=inetOrgPerson)",
                 new UserAttributesMapper()
         );
@@ -241,7 +303,7 @@ public class LdapService {
         // 删除多余用户
         toDelete.forEach(u -> {
             try {
-                ldapTemplate.unbind(buildUserDn(u));
+                ldapTemplate.unbind(buildUserDn(groupName,u));
             }catch (Exception e){
                 log.error("LDAP user deletion failed for user: {}", u.getUsername(), e);
             }
@@ -251,7 +313,7 @@ public class LdapService {
         // 新增用户
         toAdd.forEach(u -> {
             try {
-                DirContextAdapter ctx = new DirContextAdapter(buildUserDn(u));
+                DirContextAdapter ctx = new DirContextAdapter(buildUserDn(groupName,u));
                 mapUserAttributes(u, ctx);
                 ldapTemplate.bind(ctx);
             }catch (Exception e){
@@ -263,7 +325,7 @@ public class LdapService {
         // 更新用户
         toUpdate.forEach(u -> {
             try {
-                DirContextOperations ctx = ldapTemplate.lookupContext(buildUserDn(u));
+                DirContextOperations ctx = ldapTemplate.lookupContext(buildUserDn(groupName,u));
                 mapUserAttributes(u, ctx);
                 ldapTemplate.modifyAttributes(ctx);
             }catch (Exception e){
@@ -291,32 +353,7 @@ public class LdapService {
                 ));
     }
 
-    /**
-     * 执行同步
-     */
-    public void syncDataToLdap(){
-        // 清空缓存
-        deptPathCache.clear();
-        // 从数据库获取有效用户（密码不为空）
-        List<User> dbUsers = userDao.findByRsaPasswordIsNotNull();
-        // 校验用户名和邮箱，用户名不能包含空格，邮箱得符合邮箱正则
-        dbUsers = dbUsers.stream()
-                .filter(user -> StringUtils.isNotBlank(user.getUsername()) && !user.getUsername().contains(" "))
-                .filter(user -> StringUtils.isNotBlank(user.getEmail()) && user.getEmail().matches("^[\\w-\\.]+@[\\w-]+\\.[a-z]{2,4}$"))
-                .collect(Collectors.toList());
-        // --- 1.用户同步 ---
-        syncUsersToLdap(dbUsers);
-        List<SysDept> list = iSysDeptService.list();
 
-
-        // --- 2.用户组同步 ---
-        syncDepts(list);
-
-
-        // --- 3.用户-组织关联关系同步 ---
-        Map<String, List<String>> targetMemberMap = buildUserDeptMapping(dbUsers,list);
-        syncDeptMembers(targetMemberMap);
-    }
     private void syncDeptMembers(Map<String, List<String>> targetMemberMap) {
         targetMemberMap.forEach((deptDn, targetMembers) -> {
             // 获取当前部门成员

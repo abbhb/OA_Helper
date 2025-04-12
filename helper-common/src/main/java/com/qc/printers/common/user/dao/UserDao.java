@@ -151,6 +151,11 @@ public class UserDao extends ServiceImpl<UserMapper, User> {
                 userLists.add(user);
             }
         }
+        // 校验用户名和邮箱，用户名不能包含空格，邮箱得符合邮箱正则
+        userLists = userLists.stream()
+                .filter(user -> com.qc.printers.common.common.utils.StringUtils.isNotBlank(user.getUsername()) && !user.getUsername().contains(" "))
+                .filter(user -> com.qc.printers.common.common.utils.StringUtils.isNotBlank(user.getEmail()) && user.getEmail().matches("^[\\w-\\.]+@[\\w-]+\\.[a-z]{2,4}$"))
+                .collect(Collectors.toList());
         return userLists;
     }
 }

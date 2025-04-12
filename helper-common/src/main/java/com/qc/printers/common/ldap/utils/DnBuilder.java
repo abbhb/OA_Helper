@@ -13,11 +13,12 @@ import java.util.List;
 public class DnBuilder {
     // todo: 后面变得不再写死
     // 用户DN示例：cn=zhangsan,ou=users
-    public static LdapName buildUserDn(User user) {
-        return LdapNameBuilder.newInstance("ou=users")
+    public static LdapName buildUserDn(String groupName,User user) {
+        return LdapNameBuilder.newInstance("ou=%s".formatted(groupName))
                 .add("cn=" + user.getUsername())
                 .build();
     }
+
 
     public static LdapName buildDn(String rdn) {
         return LdapNameBuilder.newInstance(rdn)
