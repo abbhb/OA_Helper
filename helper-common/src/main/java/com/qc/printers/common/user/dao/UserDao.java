@@ -144,6 +144,8 @@ public class UserDao extends ServiceImpl<UserMapper, User> {
     public List<User> findByRsaPasswordIsNotNull() {
         LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
         lambdaQueryWrapper.isNotNull(User::getRsaPassword);
+        // 未封号状态
+        lambdaQueryWrapper.eq(User::getStatus,1);
         List<User> list = this.list(lambdaQueryWrapper);
         List<User> userLists = new ArrayList<>();
         for (User user : list) {
