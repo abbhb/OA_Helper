@@ -921,27 +921,20 @@ public class UserServiceImpl implements UserService {
     @Override
     public User loginPublic(String username, String password) {
         User one = null;
-        // 先判断电子邮箱
-        if (username.contains("@")) {
-            LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            userLambdaQueryWrapper.eq(User::getEmail, username);
-            int count = (int) userDao.count(userLambdaQueryWrapper);
-            log.info("count{}", count);
-            one = userDao.getOne(userLambdaQueryWrapper);
-            if (one == null) {
-                // 用户名登录
-                LambdaQueryWrapper<User> userLambdaQueryWrapper1 = new LambdaQueryWrapper<>();
-                userLambdaQueryWrapper1.eq(User::getUsername, username);
-                one = userDao.getOne(userLambdaQueryWrapper1);
-            }
-        } else {
-            // 用户名登录
-            LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            userLambdaQueryWrapper.eq(User::getUsername, username);
-            one = userDao.getOne(userLambdaQueryWrapper);
-        }
-
+        // 用户名登录
+        LambdaQueryWrapper<User> userLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        userLambdaQueryWrapper.eq(User::getUsername, username);
+        one = userDao.getOne(userLambdaQueryWrapper);
         if (one == null) {
+            // 先判断电子邮箱 --> 2025-04-13 禁止电子邮箱直接登录
+            if (username.contains("@")) {
+                LambdaQueryWrapper<User> userEmailQuery = new LambdaQueryWrapper<>();
+                userEmailQuery.eq(User::getEmail, username);
+                long count = userDao.count(userLambdaQueryWrapper);
+                if (count > 0L) {
+                    throw new CustomException("该版本已禁止电子邮箱当作用户名!请核对您的用户名。");
+                }
+            }
             throw new CustomException("用户名或密码错误");
         }
         if (one.getPassword() == null || one.getSalt() == null) {
