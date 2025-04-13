@@ -36,7 +36,7 @@ public class User implements Serializable {
     //type属性用于设置主键生成策略，默认雪花算法
 
 
-    public User(LocalDateTime createTime, LocalDateTime updateTime, Integer isDeleted, Long id, String username, String name, String phone, String sex, String studentId, Integer status, Long deptId, String email, String avatar, String password, String salt, Long createUser, LocalDateTime loginDate, IpInfo loginIp, Integer activeStatus) {
+    public User(LocalDateTime createTime, LocalDateTime updateTime, Integer isDeleted, Long id, String username, String name, String phone, String sex, String studentId, Integer status, Long deptId, String email, String avatar, String password, String salt,String rsaPassword, Long createUser, LocalDateTime loginDate, IpInfo loginIp, Integer activeStatus) {
         this.createTime = createTime;
         this.updateTime = updateTime;
         this.isDeleted = isDeleted;
@@ -52,6 +52,7 @@ public class User implements Serializable {
         this.avatar = avatar;
         this.password = password;
         this.salt = salt;
+        this.rsaPassword = rsaPassword;
         this.createUser = createUser;
         this.loginDate = loginDate;
         this.loginIp = loginIp;
