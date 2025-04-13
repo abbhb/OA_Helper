@@ -930,9 +930,9 @@ public class UserServiceImpl implements UserService {
             if (username.contains("@")) {
                 LambdaQueryWrapper<User> userEmailQuery = new LambdaQueryWrapper<>();
                 userEmailQuery.eq(User::getEmail, username);
-                long count = userDao.count(userLambdaQueryWrapper);
-                if (count > 0L) {
-                    throw new CustomException("该版本已禁止电子邮箱当作用户名!请核对您的用户名。");
+                one = userDao.getOne(userEmailQuery);
+                if (one != null) {
+                    throw new CustomException("该版本已禁止安全邮箱当作用户名!您的用户名为:%s".formatted(one.getUsername()));
                 }
             }
             throw new CustomException("用户名或密码错误");
