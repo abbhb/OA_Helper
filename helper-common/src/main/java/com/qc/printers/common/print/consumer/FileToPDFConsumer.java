@@ -11,6 +11,7 @@ import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.print.domain.dto.PrinterRedis;
 import com.qc.printers.common.print.domain.entity.Printer;
 import com.qc.printers.common.print.domain.vo.response.data.PrintDataFromPDFResp;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.rocketmq.spring.annotation.RocketMQMessageListener;
 import org.apache.rocketmq.spring.core.RocketMQListener;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,6 +27,7 @@ import java.util.concurrent.TimeUnit;
  */
 @RocketMQMessageListener(consumerGroup = MQConstant.SEND_FILE_TOPDF_R_GROUP, topic = MQConstant.SEND_FILE_TOPDF_R_TOPIC, selectorExpression = "resp")
 @Component
+@Slf4j
 public class FileToPDFConsumer implements RocketMQListener<PrintDataFromPDFResp> {
     @Autowired
     private ApplicationEventPublisher applicationEventPublisher;
@@ -38,7 +40,8 @@ public class FileToPDFConsumer implements RocketMQListener<PrintDataFromPDFResp>
             //更新redis
             PrinterRedis printerRedis = RedisUtils.get(MyString.print + printDataFromPDFResp.getId(), PrinterRedis.class);
             if (printerRedis == null) {
-                throw new CustomException("异常");
+                log.error("可能已经过期了，获取不到redis数据，id:{}", printDataFromPDFResp.getId());
+                return;
             }
 
             printerRedis.setPageNums(printDataFromPDFResp.getPageNums());
