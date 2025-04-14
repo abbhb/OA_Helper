@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.qc.printers.common.common.annotation.Excel;
 import com.qc.printers.common.ldap.utils.PasswordRsaUtil;
 import com.qc.printers.common.websocket.domain.entity.IpInfo;
@@ -139,6 +140,7 @@ public class User implements Serializable {
     private String existSql;
 
 
+    @JsonIgnore
     public String getJieMiPassword() {
         // 解密逻辑: 解密成功返回解密后的密码, 解密失败返回一个登陆不上的密码并打log
         try {
