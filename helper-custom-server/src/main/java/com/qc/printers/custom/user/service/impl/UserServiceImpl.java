@@ -1423,29 +1423,30 @@ public class UserServiceImpl implements UserService {
         // 首先判断当前有没有进行中的审批，还没结束
         HistoricProcessInstanceQuery query = historyService.createHistoricProcessInstanceQuery()
                 .processInstanceId(taskId)
-                .notDeleted();
-        // 根据流程key查询 注意是等于不是模糊查询
+                .orderByProcessInstanceStartTime()
+                .desc();// 根据流程key查询 注意是等于不是模糊查询
         List<HistoricProcessInstance> processSystemList = query.processDefinitionKey("Process_system_1").list();
         HistoricProcessInstance processSystem1 = null;
 
-        if (processSystemList!=null&&processSystemList.size()!=0){
+        if (processSystemList!=null&& !processSystemList.isEmpty()){
             processSystem1 = processSystemList.get(0);
         }
-        if (processSystem1!=null){
-            List<HistoricVariableInstance> historicVariables = historyService.createHistoricVariableInstanceQuery()
-                    .processInstanceId(processSystem1.getId())
-                    .list();
-            Optional<HistoricVariableInstance> userinfoExtData = historicVariables.stream()
-                    .filter(t -> t.getVariableName().equals("userinfo_ext_data"))
-                    .findAny();
-            if (userinfoExtData.isPresent()){
-                HistoricVariableInstance historicVariableInstance = userinfoExtData.get();
-                UserInfoBaseExtDto userInfoBaseExtDto1 = JsonUtils.toObj((String) historicVariableInstance.getValue(), UserInfoBaseExtDto.class);
-                return userInfoBaseExtDto1;
-            }
+        if (processSystem1==null){
+            throw new CustomException("无法获取:processSystem1==null");
         }
+        List<HistoricVariableInstance> historicVariables = historyService.createHistoricVariableInstanceQuery()
+                .processInstanceId(processSystem1.getId())
+                .list();
+        Optional<HistoricVariableInstance> userinfoExtData = historicVariables.stream()
+                .filter(t -> t.getVariableName().equals("userinfo_ext_data"))
+                .findAny();
+        if (!userinfoExtData.isPresent()){
+            throw new CustomException("无法获取-notPresent");
 
-        throw new CustomException("无法获取");
+        }
+        HistoricVariableInstance historicVariableInstance = userinfoExtData.get();
+        UserInfoBaseExtDto userInfoBaseExtDto1 = JsonUtils.toObj((String) historicVariableInstance.getValue(), UserInfoBaseExtDto.class);
+        return userInfoBaseExtDto1;
     }
 
     @Transactional
