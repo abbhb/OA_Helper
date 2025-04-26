@@ -2,18 +2,24 @@ package com.qc.printers.common.ldap.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.qc.printers.common.common.utils.StringUtils;
+import com.qc.printers.common.common.utils.ThreadLocalUtil;
 import com.qc.printers.common.ikuai.dao.SysIkuaiNetAllowDao;
 import com.qc.printers.common.ikuai.domain.entity.SysIkuaiNetAllow;
+import com.qc.printers.common.ldap.dao.SyncLdapJobDao;
 import com.qc.printers.common.ldap.domain.dto.LdapDetpVO;
 import com.qc.printers.common.ldap.domain.entity.LdapDept;
+import com.qc.printers.common.ldap.domain.entity.SyncLdapJob;
+import com.qc.printers.common.ldap.domain.vo.SyncLdapJobVO;
 import com.qc.printers.common.ldap.utils.PasswordRsaUtil;
 import com.qc.printers.common.user.dao.UserDao;
 import com.qc.printers.common.user.domain.dto.DeptManger;
+import com.qc.printers.common.user.domain.dto.UserInfo;
 import com.qc.printers.common.user.domain.entity.SysDept;
 import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.common.user.service.ISysDeptService;
 import com.qc.printers.common.user.utils.DeptMangerHierarchyBuilder;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.ldap.AuthenticationException;
 import org.springframework.ldap.core.*;
@@ -28,6 +34,7 @@ import javax.naming.directory.DirContext;
 import javax.naming.directory.SearchControls;
 import javax.naming.ldap.LdapContext;
 import javax.naming.ldap.LdapName;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.function.Function;
@@ -52,8 +59,38 @@ public class LdapService {
     @Autowired
     private SysIkuaiNetAllowDao sysIkuaiNetAllowDao;
 
+    @Autowired
+    private SyncLdapJobDao syncLdapJobDao;
+
     // 构建部门路径缓存（需在服务初始化时加载）
     private Map<Long, String> deptPathCache = new ConcurrentHashMap<>();
+
+    public List<SyncLdapJobVO> syncDataToLdapJobs() {
+        LambdaQueryWrapper<SyncLdapJob> syncLdapJobLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        // 计算两天前的时间
+        LocalDateTime twoDaysAgo = LocalDateTime.now().minusDays(2);
+
+        syncLdapJobLambdaQueryWrapper
+                // 筛选最近两天的记录（包括边界）
+                .ge(SyncLdapJob::getUpdateTime, twoDaysAgo)
+                // 按更新时间倒序
+                .orderByDesc(SyncLdapJob::getUpdateTime);
+
+        List<SyncLdapJob> list = syncLdapJobDao.list(syncLdapJobLambdaQueryWrapper);
+        // 转换对象
+        List<SyncLdapJobVO> syncLdapJobVOS = new ArrayList<>();
+        for (SyncLdapJob syncLdapJob : list) {
+            SyncLdapJobVO syncLdapJobVO = new SyncLdapJobVO();
+            BeanUtils.copyProperties(syncLdapJob,syncLdapJobVO);
+            User user = userDao.getById(syncLdapJob.getCreateUser());
+            syncLdapJobVO.setUserName("无用户");
+            if (user!=null){
+                syncLdapJobVO.setUserName(user.getName());
+            }
+            syncLdapJobVOS.add(syncLdapJobVO);
+        }
+        return syncLdapJobVOS;
+    }
 
     private class UserAttributesMapper implements AttributesMapper<User> {
         @Override
@@ -79,31 +116,56 @@ public class LdapService {
 
     /**
      * 执行同步
+     * 不一定来源于接口，所以需要判断是否有操作用户！
      */
+    @Transactional
     public void syncDataToLdap(){
-        // 清空缓存
-        deptPathCache.clear();
-        // 从数据库获取有效用户（密码不为空）
-        List<User> dbUsers = userDao.findByRsaPasswordIsNotNull();
-
-        // --- 1.用户同步 ---
-        syncUsersToLdap("users",dbUsers);
-        List<SysDept> list = iSysDeptService.list();
-
-        // --- 2.用户组同步 ---
-        syncDepts(list);
-
-        // --- 3.用户-组织关联关系同步 ---
-        Map<String, List<String>> targetMemberMap = buildUserDeptMapping(dbUsers,list);
-        syncDeptMembers(targetMemberMap);
-
-        // --- 4.再写一份用户到ikuaier组 ---
-        try {
-            syncUserToIkuai();
-        }catch (Exception e){
-            // 失败不影响整个同步
-            log.error("syncUserToIkuai error: {}", e.getMessage());
+        SyncLdapJob syncLdapJob = new SyncLdapJob();
+        syncLdapJob.setState(0);
+        UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
+        Long userId = null;
+        if (currentUser!=null){
+            userId = currentUser.getId();
+        }else {
+            // 设置为admin更新
+            LambdaQueryWrapper<User> lambdaQueryWrapper = new LambdaQueryWrapper<>();
+            lambdaQueryWrapper.eq(User::getUsername,"admin");
+            User user = userDao.getOne(lambdaQueryWrapper);
+            userId = 1L;
+            if (user!=null){
+                userId = user.getId();
+            }
         }
+        syncLdapJob.setCreateUser(userId);
+        // 先写入记录
+        syncLdapJobDao.save(syncLdapJob);
+        try {
+            // 清空缓存
+            deptPathCache.clear();
+            // 从数据库获取有效用户（密码不为空）
+            List<User> dbUsers = userDao.findByRsaPasswordIsNotNull();
+
+            // --- 1.用户同步 ---
+            syncUsersToLdap("users",dbUsers);
+            List<SysDept> list = iSysDeptService.list();
+
+            // --- 2.用户组同步 ---
+            syncDepts(list);
+
+            // --- 3.用户-组织关联关系同步 ---
+            Map<String, List<String>> targetMemberMap = buildUserDeptMapping(dbUsers,list);
+            syncDeptMembers(targetMemberMap);
+
+            // --- 4.再写一份用户到ikuaier组 ---
+            syncUserToIkuai();
+            syncLdapJob.setState(1);
+        }catch (Exception e){
+            syncLdapJob.setState(2);
+            log.error("syncUserToLdap error: {}", e.getMessage());
+        }finally {
+            syncLdapJobDao.updateById(syncLdapJob);
+        }
+        // 同步状态
     }
 
     // 同步ikuai相关用户到ldap
