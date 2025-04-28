@@ -48,6 +48,8 @@ public class PrintDataPDFToPrintReq {
 
     //是否纵向
     private Integer landscape = 0;//默认纵向
+    //是否可缩放的时候进行缩放到纸张大小
+    private Integer bShrinkToFit = 0;//默认不缩放到适合页面
 
 
 }

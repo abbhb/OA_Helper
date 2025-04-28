@@ -31,9 +31,11 @@ public class PrintPDFListener {
         if (!RedisUtils.hasKey(MyString.print + event.getPrintId())) {
             throw new CustomException("无任务");
         }
-        ;
         PrinterRedis printerRedis = RedisUtils.get(MyString.print + event.getPrintId(), PrinterRedis.class);
-        PrintDataPDFToPrintReq printDataPDFToImageReq = new PrintDataPDFToPrintReq(String.valueOf(printId), printerRedis.getCopies(), printerRedis.getIsDuplex(), printerRedis.getName(), printerRedis.getNeedPrintPagesIndex(), printerRedis.getNeedPrintPagesEndIndex(), printerRedis.getPdfUrl(), printerRedis.getPrintingDirection().equals(0) ? 1 : 0);
+        Integer landscape =  printerRedis.getPrintingDirection().equals(0) ? 1 : 0;
+        Integer bShrinkToFit = printerRedis.getBShrinkToFit() == null ? 0 : printerRedis.getBShrinkToFit();
+        // 发送任务
+        PrintDataPDFToPrintReq printDataPDFToImageReq = new PrintDataPDFToPrintReq(String.valueOf(printId), printerRedis.getCopies(), printerRedis.getIsDuplex(), printerRedis.getName(), printerRedis.getNeedPrintPagesIndex(), printerRedis.getNeedPrintPagesEndIndex(), printerRedis.getPdfUrl(),landscape,bShrinkToFit);
         mqProducer.sendMessageWithTags(MQConstant.SEND_PRINT_TOPIC, printDataPDFToImageReq, printerRedis.getDeviceId());
     }
 }

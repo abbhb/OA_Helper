@@ -61,4 +61,11 @@ public class PrinterRedis extends Printer implements Serializable {
      * 打印机id
      */
     private String deviceId;
+
+    /**
+     * 默认不缩放到适合页面
+     * 0：不缩放到适合页面
+     * 1：缩放到适合页面
+     */
+    private Integer bShrinkToFit = 0;
 }

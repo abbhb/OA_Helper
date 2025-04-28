@@ -643,6 +643,7 @@ public class PrinterServiceImpl implements PrinterService {
         printerRedis.setPrintingDirection(printFileReq.getLandscape());
         printerRedis.setNeedPrintPagesIndex(printFileReq.getStartNum());
         printerRedis.setNeedPrintPagesEndIndex(printFileReq.getEndNum());
+        printerRedis.setBShrinkToFit(printFileReq.getBShrinkToFit());// 是否缩放
         printerRedis.setSTU(4);//开始打印了
         printerRedis.setDeviceId(printFileReq.getDeviceId());
         //任务发送事务消息，保证成功
