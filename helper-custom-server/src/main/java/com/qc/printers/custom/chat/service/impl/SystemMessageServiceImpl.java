@@ -80,16 +80,15 @@ public class SystemMessageServiceImpl implements SystemMessageService {
     @Override
     public Integer noreadCount() {
         List<SystemMessage> list = systemMessageDao.list();
-        Integer tiaoshu = 0;
+        int tiaoshu = 0;
         UserInfo currentUser = ThreadLocalUtil.getCurrentUser();
         for (SystemMessage systemMessage : list) {
             LambdaQueryWrapper<SystemMessageConfirm> systemMessageConfirmLambdaQueryWrapper = new LambdaQueryWrapper<>();
-            systemMessageConfirmLambdaQueryWrapper.eq(SystemMessageConfirm::getUserId,currentUser.getId());
-            systemMessageConfirmLambdaQueryWrapper.eq(SystemMessageConfirm::getSystemMessageId,systemMessage.getId());
-            systemMessageConfirmLambdaQueryWrapper.eq(SystemMessageConfirm::getReadType,1).or(lambda ->{
-                lambda.eq(SystemMessageConfirm::getReadType,2);
-            });
-            if (systemMessageConfirmDao.count(systemMessageConfirmLambdaQueryWrapper)<1){
+            systemMessageConfirmLambdaQueryWrapper
+                    .eq(SystemMessageConfirm::getUserId,currentUser.getId())
+                    .eq(SystemMessageConfirm::getSystemMessageId,systemMessage.getId());
+            long count = systemMessageConfirmDao.count(systemMessageConfirmLambdaQueryWrapper);
+            if (count<1L){
                 tiaoshu+=1;
             }
         }

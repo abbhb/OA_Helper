@@ -16,6 +16,6 @@ public class SystemMessageConfirm implements Serializable {
     private Long userId;
 
     private Long systemMessageId;
-
+    // read为1,阅读并删除为2
     private Integer readType;
 }
