@@ -103,11 +103,13 @@ public class DataScopeAspect
             {
                 if (params instanceof SysDept){
                     SysDept baseEntity = (SysDept) params;
-                    baseEntity.setExistSql(" (" + dataScopeSqlString.substring(4) + ")");
+//                    baseEntity.setExistSql(" (" + dataScopeSqlString.substring(4) + ")");
+                    baseEntity.setExistSql(dataScopeSqlString);
                 }
                 if (params instanceof User){
                     User baseEntity = (User) params;
-                    baseEntity.setExistSql(" (" + dataScopeSqlString.substring(4) + ")");
+                    baseEntity.setExistSql(dataScopeSqlString);
+//                    baseEntity.setExistSql(" (" + dataScopeSqlString.substring(4) + ")");
                 }
             }
         }
