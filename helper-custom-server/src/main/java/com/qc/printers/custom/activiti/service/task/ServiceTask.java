@@ -1,5 +1,6 @@
 package com.qc.printers.custom.activiti.service.task;
 
+import cn.hutool.json.JSONObject;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.qc.printers.common.signin.domain.entity.SigninLogAskLeave;
@@ -89,7 +90,10 @@ public class ServiceTask {
         String initiator = (String) execution.getVariable("initiator");
 
         List<SigninRenewal> signinRenewals = JsonUtils.toList((String) execution.getVariable("bq_signin_list_json"), SigninRenewal.class);
-        for (SigninRenewal signinRenewal : signinRenewals) {
+        for (Object s : signinRenewals) {
+            JSONObject jsonObject = new JSONObject(s);
+            SigninRenewal signinRenewal = jsonObject.toBean(SigninRenewal.class);
+
             signinLogService.replacementVisaApprovalByService(Long.valueOf(initiator),signinRenewal.getRenewalTime(),execution.getProcessInstanceId(),signinRenewal.getRenewalReason());
         }
 

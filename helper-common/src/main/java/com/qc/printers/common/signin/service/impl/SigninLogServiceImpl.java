@@ -43,6 +43,7 @@ import org.activiti.engine.HistoryService;
 import org.activiti.engine.RepositoryService;
 import org.activiti.engine.history.HistoricProcessInstance;
 import org.activiti.engine.history.HistoricProcessInstanceQuery;
+import org.activiti.engine.history.HistoricVariableInstance;
 import org.activiti.engine.repository.ProcessDefinition;
 import org.activiti.engine.repository.ProcessDefinitionQuery;
 import org.apache.commons.lang3.StringUtils;
@@ -679,6 +680,7 @@ public class SigninLogServiceImpl implements SigninLogService {
         signinLog.setRemark("补签【act单号："+actId+"】");
         signinLog.setSigninTime(time);
         signinLog.setStudentId(byId.getStudentId());
+        signinLog.setUserId(byId.getId());
         signinLogDao.save(signinLog);
         // 实际Cli不会记录补签，只会记录到补签表
         addSigninLogCliByLog(signinLog);
@@ -686,7 +688,9 @@ public class SigninLogServiceImpl implements SigninLogService {
         SigninRenewal signinRenewal = SigninRenewal.builder()
                 .renewalTime(time)
                 .createTime(LocalDateTime.now())
+                .updateTime(LocalDateTime.now())
                 .renewalReason(reason)
+                .userId(byId.getId())
                 .signinLogId(signinLog.getId())
                 .renewalAboutActId(actId).userId(userId).build();
         signinRenewalDao.save(signinRenewal);
@@ -1179,6 +1183,45 @@ public class SigninLogServiceImpl implements SigninLogService {
             throw new CustomException("当前未处于任何的考勤组");
         }
         return String.valueOf(signinGroupByUserIdWithTime.getGroupId());
+    }
+
+    // 获取补签流程额外信息
+    @Override
+    public List<SigninRenewal> getRenewalSigninDataByInstantId(String instanceId) {
+        HistoricProcessInstance historicInstance = historyService.createHistoricProcessInstanceQuery()
+                .processInstanceId(instanceId).singleResult();
+        if (historicInstance == null) {
+            throw new CustomException("未知流程");
+        }
+        Map<String, Object> result = new HashMap<>();
+
+        // 当前流程的流程变量
+        List<HistoricVariableInstance> historicVariables = historyService.createHistoricVariableInstanceQuery()
+                .processInstanceId(instanceId)
+                .variableName("bq_signin_list_json")
+                .list();
+//        // 业务key
+//        String businessKey = historicInstance.getBusinessKey();
+//        // 设置流程变量,根据businessKey回显主表单,因为前端赋值是这样的:
+//        // variables[`${form.value.businessKey}formData`] = JSON.parse(JSON.stringify(formData));
+//        // variables[`${form.value.businessKey}formJson`] = form.value.formJson;
+//        historicVariables.stream()
+//                .filter(t -> t.getVariableName().equals(String.format("%s_formJson", businessKey)))
+//                .findAny()
+//                .ifPresent(t -> result.put("formJson", t.getValue()));
+//
+//        historicVariables.stream()
+//                .filter(t -> t.getVariableName().equals(String.format("%s_formData", businessKey)))
+//                .findAny()
+//                .ifPresent(t -> result.put("formData", t.getValue()));
+        if (!historicVariables.isEmpty()){
+            // 大小
+            log.info("大小:{}",historicVariables.size());
+            log.info("获取到补签流程变量:{}",historicVariables.get(0).getValue());
+            List<SigninRenewal> signinRenewals = JsonUtils.toList((String) historicVariables.get(0).getValue(), SigninRenewal.class);
+            return signinRenewals;
+        }
+        return new ArrayList<>();
     }
 
     private List<Long> itemToIdList(List<Long> list1,List<Long> list2){

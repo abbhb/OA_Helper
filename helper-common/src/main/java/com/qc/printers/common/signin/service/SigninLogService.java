@@ -68,4 +68,6 @@ public interface SigninLogService {
     PageData<SigninLogForSelfResp> indexPageDataWithuser(IndexPageDataWithuserReq indexPageDataWithuserReq);
 
     String getMyGroupId();
+
+    List<SigninRenewal> getRenewalSigninDataByInstantId(String instanceId);
 }

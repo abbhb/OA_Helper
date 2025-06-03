@@ -113,5 +113,12 @@ public class SigninLogController {
         return R.success(signinLogService.logRenewalSignin(signinRenewals));
     }
 
+    @NeedToken
+    @GetMapping("/get_renewal_signin_data_by_instant_id")
+    public R<List<SigninRenewal>> getRenewalSigninDataByInstantId(@RequestParam(name = "instance_id") String instanceId) {
+        log.info("instanceId={}", instanceId);
+        return R.success(signinLogService.getRenewalSigninDataByInstantId(instanceId));
+    }
+
 
 }
