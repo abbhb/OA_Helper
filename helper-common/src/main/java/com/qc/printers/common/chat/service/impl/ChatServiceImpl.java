@@ -403,6 +403,14 @@ public class ChatServiceImpl implements ChatService {
             if (hasPower) {
                 return;
             }
+            // 如果消息出自自己且两分钟内允许撤回
+            boolean self = Objects.equals(uid, message.getFromUid());
+            AssertUtil.isTrue(self, "抱歉,您没有权限");
+            long between = DateUtil.between(Date.from(message.getCreateTime().atZone(ZoneId.systemDefault()).toInstant()), new Date(), DateUnit.MINUTE);
+            AssertUtil.isTrue(between < 2, "覆水难收，超过2分钟的消息不能撤回哦~~");
+            if (self&& between < 2) {
+                return;
+            }
             throw new CustomException( "抱歉,您没有权限");
         }
         // 群聊的话
