@@ -12,4 +12,6 @@ public class OauthConfig {
 
 
     private String frontAddress;
+
+    private String issuer;
 }

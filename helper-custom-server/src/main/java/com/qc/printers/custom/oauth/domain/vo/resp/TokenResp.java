@@ -28,6 +28,13 @@ public class TokenResp implements Serializable {
     private Long createdAt;
 
     /**
+     * OIDC ID Token
+     * JWT格式，包含用户身份信息
+     */
+    @JsonProperty("id_token")
+    private String idToken;
+
+    /**
      * 当异常时才会返回以下字段
      */
     private Integer code;

@@ -1,10 +1,19 @@
 package com.qc.printers.custom.oauth.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.qc.printers.common.common.MyString;
 import com.qc.printers.common.common.R;
 import com.qc.printers.common.common.annotation.NeedToken;
 import com.qc.printers.common.common.annotation.PermissionCheck;
+import com.qc.printers.common.common.utils.RedisUtils;
 import com.qc.printers.common.config.OauthConfig;
+import com.qc.printers.common.oauth.dao.SysOauthDao;
+import com.qc.printers.common.oauth.dao.SysOauthOpenidDao;
+import com.qc.printers.common.oauth.domain.dto.AccessToken;
 import com.qc.printers.common.oauth.domain.entity.SysOauth;
+import com.qc.printers.common.oauth.domain.entity.SysOauthOpenid;
+import com.qc.printers.common.user.dao.UserDao;
+import com.qc.printers.common.user.domain.entity.User;
 import com.qc.printers.custom.oauth.domain.dto.Authorize;
 import com.qc.printers.custom.oauth.domain.vo.CanAuthorize;
 import com.qc.printers.custom.oauth.domain.vo.req.AgreeLoginReq;
@@ -13,6 +22,8 @@ import com.qc.printers.custom.oauth.domain.vo.resp.*;
 import com.qc.printers.custom.oauth.service.OauthService;
 import com.qc.printers.custom.oauth.service.strategy.GetAccessTokenHandel;
 import com.qc.printers.custom.oauth.service.strategy.GetAccessTokenHandelFactory;
+import com.qc.printers.custom.oauth.service.OidcService;
+import com.qc.printers.custom.oauth.util.JwtUtil;
 import io.swagger.annotations.Api;
 import io.swagger.annotations.ApiOperation;
 import lombok.extern.slf4j.Slf4j;
@@ -25,9 +36,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.Base64;
-import java.util.Enumeration;
-import java.util.List;
+import java.util.*;
 
 
 /**
@@ -49,9 +58,22 @@ public class OauthController {
     @Autowired
     private GetAccessTokenHandelFactory getAccessTokenHandelFactory;
 
+    @Autowired
+    private OidcService oidcService;
 
-    //todo:注册的默认用户名
+    // todo:临时写法，此处需要优化
+    @Autowired
+    private SysOauthDao sysOauthDao;
+    @Autowired
+    private SysOauthOpenidDao sysOauthOpenidDao;
 
+    @Autowired
+    private UserDao userDao;
+
+
+
+
+    
     /**
      * state不为强制，提供则返回
      *
@@ -153,6 +175,80 @@ public class OauthController {
 
     }
 
+    @PostMapping("/oidc/token")
+    public TokenResp authorizeCodeToAccessTokenForOidc(HttpServletRequest request,String code, String grant_type, String client_id, String client_secret, String redirect_uri, String refresh_token) throws UnsupportedEncodingException {
+        log.info("oidc.token.request:{},getPathInfo{}",request,request.getPathInfo());
+        // 获取Authorization请求头
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Basic ")) {
+            // 移除"Basic "前缀并解码
+            String encodedCredentials = authHeader.substring(6);
+            byte[] decodedBytes = Base64.getDecoder().decode(encodedCredentials);
+            String client_serect = new String(decodedBytes, "UTF-8");
+            client_id = client_serect.split(":")[0];
+            client_secret = client_serect.split(":")[1];
+        }
+        String redirectUriEnd = oauthService.getEndRedirectUri(client_id, redirect_uri);
+
+        Authorize authorize = new Authorize();
+        authorize.setCode(code);
+        authorize.setRedirectUri(redirectUriEnd);
+        authorize.setClientId(client_id);
+        authorize.setClientSecret(client_secret);
+        authorize.setGrantType(grant_type);
+        authorize.setRefreshToken(refresh_token);
+        GetAccessTokenHandel instance = getAccessTokenHandelFactory.getInstance(authorize.getGrantType());
+        if (instance == null) {
+            TokenResp tokenResp = new TokenResp();
+            tokenResp.setCode(100000);
+            tokenResp.setMsg("缺少参数response_type或response_type非法");
+            return tokenResp;
+        }
+        // todo:临时写法，业务代码需要后置
+        TokenResp tokenResp = instance.getAccessToken(authorize);
+        AccessToken accessTokenObject = RedisUtils.get(MyString.oauth_access_token + tokenResp.getAccessToken(), AccessToken.class);
+        if (accessTokenObject == null){
+            tokenResp.setCode(10065);
+            tokenResp.setMsg("请先登录!");
+            return tokenResp;
+        }
+        Long userId = accessTokenObject.getUserId();
+        String clientIdT = accessTokenObject.getClientId();
+        if (userId == null) {
+            tokenResp.setCode(10065);
+            tokenResp.setMsg("请先登录!");
+            return tokenResp;
+        }
+        LambdaQueryWrapper<SysOauth> sysOauthLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysOauthLambdaQueryWrapper.eq(SysOauth::getClientId, clientIdT);
+        SysOauth sysOauth = sysOauthDao.getOne(sysOauthLambdaQueryWrapper);
+        LambdaQueryWrapper<SysOauthOpenid> sysOauthOpenidLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        sysOauthOpenidLambdaQueryWrapper.eq(SysOauthOpenid::getSysOauthId, sysOauth.getId());
+        sysOauthOpenidLambdaQueryWrapper.eq(SysOauthOpenid::getUserId, userId);
+        SysOauthOpenid sysOauthOpenid = sysOauthOpenidDao.getOne(sysOauthOpenidLambdaQueryWrapper);
+        if (sysOauthOpenid==null){
+            tokenResp.setCode(12065);
+            tokenResp.setMsg("未鉴权!");
+            return tokenResp;
+        }
+        User user = userDao.getById(userId);
+        if (user==null){
+            tokenResp.setCode(12066);
+            tokenResp.setMsg("系统异常!");
+            return tokenResp;
+        }
+        tokenResp.setIdToken(JwtUtil.generateIdToken(
+                oauthConfig.getIssuer(),
+                String.valueOf(sysOauthOpenid.getOpenid()),
+                authorize.getClientId(),
+                UUID.randomUUID().toString(),
+                user.getName(),
+                user.getEmail(),
+                user.getUsername()
+        ));
+        return tokenResp;
+
+    }
 
     /**
      * 该接口按照gitlab标准实现
@@ -330,5 +426,49 @@ public class OauthController {
         return R.successOnlyObject(oauthService.agreementGet(way,clientId,type));
     }
 
+    /**
+     * OIDC 发现文档
+     * 返回 OIDC 服务端点和能力描述
+     */
+    @GetMapping("/.well-known/openid-configuration")
+    public Map<String, Object> openidConfiguration(HttpServletRequest request) {
+        // todo: 先写死
+        String issuer = oauthConfig.getIssuer();
+        Map<String, Object> config = new HashMap<>();
+        config.put("issuer", issuer);
+        config.put("authorization_endpoint", issuer + "/authorize");
+        config.put("token_endpoint", issuer + "/oidc/token");
+        config.put("userinfo_endpoint", issuer + "/userinfo");
+        config.put("jwks_uri", issuer + "/.well-known/jwks.json");
+        config.put("response_types_supported", Arrays.asList("code", "token", "id_token", "code token", "code id_token"));
+        config.put("subject_types_supported", Arrays.asList("public"));
+        config.put("id_token_signing_alg_values_supported", Arrays.asList("RS256"));
+        config.put("scopes_supported", Arrays.asList("openid", "profile", "email"));
+        config.put("token_endpoint_auth_methods_supported", Arrays.asList("client_secret_basic"));
+        config.put("claims_supported", Arrays.asList("sub", "iss", "name", "email"));
+        return config;
+    }
+
+    /**
+     * OIDC JWKS 端点
+     * 返回用于验证 ID Token 的公钥集合
+     */
+    @GetMapping("/.well-known/jwks.json")
+    public Map<String, Object> jwks() {
+        return JwtUtil.getJwks();
+    }
+
+    /**
+     * OIDC UserInfo 端点
+     * 返回用户信息，需要 Bearer Token 认证
+     */
+    @GetMapping("/userinfo")
+    public Map<String, Object> userinfo(@RequestHeader("Authorization") String authorization) {
+        if (authorization == null || !authorization.startsWith("Bearer ")) {
+            throw new RuntimeException("Invalid authorization header");
+        }
+        String accessToken = authorization.substring(7);
+        return oidcService.getUserInfo(accessToken);
+    }
 
 }

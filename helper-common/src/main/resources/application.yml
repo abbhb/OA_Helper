@@ -140,6 +140,7 @@ my-consul:
 oauth:
   use: true
   frontAddress: https://i.easyus.top
+  issuer: https://i.easyus.top/api/oauth2.0
 # 验证码
 vail-code:
   # 滑块验证码验证
@@ -157,3 +158,6 @@ authn:
 ikuai:
   ip: 10.15.247.251
   port: 13170
+logging:
+  level:
+    web: debug
